@@ -1,0 +1,65 @@
+{
+  "APP": {
+    "NAME": "MyBus"
+  },
+  "COMMON": {
+    "SKIP_TO_CONTENT": "Skip to main content",
+    "BACK_HOME": "Back to home"
+  },
+  "HEADER": {
+    "MAIN_NAV": "Main navigation",
+    "MENU": "Menu"
+  },
+  "NAV": {
+    "BUS_TICKETS": "Bus tickets",
+    "MY_BOOKINGS": "My bookings",
+    "COMMUNITY": "Community",
+    "ROUTE_PLANNER": "Route planner",
+    "NOTIFICATIONS": "Notifications"
+  },
+  "TITLES": {
+    "HOME": "Book bus tickets online",
+    "MY_BOOKINGS": "My bookings",
+    "COMMUNITY": "Community",
+    "ROUTE_PLANNER": "Route planner",
+    "NOTIFICATIONS": "Notifications",
+    "NOT_FOUND": "Page not found"
+  },
+  "HOME": {
+    "TITLE": "Book bus tickets across India",
+    "SUBTITLE": "Compare buses, pick your seat and travel comfortably with MyBus.",
+    "API_STATUS": {
+      "CHECKING": "Checking server…",
+      "ONLINE": "Server online",
+      "OFFLINE": "Server unreachable"
+    }
+  },
+  "COMING_SOON": {
+    "BADGE": "Coming soon",
+    "BOOKINGS": {
+      "TITLE": "My bookings",
+      "TEXT": "Your upcoming, completed and cancelled trips will appear here."
+    },
+    "COMMUNITY": {
+      "TITLE": "Traveller community",
+      "TEXT": "Share journey stories, travel tips and photos with fellow travellers."
+    },
+    "ROUTE_PLANNER": {
+      "TITLE": "Route planner",
+      "TEXT": "Plan journeys on an interactive map with live traffic and alternative routes."
+    },
+    "NOTIFICATIONS": {
+      "TITLE": "Notifications",
+      "TEXT": "Booking updates, reminders and offers will be listed here."
+    }
+  },
+  "NOT_FOUND": {
+    "TITLE": "We couldn't find that page",
+    "TEXT": "The link may be broken or the page may have moved."
+  },
+  "FOOTER": {
+    "TAGLINE": "Safe, simple bus travel across India.",
+    "LINKS": "Footer links",
+    "COPYRIGHT": "© {{year}} MyBus. All rights reserved."
+  }
+}
