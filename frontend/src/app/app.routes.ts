@@ -5,6 +5,7 @@ const comingSoon = () => import('./pages/coming-soon/coming-soon').then((m) => m
 
 export const routes: Routes = [
   { path: '', loadComponent: () => import('./pages/home/home').then((m) => m.HomePage), title: 'TITLES.HOME' },
+  { path: 'search', loadComponent: () => import('./pages/search/search').then((m) => m.SearchPage), title: 'TITLES.SEARCH' },
 
   // Accounts
   { path: 'login', canActivate: [guestGuard], loadComponent: () => import('./pages/auth/login').then((m) => m.LoginPage), title: 'TITLES.LOGIN' },
@@ -25,6 +26,7 @@ export const routes: Routes = [
   { path: 'forbidden', loadComponent: () => import('./pages/forbidden/forbidden').then((m) => m.ForbiddenPage), title: 'TITLES.FORBIDDEN' },
 
   // Placeholders: each section is replaced by its real page as it is built.
+  { path: 'trip/:id', loadComponent: comingSoon, data: { feature: 'SEATS' }, title: 'TITLES.TRIP' },
   { path: 'bookings', loadComponent: comingSoon, data: { feature: 'BOOKINGS' }, title: 'TITLES.MY_BOOKINGS' },
   { path: 'community', loadComponent: comingSoon, data: { feature: 'COMMUNITY' }, title: 'TITLES.COMMUNITY' },
   { path: 'route-planner', loadComponent: comingSoon, data: { feature: 'ROUTE_PLANNER' }, title: 'TITLES.ROUTE_PLANNER' },

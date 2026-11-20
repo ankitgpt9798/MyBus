@@ -1,0 +1,218 @@
+<section class="search-top">
+  <div class="container">
+    <app-search-form [from]="from() ?? ''" [to]="to() ?? ''" [date]="validDate()" [compact]="true" />
+  </div>
+</section>
+
+<div class="container section">
+  @if (!hasQuery()) {
+    <div class="empty-state card">
+      <app-icon name="bus" [size]="40" />
+      <h1 class="page-title">{{ 'SEARCH.START' | translate }}</h1>
+      <p class="muted">{{ 'SEARCH.START_HINT' | translate }}</p>
+    </div>
+  } @else {
+    <div class="results-head">
+      <div>
+        <h1 class="page-title">
+          {{ from() | city }} <app-icon name="chevron-right" [size]="20" /> {{ to() | city }}
+        </h1>
+        @if (result(); as r) {
+          <p class="muted">
+            {{ 'SEARCH.RESULTS_COUNT' | translate: { count: (r.trips.length | num) } }}
+            @if (r.route) {
+              · {{ 'HOME.ROUTE_META' | translate: { km: (r.route.distanceKm | num), duration: (r.route.durationMinutes | duration) } }}
+            }
+          </p>
+        }
+      </div>
+      <div class="day-switch">
+        <button type="button" class="icon-btn" (click)="changeDay(-1)" [disabled]="validDate() <= today" [attr.aria-label]="'SEARCH.PREV_DAY' | translate">
+          <app-icon name="chevron-left" />
+        </button>
+        <span class="day-label">{{ validDate() | appDate: 'day' }}</span>
+        <button type="button" class="icon-btn" (click)="changeDay(1)" [attr.aria-label]="'SEARCH.NEXT_DAY' | translate">
+          <app-icon name="chevron-right" />
+        </button>
+      </div>
+    </div>
+
+    <div class="results-layout">
+      <aside class="filters card" [class.open]="filtersOpen()" [attr.aria-label]="'FILTERS.TITLE' | translate">
+        <div class="filters-head">
+          <h2>{{ 'FILTERS.TITLE' | translate }}</h2>
+          @if (activeFilters()) {
+            <button type="button" class="link" (click)="clearFilters()">{{ 'FILTERS.CLEAR' | translate }}</button>
+          }
+        </div>
+
+        <fieldset>
+          <legend>{{ 'FILTERS.BUS_TYPE' | translate }}</legend>
+          @for (t of busTypeOptions; track t) {
+            <label class="check">
+              <input type="checkbox" [checked]="isSelected('busType', t)" (change)="toggle('busType', t)" />
+              {{ 'BUS.TYPE.' + t | translate }}
+            </label>
+          }
+          @for (a of acOptions; track a) {
+            <label class="check">
+              <input type="checkbox" [checked]="isSelected('ac', a)" (change)="toggle('ac', a)" />
+              {{ 'BUS.' + a.toUpperCase() | translate }}
+            </label>
+          }
+        </fieldset>
+
+        <fieldset>
+          <legend>{{ 'FILTERS.DEPARTURE' | translate }}</legend>
+          <div class="slot-grid">
+            @for (s of allSlots; track s) {
+              <button type="button" class="slot-btn" [class.active]="isSelected('slots', s)" [attr.aria-pressed]="isSelected('slots', s)" (click)="toggle('slots', s)">
+                <strong>{{ 'FILTERS.SLOT.' + s.toUpperCase() | translate }}</strong>
+                <small>{{ 'FILTERS.SLOT_RANGE.' + s.toUpperCase() | translate }}</small>
+              </button>
+            }
+          </div>
+        </fieldset>
+
+        @if (facets(); as m) {
+          @if (m.maxFare > m.minFare) {
+            <fieldset>
+              <legend>{{ 'FILTERS.PRICE' | translate }}</legend>
+              <div class="price-values">
+                <span>{{ minPriceValue() ?? m.minFare | inr }}</span>
+                <span>{{ maxPriceValue() ?? m.maxFare | inr }}</span>
+              </div>
+              <label class="range-label" for="minPrice">{{ 'FILTERS.MIN_PRICE' | translate }}</label>
+              <input id="minPrice" type="range" class="range" [min]="m.minFare" [max]="m.maxFare" step="10"
+                [value]="minPriceValue() ?? m.minFare" (change)="setPrice('min', $any($event.target).value)" />
+              <label class="range-label" for="maxPrice">{{ 'FILTERS.MAX_PRICE' | translate }}</label>
+              <input id="maxPrice" type="range" class="range" [min]="m.minFare" [max]="m.maxFare" step="10"
+                [value]="maxPriceValue() ?? m.maxFare" (change)="setPrice('max', $any($event.target).value)" />
+            </fieldset>
+          }
+          @if (m.operators.length > 1) {
+            <fieldset>
+              <legend>{{ 'FILTERS.OPERATORS' | translate }}</legend>
+              @for (op of m.operators; track op.id) {
+                <label class="check">
+                  <input type="checkbox" [checked]="isSelected('operators', op.id)" (change)="toggle('operators', op.id)" />
+                  {{ op.name }}
+                </label>
+              }
+            </fieldset>
+          }
+        }
+        <button type="button" class="btn btn-primary btn-block filters-done" (click)="filtersOpen.set(false)">
+          {{ 'FILTERS.SHOW_RESULTS' | translate: { count: ((result()?.trips?.length ?? 0) | num) } }}
+        </button>
+      </aside>
+
+      <section class="results" [attr.aria-busy]="loading()">
+        <div class="sort-bar">
+          <button type="button" class="btn btn-outline btn-sm filters-toggle" (click)="filtersOpen.set(true)">
+            <app-icon name="filter" [size]="16" /> {{ 'FILTERS.TITLE' | translate }}
+            @if (activeFilters()) {
+              <span class="badge badge-primary">{{ activeFilters() | num }}</span>
+            }
+          </button>
+          <span class="muted small">{{ 'SORT.LABEL' | translate }}</span>
+          @for (k of sortKeys; track k) {
+            <button type="button" class="chip" [class.active]="sortKey() === k" [attr.aria-pressed]="sortKey() === k" (click)="setSort(k)">
+              {{ 'SORT.' + k.toUpperCase() | translate }}
+              @if (sortKey() === k) {
+                <span [attr.aria-label]="(sortOrder() === 'asc' ? 'SORT.ASC' : 'SORT.DESC') | translate">{{ sortOrder() === 'asc' ? '↑' : '↓' }}</span>
+              }
+            </button>
+          }
+        </div>
+
+        @if (error(); as e) {
+          <div class="empty-state card">
+            <app-icon name="alert" [size]="40" />
+            <h2>{{ e | translateOr: 'ERRORS.GENERIC' }}</h2>
+          </div>
+        } @else if (!result()) {
+          @for (i of [1, 2, 3]; track i) {
+            <div class="card skeleton trip-skeleton"></div>
+          }
+        } @else if (result(); as r) {
+          @if (!r.route) {
+            <div class="empty-state card">
+              <app-icon name="bus" [size]="40" />
+              <h2>{{ 'SEARCH.NO_ROUTE' | translate }}</h2>
+              <p class="muted">{{ 'SEARCH.NO_ROUTE_HINT' | translate }}</p>
+            </div>
+          } @else if (!r.trips.length) {
+            <div class="empty-state card">
+              <app-icon name="bus" [size]="40" />
+              <h2>{{ 'SEARCH.NO_BUSES' | translate }}</h2>
+              <p class="muted">{{ (activeFilters() ? 'SEARCH.NO_BUSES_FILTERED' : 'SEARCH.NO_BUSES_HINT') | translate }}</p>
+              @if (activeFilters()) {
+                <button type="button" class="btn btn-outline" (click)="clearFilters()">{{ 'FILTERS.CLEAR' | translate }}</button>
+              } @else {
+                <button type="button" class="btn btn-outline" (click)="changeDay(1)">{{ 'SEARCH.TRY_NEXT_DAY' | translate }}</button>
+              }
+            </div>
+          } @else {
+            <div class="trip-list" [class.dim]="loading()">
+              @for (t of r.trips; track t.id) {
+                <article class="trip-card card">
+                  <div class="trip-operator">
+                    <h3>{{ t.operator.name }}</h3>
+                    <p class="muted small">{{ t.bus.name }}</p>
+                    <div class="tags">
+                      <span class="badge">{{ (t.bus.ac ? 'BUS.AC' : 'BUS.NONAC') | translate }}</span>
+                      <span class="badge">{{ 'BUS.TYPE.' + t.bus.type | translate }}</span>
+                    </div>
+                  </div>
+                  <div class="trip-times">
+                    <div>
+                      <strong class="time">{{ t.departureTime | appDate: 'time' }}</strong>
+                      <span class="muted small">{{ from() | city }}</span>
+                    </div>
+                    <div class="trip-duration">
+                      <span class="small muted">{{ t.durationMinutes | duration }}</span>
+                      <span class="line" aria-hidden="true"></span>
+                    </div>
+                    <div>
+                      <strong class="time">{{ t.arrivalTime | appDate: 'time' }}</strong>
+                      @if (arrivesNextDay(t.arrivalTime, t.departureTime)) {
+                        <span class="next-day">{{ t.arrivalTime | appDate: 'day' }}</span>
+                      }
+                      <span class="muted small">{{ to() | city }}</span>
+                    </div>
+                  </div>
+                  <div class="trip-price">
+                    <span class="muted small">{{ 'SEARCH.STARTS_FROM' | translate }}</span>
+                    <strong class="price">{{ t.fare | inr }}</strong>
+                    <span class="small seats-left" [class.text-warning]="t.seatsAvailable < 10" [class.muted]="t.seatsAvailable >= 10">
+                      {{ 'SEARCH.SEATS_LEFT' | translate: { count: (t.seatsAvailable | num) } }}
+                    </span>
+                    <a class="btn btn-primary" [routerLink]="['/trip', t.id]" [class.disabled]="!t.seatsAvailable">
+                      {{ 'SEARCH.SELECT_SEATS' | translate }}
+                    </a>
+                  </div>
+                  <div class="trip-foot">
+                    <div class="amenities">
+                      @for (a of t.bus.amenities; track a) {
+                        <span class="amenity">{{ 'AMENITY.' + a | translate }}</span>
+                      }
+                    </div>
+                    <button type="button" class="link details-toggle" (click)="toggleDetails(t.id)" [attr.aria-expanded]="openDetails() === t.id">
+                      {{ (openDetails() === t.id ? 'SEARCH.HIDE_DETAILS' : 'SEARCH.TRIP_DETAILS') | translate }}
+                    </button>
+                  </div>
+                  @if (openDetails() === t.id) {
+                    <div class="trip-details">
+                      <app-trip-details [tripId]="t.id" />
+                    </div>
+                  }
+                </article>
+              }
+            </div>
+          }
+        }
+      </section>
+    </div>
+  }
+</div>

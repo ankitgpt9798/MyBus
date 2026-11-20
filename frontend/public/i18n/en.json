@@ -7,7 +7,8 @@
     "BACK_HOME": "Back to home",
     "CLOSE": "Close",
     "SAVE": "Save changes",
-    "PLEASE_WAIT": "Please wait…"
+    "PLEASE_WAIT": "Please wait…",
+    "DURATION": "{{h}}h {{m}}m"
   },
   "HEADER": {
     "MAIN_NAV": "Main navigation",
@@ -38,16 +39,145 @@
     "COMMUNITY": "Community",
     "ROUTE_PLANNER": "Route planner",
     "NOTIFICATIONS": "Notifications",
-    "NOT_FOUND": "Page not found"
+    "NOT_FOUND": "Page not found",
+    "SEARCH": "Bus search results",
+    "TRIP": "Select seats"
   },
   "HOME": {
     "TITLE": "Book bus tickets across India",
     "SUBTITLE": "Compare buses, pick your seat and travel comfortably with MyBus.",
-    "API_STATUS": {
-      "CHECKING": "Checking server…",
-      "ONLINE": "Server online",
-      "OFFLINE": "Server unreachable"
+    "POPULAR_ROUTES": "Popular routes",
+    "ROUTE_META": "{{km}} km · about {{duration}}",
+    "FEATURES": {
+      "SAFE": {
+        "TITLE": "Safe and verified operators",
+        "TEXT": "Travel with trusted operators, live seat availability and clear policies."
+      },
+      "PRICE": {
+        "TITLE": "Best prices, no hidden fees",
+        "TEXT": "Compare fares across operators and pay only for the seats you pick."
+      },
+      "SUPPORT": {
+        "TITLE": "Flexible cancellation",
+        "TEXT": "Cancel online and get your refund according to a simple policy."
+      }
+    },
+    "COMMUNITY_TITLE": "Travel smarter with the MyBus community",
+    "COMMUNITY_TEXT": "Read journey stories and tips from fellow travellers, and plan routes with live traffic."
+  },
+  "SEARCH": {
+    "FROM": "From",
+    "TO": "To",
+    "SELECT_CITY": "Select a city",
+    "SWAP": "Swap origin and destination",
+    "DATE": "Date of journey",
+    "TODAY": "Today",
+    "TOMORROW": "Tomorrow",
+    "SUBMIT": "Search buses",
+    "START": "Where would you like to go?",
+    "START_HINT": "Choose your cities and travel date above to see available buses.",
+    "RESULTS_COUNT": "{{count}} buses found",
+    "PREV_DAY": "Previous day",
+    "NEXT_DAY": "Next day",
+    "NO_ROUTE": "We don't run buses on this route yet",
+    "NO_ROUTE_HINT": "Try another pair of cities from the list.",
+    "NO_BUSES": "No buses found",
+    "NO_BUSES_HINT": "There are no more departures on this date.",
+    "NO_BUSES_FILTERED": "No buses match your filters. Try removing some of them.",
+    "TRY_NEXT_DAY": "Check the next day",
+    "STARTS_FROM": "Starts from",
+    "SEATS_LEFT": "{{count}} seats left",
+    "SELECT_SEATS": "Select seats",
+    "TRIP_DETAILS": "Trip details",
+    "HIDE_DETAILS": "Hide details"
+  },
+  "FILTERS": {
+    "TITLE": "Filters",
+    "CLEAR": "Clear all",
+    "BUS_TYPE": "Bus type",
+    "DEPARTURE": "Departure time",
+    "SLOT": {
+      "NIGHT": "Night",
+      "MORNING": "Morning",
+      "AFTERNOON": "Afternoon",
+      "EVENING": "Evening"
+    },
+    "SLOT_RANGE": {
+      "NIGHT": "12 AM – 6 AM",
+      "MORNING": "6 AM – 12 PM",
+      "AFTERNOON": "12 PM – 6 PM",
+      "EVENING": "6 PM – 12 AM"
+    },
+    "PRICE": "Price range",
+    "MIN_PRICE": "Minimum price",
+    "MAX_PRICE": "Maximum price",
+    "OPERATORS": "Bus operators",
+    "SHOW_RESULTS": "Show {{count}} buses"
+  },
+  "SORT": {
+    "LABEL": "Sort by",
+    "DEPARTURE": "Departure",
+    "PRICE": "Price",
+    "DURATION": "Duration",
+    "SEATS": "Seats available",
+    "ASC": "ascending",
+    "DESC": "descending"
+  },
+  "BUS": {
+    "AC": "AC",
+    "NONAC": "Non-AC",
+    "TYPE": {
+      "seater": "Seater",
+      "sleeper": "Sleeper"
     }
+  },
+  "AMENITY": {
+    "wifi": "Wi-Fi",
+    "charging": "Charging point",
+    "water": "Water bottle",
+    "blanket": "Blanket",
+    "snacks": "Snacks",
+    "tv": "Entertainment screen",
+    "reading_light": "Reading light",
+    "cctv": "CCTV",
+    "gps": "Live GPS tracking"
+  },
+  "CITY": {
+    "Agra": "Agra",
+    "Ahmedabad": "Ahmedabad",
+    "Bengaluru": "Bengaluru",
+    "Chennai": "Chennai",
+    "Delhi": "Delhi",
+    "Goa": "Goa",
+    "Hyderabad": "Hyderabad",
+    "Jaipur": "Jaipur",
+    "Mumbai": "Mumbai",
+    "Pune": "Pune"
+  },
+  "TRIP": {
+    "TABS": {
+      "POINTS": "Boarding & dropping",
+      "BUS": "Bus & amenities",
+      "POLICY": "Cancellation policy"
+    },
+    "BOARDING_POINTS": "Boarding points",
+    "DROPPING_POINTS": "Dropping points",
+    "ROUTE_STOPS": "Route and stops",
+    "OPERATOR": "Operator",
+    "BUS": "Bus",
+    "TYPE": "Type",
+    "SEATS": "Seats",
+    "SEATS_OF": "{{free}} of {{total}} available",
+    "DISTANCE": "Distance",
+    "KM": "{{km}} km",
+    "AMENITIES": "Amenities",
+    "NO_AMENITIES": "No amenities listed",
+    "POLICY_MORE_THAN": "More than {{h}} hours before departure",
+    "POLICY_BETWEEN": "{{h}} to {{max}} hours before departure",
+    "POLICY_LESS_THAN": "Less than {{h}} hours before departure",
+    "POLICY_REFUND": "{{p}}% refund",
+    "POLICY_NO_REFUND": "No refund",
+    "POLICY_NOTE": "Tickets cannot be cancelled after the bus has departed."
   },
   "AUTH": {
     "LOGIN_TITLE": "Welcome back",
@@ -172,6 +302,10 @@
     "NOTIFICATIONS": {
       "TITLE": "Notifications",
       "TEXT": "Booking updates, reminders and offers will be listed here."
+    },
+    "SEATS": {
+      "TITLE": "Seat selection",
+      "TEXT": "Choose your seats, add passenger details and pay securely."
     }
   },
   "NOT_FOUND": {
