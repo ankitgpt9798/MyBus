@@ -1,0 +1,92 @@
+<div class="container section narrow">
+  @if (auth.user(); as user) {
+    <h1 class="page-title">{{ 'PROFILE.TITLE' | translate }}</h1>
+
+    @if (verify() && !user.emailVerified) {
+      <div class="alert alert-warning verify-required">{{ 'VERIFY.REQUIRED' | translate }}</div>
+    }
+
+    <section class="card account">
+      <span class="avatar-lg" aria-hidden="true">{{ user.name.charAt(0).toUpperCase() }}</span>
+      <div class="account-info">
+        <h2>{{ user.name }}</h2>
+        <p class="muted">{{ user.email }}</p>
+        <div class="badges">
+          @if (user.emailVerified) {
+            <span class="badge badge-success">{{ 'PROFILE.VERIFIED' | translate }}</span>
+          } @else {
+            <span class="badge badge-warning">{{ 'PROFILE.NOT_VERIFIED' | translate }}</span>
+          }
+          @if (user.role === 'admin') {
+            <span class="badge badge-info">{{ 'PROFILE.ADMIN' | translate }}</span>
+          }
+        </div>
+      </div>
+      @if (!user.emailVerified) {
+        <button type="button" class="btn btn-outline btn-sm" [disabled]="resending() || resent()" (click)="resend()">
+          {{ (resent() ? 'VERIFY.RESENT_SHORT' : 'VERIFY.RESEND') | translate }}
+        </button>
+      }
+    </section>
+
+    <section class="card">
+      <h2 class="sub-title">{{ 'PROFILE.PERSONAL' | translate }}</h2>
+      @if (profileError(); as e) {
+        <div class="alert alert-error" role="alert">{{ e | translateOr: 'ERRORS.GENERIC' }}</div>
+      }
+      <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" novalidate>
+        <div class="form-grid two">
+          <div class="form-field">
+            <label for="pname">{{ 'AUTH.FULL_NAME' | translate }}</label>
+            <input id="pname" formControlName="name" autocomplete="name" />
+            <app-field-error [control]="profileForm.controls.name" [submitted]="profileSubmitted()" />
+          </div>
+          <div class="form-field">
+            <label for="pphone">{{ 'PROFILE.PHONE' | translate }}</label>
+            <input id="pphone" type="tel" formControlName="phone" autocomplete="tel" placeholder="9876543210" />
+            <app-field-error [control]="profileForm.controls.phone" [submitted]="profileSubmitted()" />
+          </div>
+          <div class="form-field">
+            <label for="pemail">{{ 'AUTH.EMAIL' | translate }}</label>
+            <input id="pemail" type="email" [value]="user.email" disabled />
+            <small class="muted">{{ 'PROFILE.EMAIL_FIXED' | translate }}</small>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary" [disabled]="savingProfile() || profileForm.pristine">
+          {{ (savingProfile() ? 'COMMON.PLEASE_WAIT' : 'COMMON.SAVE') | translate }}
+        </button>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2 class="sub-title">{{ 'PROFILE.CHANGE_PASSWORD' | translate }}</h2>
+      @if (passwordError(); as e) {
+        <div class="alert alert-error" role="alert">{{ e | translateOr: 'ERRORS.GENERIC' }}</div>
+      }
+      <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" novalidate>
+        <div class="form-grid two">
+          <div class="form-field">
+            <label for="cur">{{ 'PROFILE.CURRENT_PASSWORD' | translate }}</label>
+            <input id="cur" type="password" formControlName="currentPassword" autocomplete="current-password" />
+            <app-field-error [control]="passwordForm.controls.currentPassword" [submitted]="passwordSubmitted()" />
+          </div>
+          <div></div>
+          <div class="form-field">
+            <label for="new">{{ 'PROFILE.NEW_PASSWORD' | translate }}</label>
+            <input id="new" type="password" formControlName="newPassword" autocomplete="new-password" />
+            <small class="muted">{{ 'AUTH.PASSWORD_HINT' | translate }}</small>
+            <app-field-error [control]="passwordForm.controls.newPassword" [submitted]="passwordSubmitted()" />
+          </div>
+          <div class="form-field">
+            <label for="conf">{{ 'AUTH.CONFIRM_PASSWORD' | translate }}</label>
+            <input id="conf" type="password" formControlName="confirmPassword" autocomplete="new-password" />
+            <app-field-error [control]="passwordForm.controls.confirmPassword" [submitted]="passwordSubmitted()" />
+          </div>
+        </div>
+        <button type="submit" class="btn btn-outline" [disabled]="savingPassword()">
+          {{ (savingPassword() ? 'COMMON.PLEASE_WAIT' : 'PROFILE.UPDATE_PASSWORD') | translate }}
+        </button>
+      </form>
+    </section>
+  }
+</div>

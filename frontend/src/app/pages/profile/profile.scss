@@ -1,0 +1,27 @@
+:host section + section { margin-top: 1.25rem; }
+.verify-required { margin-bottom: 1rem; }
+.account {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.avatar-lg {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+.account-info {
+  flex: 1;
+  min-width: 200px;
+  h2 { margin: 0; font-size: 1.2rem; }
+  p { margin: 0.1rem 0 0.4rem; overflow-wrap: anywhere; }
+}
+.badges { display: flex; gap: 0.4rem; flex-wrap: wrap; }

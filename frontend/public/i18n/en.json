@@ -4,21 +4,36 @@
   },
   "COMMON": {
     "SKIP_TO_CONTENT": "Skip to main content",
-    "BACK_HOME": "Back to home"
+    "BACK_HOME": "Back to home",
+    "CLOSE": "Close",
+    "SAVE": "Save changes",
+    "PLEASE_WAIT": "Please wait…"
   },
   "HEADER": {
     "MAIN_NAV": "Main navigation",
-    "MENU": "Menu"
+    "MENU": "Menu",
+    "ACCOUNT_MENU": "Account menu"
   },
   "NAV": {
     "BUS_TICKETS": "Bus tickets",
     "MY_BOOKINGS": "My bookings",
     "COMMUNITY": "Community",
     "ROUTE_PLANNER": "Route planner",
-    "NOTIFICATIONS": "Notifications"
+    "NOTIFICATIONS": "Notifications",
+    "ADMIN": "Admin",
+    "LOGIN": "Log in",
+    "SIGNUP": "Sign up",
+    "PROFILE": "My profile",
+    "LOGOUT": "Log out"
   },
   "TITLES": {
     "HOME": "Book bus tickets online",
+    "LOGIN": "Log in",
+    "REGISTER": "Create account",
+    "VERIFY": "Verify email",
+    "PROFILE": "My profile",
+    "ADMIN": "Admin",
+    "FORBIDDEN": "Access denied",
     "MY_BOOKINGS": "My bookings",
     "COMMUNITY": "Community",
     "ROUTE_PLANNER": "Route planner",
@@ -34,8 +49,114 @@
       "OFFLINE": "Server unreachable"
     }
   },
+  "AUTH": {
+    "LOGIN_TITLE": "Welcome back",
+    "LOGIN_SUBTITLE": "Log in to manage your bookings and join the community.",
+    "REGISTER_TITLE": "Create your account",
+    "REGISTER_SUBTITLE": "Book faster, track your trips and share your journeys.",
+    "FULL_NAME": "Full name",
+    "EMAIL": "Email address",
+    "PASSWORD": "Password",
+    "CONFIRM_PASSWORD": "Confirm password",
+    "PASSWORD_HINT": "At least 8 characters, with a letter and a number.",
+    "SHOW": "Show",
+    "HIDE": "Hide",
+    "LOGIN": "Log in",
+    "CREATE_ACCOUNT": "Create account",
+    "NO_ACCOUNT": "New to MyBus?",
+    "HAVE_ACCOUNT": "Already have an account?",
+    "SESSION_EXPIRED": "Your session has expired. Please log in again.",
+    "WELCOME_BACK": "Welcome back, {{name}}!",
+    "REGISTERED": "Account created! We sent a verification link to {{email}}.",
+    "LOGGED_OUT": "You have been logged out."
+  },
+  "VERIFY": {
+    "BANNER": "Please verify your email address ({{email}}) to post reviews and join community discussions.",
+    "RESEND": "Resend verification link",
+    "RESENT": "A new verification link is on its way. Check your inbox.",
+    "RESENT_SHORT": "Link sent",
+    "VERIFYING": "Verifying your email…",
+    "SUCCESS_TITLE": "Email verified!",
+    "SUCCESS_TEXT": "Your account is verified. You can now post reviews and take part in the community.",
+    "FAILED_TITLE": "Verification failed",
+    "ALREADY_VERIFIED": "Your email is already verified.",
+    "LOGIN_TO_RESEND": "Log in to request a new verification link.",
+    "REQUIRED": "This feature is available to verified accounts only. Verify your email to continue."
+  },
+  "PROFILE": {
+    "TITLE": "My profile",
+    "PERSONAL": "Personal details",
+    "PHONE": "Mobile number",
+    "EMAIL_FIXED": "Email address cannot be changed.",
+    "VERIFIED": "Verified",
+    "NOT_VERIFIED": "Not verified",
+    "ADMIN": "Administrator",
+    "SAVED": "Your profile has been updated.",
+    "CHANGE_PASSWORD": "Change password",
+    "CURRENT_PASSWORD": "Current password",
+    "NEW_PASSWORD": "New password",
+    "UPDATE_PASSWORD": "Update password",
+    "PASSWORD_CHANGED": "Your password has been changed."
+  },
+  "VALIDATION": {
+    "REQUIRED": "This field is required.",
+    "EMAIL": "Enter a valid email address.",
+    "MINLENGTH": "Must be at least {{n}} characters.",
+    "MAXLENGTH": "Must be at most {{n}} characters.",
+    "MIN": "Must be at least {{n}}.",
+    "MAX": "Must be at most {{n}}.",
+    "PATTERN": "The format is not valid.",
+    "PHONE": "Enter a valid mobile number.",
+    "WEAKPASSWORD": "Use at least one letter and one number.",
+    "MISMATCH": "Passwords do not match.",
+    "INVALID": "This value is not valid."
+  },
+  "ERRORS": {
+    "GENERIC": "Something went wrong. Please try again.",
+    "NETWORK": "Cannot reach the server. Check your connection and try again.",
+    "SERVER_ERROR": "The server ran into a problem. Please try again shortly.",
+    "VALIDATION_ERROR": "Some details are missing or invalid. Please check the form.",
+    "INVALID_ID": "The requested item could not be found.",
+    "INVALID_JSON": "The request could not be read. Please try again.",
+    "DUPLICATE": "This record already exists.",
+    "NOT_FOUND": "The requested item could not be found.",
+    "AUTH_REQUIRED": "Please log in to continue.",
+    "AUTH_TOKEN_INVALID": "Your session has expired. Please log in again.",
+    "AUTH_FORBIDDEN": "You are not allowed to do this.",
+    "AUTH_ADMIN_ONLY": "Only administrators can access this.",
+    "AUTH_EMAIL_NOT_VERIFIED": "Please verify your email address first.",
+    "AUTH_INVALID_CREDENTIALS": "Incorrect email or password.",
+    "AUTH_EMAIL_TAKEN": "An account with this email already exists.",
+    "AUTH_ALREADY_VERIFIED": "Your email is already verified.",
+    "AUTH_WRONG_PASSWORD": "Your current password is incorrect.",
+    "VERIFY_TOKEN_INVALID": "This verification link is invalid or has expired.",
+    "ROUTE_NOT_FOUND": "This route could not be found.",
+    "TRIP_NOT_FOUND": "This bus trip could not be found.",
+    "BUS_NOT_FOUND": "This bus could not be found.",
+    "SEARCH_SAME_CITY": "Origin and destination must be different.",
+    "TRIP_NOT_BOOKABLE": "This trip is no longer available for booking.",
+    "SEAT_INVALID": "One of the selected seats does not exist on this bus.",
+    "SEAT_DUPLICATE": "Each seat can be selected only once.",
+    "PASSENGERS_MISMATCH": "Add exactly one passenger for each selected seat.",
+    "SEAT_UNAVAILABLE": "Some of your seats were just booked by someone else. Please choose other seats.",
+    "BOOKING_NOT_FOUND": "This booking could not be found.",
+    "BOOKING_EXPIRED": "Your seat hold has expired. Please select seats again.",
+    "BOOKING_NOT_PAYABLE": "This booking can no longer be paid.",
+    "BOOKING_NOT_CANCELLABLE": "This booking can no longer be cancelled.",
+    "TRIP_DEPARTURE_PAST": "The departure time must be in the future.",
+    "TRIP_ARRIVAL_BEFORE_DEPARTURE": "The arrival time must be after the departure time.",
+    "TRIP_ALREADY_CANCELLED": "This trip has already been cancelled."
+  },
+  "FORBIDDEN": {
+    "TITLE": "Access denied",
+    "TEXT": "You don't have permission to view this page."
+  },
   "COMING_SOON": {
     "BADGE": "Coming soon",
+    "ADMIN": {
+      "TITLE": "Admin console",
+      "TEXT": "Trip management and booking overview for administrators."
+    },
     "BOOKINGS": {
       "TITLE": "My bookings",
       "TEXT": "Your upcoming, completed and cancelled trips will appear here."
