@@ -64,16 +64,21 @@ export const BUS_MODELS = [
 // Rate per km by bus category.
 export const FARE_PER_KM = { seater: { ac: 1.4, nonac: 1.0 }, sleeper: { ac: 2.0, nonac: 1.5 } } as const;
 
-// Daily departures (IST hour, minute): short hops run through the day, long routes mostly overnight.
+// Daily departures (IST hour, minute), spread across all four departure-time filters
+// (night 0-6, morning 6-12, afternoon 12-18, evening 18-24). Long routes lean towards overnight buses.
 export const SHORT_DEPARTURES: [number, number][] = [
-  [6, 0],
+  [5, 30],
+  [7, 0],
   [10, 30],
-  [15, 0],
-  [19, 30],
+  [14, 0],
+  [18, 30],
+  [22, 45],
 ];
 export const LONG_DEPARTURES: [number, number][] = [
-  [7, 0],
-  [19, 30],
+  [0, 30],
+  [6, 30],
+  [13, 0],
+  [19, 0],
   [21, 0],
   [22, 30],
 ];

@@ -161,7 +161,8 @@ async function main() {
       const day = istDateString(new Date(now + d * 24 * HOUR_MS));
       for (const [h, m] of departures) {
         const bus = pick(buses);
-        const departureTime = istDateTime(day, h, m);
+        // Small per-trip jitter so operators don't all leave at the same minute.
+        const departureTime = new Date(istDateTime(day, h, m).getTime() + Math.round(rand() * 4 - 2) * 5 * MINUTE_MS);
         const durationMinutes = route.durationMinutes + Math.round((rand() * 40 - 20) / 5) * 5;
         const future = departureTime.getTime() > now;
         // Some seats are already sold on future trips so the seat map looks realistic.
