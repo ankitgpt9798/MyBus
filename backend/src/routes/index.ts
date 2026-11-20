@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import mongoose from 'mongoose';
 import * as admin from '../controllers/admin.controller';
 import * as auth from '../controllers/auth.controller';
 import * as bookings from '../controllers/booking.controller';
@@ -9,7 +10,8 @@ import { requireAdmin, requireAuth } from '../middleware/auth';
 export const api = Router();
 
 api.get('/health', (_req, res) => {
-  res.json({ status: 'ok', time: new Date().toISOString() });
+  const db = mongoose.connection.readyState === mongoose.ConnectionStates.connected ? 'connected' : 'disconnected';
+  res.status(db === 'connected' ? 200 : 503).json({ status: db === 'connected' ? 'ok' : 'degraded', db, time: new Date().toISOString() });
 });
 
 // Auth
