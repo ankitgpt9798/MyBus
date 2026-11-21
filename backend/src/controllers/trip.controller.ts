@@ -142,6 +142,10 @@ export async function getTrip(req: Request, res: Response) {
   if (!trip) throw notFound('TRIP_NOT_FOUND', 'Trip not found');
   // bookedSeats covers sold and held seats; heldSeats lists the ones only reserved by an unpaid hold.
   const heldSeats: string[] = await Booking.distinct('seats', { trip: trip._id, status: 'pending' });
+  // Seats already booked for a female passenger, so women can choose to sit next to women. Gender only: no names.
+  const femaleSeats = (
+    await Booking.find({ trip: trip._id, status: { $in: ['pending', 'confirmed'] } }).select('passengers.seat passengers.gender').lean()
+  ).flatMap((b) => b.passengers.filter((p) => p.gender === 'female').map((p) => p.seat));
 
   res.json({
     trip: {
@@ -154,6 +158,7 @@ export async function getTrip(req: Request, res: Response) {
       bookable: trip.status === 'scheduled' && trip.departureTime > new Date(),
       bookedSeats: trip.bookedSeats,
       heldSeats,
+      femaleSeats,
       seatsAvailable: trip.bus.totalSeats - trip.bookedSeats.length,
     },
     route: { ...publicRoute(trip.route), stops: trip.route.stops },

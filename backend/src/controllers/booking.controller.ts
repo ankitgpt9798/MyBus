@@ -49,6 +49,7 @@ export function publicBooking(b: BookingDoc) {
     tripId: String(b.trip),
     routeId: String(b.route),
     seats: b.seats,
+    ladiesSeats: b.ladiesSeats ?? [],
     passengers: b.passengers,
     contact: { email: b.contact?.email ?? '', phone: b.contact?.phone ?? '' },
     detailsComplete: hasDetails(b),
@@ -73,8 +74,11 @@ const PASSENGER_RULES: Record<string, Rule> = {
   gender: { type: 'string', required: true, enum: GENDERS },
 };
 
-/** Validates passengers (one per seat) and contact details; returns normalised values. */
-function parseDetails(body: Record<string, any>, seats: string[]) {
+/**
+ * Validates passengers (one per seat) and contact details; returns normalised values.
+ * Seats in `ladiesSeats` are reserved for women and must have a female passenger (SEAT_LADIES_ONLY).
+ */
+function parseDetails(body: Record<string, any>, seats: string[], ladiesSeats: readonly string[]) {
   validate(body, {
     passengers: { type: 'array', required: true, min: 1, max: MAX_SEATS_PER_BOOKING },
     contact: { type: 'object', required: true },
@@ -102,6 +106,13 @@ function parseDetails(body: Record<string, any>, seats: string[]) {
   if (bySeat.size !== seats.length || !seats.every((s) => bySeat.has(s))) {
     throw badRequest('PASSENGERS_MISMATCH', 'Provide exactly one passenger per selected seat');
   }
+  // Field paths use the passenger's index in the request, so clients can show the error on that row.
+  const ladiesErrors: FieldError[] = (body.passengers as Record<string, any>[]).flatMap((p, i) =>
+    ladiesSeats.includes(String(p.seat)) && p.gender !== 'female'
+      ? [{ field: `passengers.${i}.gender`, rule: 'ladiesOnly', params: { seat: String(p.seat) } }]
+      : [],
+  );
+  if (ladiesErrors.length) throw badRequest('SEAT_LADIES_ONLY', 'Seats reserved for women need a female passenger', ladiesErrors);
   return {
     passengers: seats.map((seat) => {
       const p = bySeat.get(seat)!;
@@ -122,7 +133,6 @@ export async function createBooking(req: Request, res: Response) {
   const { tripId, boardingPoint, droppingPoint } = req.body;
   const seats: string[] = req.body.seats.map(String);
   if (new Set(seats).size !== seats.length) throw badRequest('SEAT_DUPLICATE', 'Each seat can be selected once');
-  const details = req.body.passengers !== undefined ? parseDetails(req.body, seats) : null;
   if (!isObjectId(tripId)) throw notFound('TRIP_NOT_FOUND', 'Trip not found');
 
   const trip = await Trip.findById(tripId)
@@ -135,6 +145,9 @@ export async function createBooking(req: Request, res: Response) {
   }
   const validSeats = new Set(trip.bus.seats.map((s) => s.number));
   if (!seats.every((s) => validSeats.has(s))) throw badRequest('SEAT_INVALID', 'Unknown seat number');
+  const ladiesSeats = trip.bus.seats.filter((s) => s.ladiesOnly && seats.includes(s.number)).map((s) => s.number);
+  // One-step booking (passengers sent with the hold) gets the same checks as PUT /passengers.
+  const details = req.body.passengers !== undefined ? parseDetails(req.body, seats, ladiesSeats) : null;
 
   const boarding = trip.route.stops.find((s) => s.type === 'boarding' && s.name === boardingPoint);
   const dropping = trip.route.stops.find((s) => s.type === 'dropping' && s.name === droppingPoint);
@@ -170,6 +183,7 @@ export async function createBooking(req: Request, res: Response) {
       route: trip.route._id,
       status: 'pending',
       seats,
+      ladiesSeats,
       passengers: details?.passengers ?? [],
       contact: details?.contact ?? { email: req.user!.email, phone: req.user!.phone || undefined },
       boardingPoint: { name: boarding.name, offsetMinutes: boarding.offsetMinutes },
@@ -216,7 +230,7 @@ async function findActiveHold(req: Request) {
 export async function updateBookingDetails(req: Request, res: Response) {
   const booking = await findActiveHold(req);
   if (booking.status !== 'pending') throw conflict('BOOKING_NOT_PAYABLE', 'This booking can no longer be changed');
-  const { passengers, contact } = parseDetails(req.body, booking.seats);
+  const { passengers, contact } = parseDetails(req.body, booking.seats, booking.ladiesSeats ?? []);
   const updated = await Booking.findOneAndUpdate(
     { _id: booking._id, status: 'pending' },
     { $set: { passengers, contact } },
