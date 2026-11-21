@@ -1,6 +1,9 @@
 // localStorage can throw (private mode, blocked storage) — never let that break the app.
+// index.html reads the theme key inline before Angular boots; keep the two in sync.
 export const STORAGE_KEYS = {
   token: 'mybus.token',
+  lang: 'mybus.lang',
+  theme: 'mybus.theme',
 } as const;
 
 export function readStorage(key: string): string | null {

@@ -74,7 +74,7 @@
   }
   // Women-reserved seat: pink outline while free; a booked seat with a female passenger gets a pink fill.
   &.ladies:not(.booked):not(.held):not(.selected) { border-color: var(--seat-ladies); color: var(--seat-ladies); }
-  &.ladies.selected { background: var(--seat-ladies); border-color: var(--seat-ladies); }
+  &.ladies.selected { background: var(--seat-ladies-fill); border-color: var(--seat-ladies-fill); color: #fff; }
   &.female { background: var(--seat-female); border-color: var(--seat-ladies); color: var(--seat-ladies); }
   &:disabled:not(.booked):not(.held) { cursor: default; opacity: 0.7; }
 }

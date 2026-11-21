@@ -54,8 +54,8 @@ import { TranslateOrPipe } from '../../shared/translate-or.pipe';
   styles: `
     .verify-card { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 0.75rem; }
     .status-icon { display: grid; place-items: center; width: 60px; height: 60px; border-radius: 50%; color: #fff; }
-    .status-icon.success { background: var(--color-success); }
-    .status-icon.error { background: var(--color-danger); }
+    .status-icon.success { background: var(--color-success-fill); }
+    .status-icon.error { background: var(--color-danger-fill); }
     h1 { margin: 0; font-size: 1.4rem; }
     p { margin: 0; }
   `,

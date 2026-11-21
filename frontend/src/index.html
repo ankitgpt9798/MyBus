@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="utf-8">
   <title>MyBus</title>
@@ -7,6 +7,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="MyBus - book bus tickets across India">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <script>
+    // Apply the saved theme and language before the first paint, so there is no flash of the wrong theme.
+    // Keys must match STORAGE_KEYS in src/app/core/storage.ts. Default: light theme, English.
+    (function () {
+      var root = document.documentElement;
+      try {
+        var theme = localStorage.getItem('mybus.theme');
+        var lang = localStorage.getItem('mybus.lang');
+        root.setAttribute('data-theme', theme === 'dark' ? 'dark' : 'light');
+        if (lang === 'en' || lang === 'hi' || lang === 'mr') root.setAttribute('lang', lang);
+      } catch (e) {
+        root.setAttribute('data-theme', 'light');
+      }
+    })();
+  </script>
 </head>
 <body>
   <app-root></app-root>

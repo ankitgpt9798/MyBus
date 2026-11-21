@@ -24,7 +24,7 @@
       font-size: 0.78rem;
     }
     &:not(:last-child)::after { content: ''; width: 24px; height: 2px; background: var(--color-border); }
-    &.done::before { content: '✓'; border-color: var(--color-success); background: var(--color-success); color: #fff; }
+    &.done::before { content: '✓'; border-color: var(--color-success-fill); background: var(--color-success-fill); color: #fff; }
     &.current { color: var(--color-primary); &::before { border-color: var(--color-primary); } }
   }
 }
