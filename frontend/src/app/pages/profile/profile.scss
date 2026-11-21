@@ -25,3 +25,9 @@
   p { margin: 0.1rem 0 0.4rem; overflow-wrap: anywhere; }
 }
 .badges { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.pref-group {
+  margin: 0 0 1rem;
+  padding: 0;
+  border: 0;
+  legend { margin-bottom: 0.35rem; font-weight: 600; font-size: 0.88rem; }
+}

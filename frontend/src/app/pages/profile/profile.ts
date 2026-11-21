@@ -3,6 +3,10 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { errorKey } from '../../core/api-error';
 import { AuthService } from '../../core/auth.service';
+import { LANGUAGES, LanguageService } from '../../core/language.service';
+import { Lang, Theme } from '../../core/models';
+import { PreferencesService } from '../../core/preferences.service';
+import { ThemeService } from '../../core/theme.service';
 import { ToastService } from '../../core/toast.service';
 import { FieldError } from '../../shared/field-error';
 import { applyServerErrors } from '../../shared/form-errors';
@@ -20,7 +24,12 @@ export class ProfilePage {
   readonly verify = input<string | undefined>(undefined);
 
   protected readonly auth = inject(AuthService);
+  protected readonly language = inject(LanguageService);
+  protected readonly theme = inject(ThemeService);
+  private readonly prefs = inject(PreferencesService);
   private readonly toast = inject(ToastService);
+  protected readonly languages = LANGUAGES;
+  protected readonly themes: Theme[] = ['light', 'dark'];
   private readonly fb = inject(FormBuilder).nonNullable;
 
   protected readonly profileForm = this.fb.group({
@@ -92,6 +101,15 @@ export class ProfilePage {
     } finally {
       this.savingPassword.set(false);
     }
+  }
+
+  /** Preferences apply instantly and are saved to the profile (they follow the user to other devices). */
+  protected async setLanguage(lang: Lang): Promise<void> {
+    if (await this.prefs.setLanguage(lang)) this.toast.success('PROFILE.PREFS_SAVED');
+  }
+
+  protected async setTheme(theme: Theme): Promise<void> {
+    if (await this.prefs.setTheme(theme)) this.toast.success('PROFILE.PREFS_SAVED');
   }
 
   protected async resend(): Promise<void> {

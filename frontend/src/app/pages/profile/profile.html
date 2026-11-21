@@ -58,6 +58,31 @@
       </form>
     </section>
 
+    <section class="card prefs-card">
+      <h2 class="sub-title">{{ 'PROFILE.PREFERENCES' | translate }}</h2>
+      <p class="muted small">{{ 'PROFILE.PREFS_HINT' | translate }}</p>
+      <div class="form-grid two">
+        <fieldset class="pref-group">
+          <legend>{{ 'PROFILE.LANGUAGE' | translate }}</legend>
+          @for (l of languages; track l.code) {
+            <label class="check">
+              <input type="radio" name="pref-lang" [value]="l.code" [checked]="language.current() === l.code" (change)="setLanguage(l.code)" />
+              <span [attr.lang]="l.code">{{ l.label }}</span>
+            </label>
+          }
+        </fieldset>
+        <fieldset class="pref-group">
+          <legend>{{ 'PROFILE.THEME' | translate }}</legend>
+          @for (t of themes; track t) {
+            <label class="check">
+              <input type="radio" name="pref-theme" [value]="t" [checked]="theme.current() === t" (change)="setTheme(t)" />
+              {{ (t === 'dark' ? 'PROFILE.THEME_DARK' : 'PROFILE.THEME_LIGHT') | translate }}
+            </label>
+          }
+        </fieldset>
+      </div>
+    </section>
+
     <section class="card">
       <h2 class="sub-title">{{ 'PROFILE.CHANGE_PASSWORD' | translate }}</h2>
       @if (passwordError(); as e) {

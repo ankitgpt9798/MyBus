@@ -5,10 +5,11 @@ import { filter } from 'rxjs';
 import { AuthService } from '../core/auth.service';
 import { ToastService } from '../core/toast.service';
 import { Icon } from './icons';
+import { PreferenceControls } from './preference-controls';
 
 @Component({
   selector: 'app-header',
-  imports: [RouterLink, RouterLinkActive, TranslatePipe, Icon],
+  imports: [RouterLink, RouterLinkActive, TranslatePipe, Icon, PreferenceControls],
   template: `
     <header class="site-header">
       <div class="container header-inner">
@@ -25,9 +26,11 @@ import { Icon } from './icons';
           @if (auth.isAdmin()) {
             <a routerLink="/admin" routerLinkActive="active">{{ 'NAV.ADMIN' | translate }}</a>
           }
+          <app-preference-controls class="menu-prefs" place="menu" />
         </nav>
 
         <div class="header-actions">
+          <app-preference-controls class="header-prefs" place="header" />
           <a routerLink="/notifications" class="icon-btn" [attr.aria-label]="'NAV.NOTIFICATIONS' | translate"
             [title]="'NAV.NOTIFICATIONS' | translate">
             <app-icon name="bell" />
