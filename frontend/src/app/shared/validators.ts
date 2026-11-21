@@ -25,6 +25,10 @@ export const matchPasswords =
     return null;
   };
 
+/** For seats reserved for women: the passenger's gender must be female. Error key `ladiesonly` -> VALIDATION.LADIESONLY */
+export const femaleOnly: ValidatorFn = (c: AbstractControl): ValidationErrors | null =>
+  c.value && c.value !== 'female' ? { ladiesonly: true } : null;
+
 /** Trims and rejects whitespace-only input. Error key `required`. */
 export const notBlank: ValidatorFn = (c: AbstractControl): ValidationErrors | null =>
   typeof c.value === 'string' && c.value.length && !c.value.trim() ? { required: true } : null;

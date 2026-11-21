@@ -27,7 +27,12 @@
           <div formArrayName="passengers" class="passenger-list">
             @for (p of passengers.controls; track p.controls.seat.value; let i = $index) {
               <fieldset class="passenger" [formGroupName]="i">
-                <legend>{{ 'CHECKOUT.PASSENGER_N' | translate: { n: i + 1 } }} · {{ 'SEATS.SEAT' | translate: { n: p.controls.seat.value } }}</legend>
+                <legend>
+                  {{ 'CHECKOUT.PASSENGER_N' | translate: { n: i + 1 } }} · {{ 'SEATS.SEAT' | translate: { n: p.controls.seat.value } }}
+                  @if (isLadiesSeat(p.controls.seat.value)) {
+                    <span class="badge badge-ladies">{{ 'SEATS.WOMENS_SEAT' | translate }}</span>
+                  }
+                </legend>
                 <div class="form-grid three">
                   <div class="form-field">
                     <label [for]="'pname' + i">{{ 'CHECKOUT.NAME' | translate }}</label>

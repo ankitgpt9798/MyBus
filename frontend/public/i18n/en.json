@@ -212,7 +212,13 @@
     "DRIVER": "Driver",
     "SEAT": "Seat {{n}}",
     "MAX_REACHED": "You can select up to {{n}} seats.",
-    "SELECT_AT_LEAST_ONE": "Select at least one seat to continue."
+    "SELECT_AT_LEAST_ONE": "Select at least one seat to continue.",
+    "LADIES": "Reserved for women",
+    "BOOKED_FEMALE": "Booked by a woman",
+    "LADIES_AVAILABLE": "Reserved for women, available",
+    "LADIES_SELECTED": "Reserved for women, selected",
+    "LADIES_NOTE": "Reserved for women: seat {{seats}}. The passenger on a reserved seat must be female.",
+    "WOMENS_SEAT": "Women's seat"
   },
   "HOLD": {
     "TIMER": "Seats held for {{time}}. Complete your booking before the timer runs out.",
@@ -432,7 +438,8 @@
     "PHONE": "Enter a valid mobile number.",
     "WEAKPASSWORD": "Use at least one letter and one number.",
     "MISMATCH": "Passwords do not match.",
-    "INVALID": "This value is not valid."
+    "INVALID": "This value is not valid.",
+    "LADIESONLY": "This seat is reserved for women. Choose a female passenger or pick another seat."
   },
   "ERRORS": {
     "GENERIC": "Something went wrong. Please try again.",
@@ -470,7 +477,8 @@
     "TRIP_ARRIVAL_BEFORE_DEPARTURE": "The arrival time must be after the departure time.",
     "TRIP_ALREADY_CANCELLED": "This trip has already been cancelled.",
     "PAYMENT_FAILED": "Your payment was declined. No money was taken. Please try again.",
-    "BOOKING_DETAILS_MISSING": "Please add passenger and contact details before paying."
+    "BOOKING_DETAILS_MISSING": "Please add passenger and contact details before paying.",
+    "SEAT_LADIES_ONLY": "Seats reserved for women can only be booked for female passengers."
   },
   "FORBIDDEN": {
     "TITLE": "Access denied",

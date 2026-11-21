@@ -11,7 +11,7 @@ import { applyServerErrors } from '../../shared/form-errors';
 import { HoldTimer } from '../../shared/hold-timer';
 import { Icon } from '../../shared/icons';
 import { TranslateOrPipe } from '../../shared/translate-or.pipe';
-import { notBlank, phoneValidator } from '../../shared/validators';
+import { femaleOnly, notBlank, phoneValidator } from '../../shared/validators';
 import { BookingSummary } from './booking-summary';
 
 type PassengerForm = FormGroup<{
@@ -79,12 +79,14 @@ export class PassengersPage {
       this.passengers.clear();
       for (const seat of booking.seats) {
         const saved = booking.passengers.find((p) => p.seat === seat);
+        const ladies = booking.ladiesSeats.includes(seat);
         this.passengers.push(
           this.fb.group({
             seat: [seat],
             name: [saved?.name ?? '', [Validators.required, notBlank, Validators.minLength(2), Validators.maxLength(60)]],
             age: this.fb.control<number | null>(saved?.age ?? null, [Validators.required, Validators.min(1), Validators.max(120)]),
-            gender: this.fb.control<Gender | ''>(saved?.gender ?? '', Validators.required),
+            // Women-reserved seats start as Female and reject any other choice.
+            gender: this.fb.control<Gender | ''>(saved?.gender ?? (ladies ? 'female' : ''), ladies ? [Validators.required, femaleOnly] : Validators.required),
           }),
         );
       }
@@ -97,6 +99,10 @@ export class PassengersPage {
     } catch (err) {
       this.loadError.set(errorKey(err));
     }
+  }
+
+  protected isLadiesSeat(seat: string): boolean {
+    return !!this.booking()?.ladiesSeats.includes(seat);
   }
 
   /** The countdown hit zero: re-read the booking so the server releases the seats, then show the expired state. */

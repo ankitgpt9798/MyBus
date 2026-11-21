@@ -14,7 +14,11 @@ import { AppDatePipe, CityPipe, InrPipe } from '../../shared/pipes';
     <p class="muted small">{{ b.journey.departureTime | appDate: 'datetime' }} · {{ b.journey.operatorName }}</p>
     <dl class="kv">
       <dt>{{ 'TRIP.SEATS' | translate }}</dt>
-      <dd>{{ b.seats.join(', ') }}</dd>
+      <dd>
+        @for (s of b.seats; track s; let last = $last) {
+          {{ s }}@if (b.ladiesSeats.includes(s)) { <span class="badge badge-ladies">{{ 'SEATS.WOMENS_SEAT' | translate }}</span> }@if (!last) {, }
+        }
+      </dd>
       <dt>{{ 'TRIP.BOARDING_POINT' | translate }}</dt>
       <dd>{{ b.boardingPoint.time | appDate: 'time' }} — {{ b.boardingPoint.name }}</dd>
       <dt>{{ 'TRIP.DROPPING_POINT' | translate }}</dt>
