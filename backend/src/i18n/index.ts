@@ -1,13 +1,15 @@
+import bn from './bn';
 import en from './en';
 import hi from './hi';
 import mr from './mr';
+import te from './te';
 
-export const SUPPORTED_LANGUAGES = ['en', 'hi', 'mr'] as const;
+export const SUPPORTED_LANGUAGES = ['en', 'hi', 'mr', 'bn', 'te'] as const;
 export type Lang = (typeof SUPPORTED_LANGUAGES)[number];
 export const DEFAULT_LANGUAGE: Lang = 'en';
 
 type Dict = { [key: string]: string | Dict };
-const dictionaries: Record<Lang, Dict> = { en, hi, mr };
+const dictionaries: Record<Lang, Dict> = { en, hi, mr, bn, te };
 
 export const isLang = (v: unknown): v is Lang => SUPPORTED_LANGUAGES.includes(v as Lang);
 
