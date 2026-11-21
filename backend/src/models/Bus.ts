@@ -10,6 +10,8 @@ const seatSchema = new Schema(
     row: { type: Number, required: true },
     col: { type: Number, required: true },
     kind: { type: String, enum: BUS_TYPES, required: true },
+    // Reserved for women: only a female passenger may be booked on it.
+    ladiesOnly: { type: Boolean, default: false },
   },
   { _id: false },
 );

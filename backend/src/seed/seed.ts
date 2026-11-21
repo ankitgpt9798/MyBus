@@ -47,7 +47,10 @@ function mulberry32(seed: number) {
 const rand = mulberry32(20261120);
 const pick = <T>(arr: readonly T[]) => arr[Math.floor(rand() * arr.length)];
 
-type SeatDef = { number: string; deck: 'lower' | 'upper'; row: number; col: number; kind: 'seater' | 'sleeper' };
+type SeatDef = { number: string; deck: 'lower' | 'upper'; row: number; col: number; kind: 'seater' | 'sleeper'; ladiesOnly?: boolean };
+
+// Women-reserved seats: a window pair in the second row on seaters, a lower-deck pair on sleepers.
+const LADIES_SEATS = { seater: ['5', '6'], sleeper: ['L5', 'L6'] } as const;
 
 function buildSeats(type: 'seater' | 'sleeper'): SeatDef[] {
   const seats: SeatDef[] = [];
@@ -67,7 +70,8 @@ function buildSeats(type: 'seater' | 'sleeper'): SeatDef[] {
       }
     }
   }
-  return seats;
+  const ladies: readonly string[] = LADIES_SEATS[type];
+  return seats.map((s) => (ladies.includes(s.number) ? { ...s, ladiesOnly: true } : s));
 }
 
 function buildStops(from: string, to: string, durationMinutes: number, via: string[]) {
@@ -167,7 +171,8 @@ async function main() {
         const future = departureTime.getTime() > now;
         // Some seats are already sold on future trips so the seat map looks realistic.
         const occupancy = future ? rand() * 0.55 : 0;
-        const bookedSeats = bus.seats.filter(() => rand() < occupancy).map((s) => s.number);
+        // Women-reserved seats are left free (there is no passenger record to say who holds them).
+        const bookedSeats = bus.seats.filter((s) => !s.ladiesOnly && rand() < occupancy).map((s) => s.number);
         tripDocs.push({
           _id: new Types.ObjectId(),
           route: route._id,
@@ -196,7 +201,7 @@ async function main() {
   for (const { trip, status } of chosen) {
     const bus = busById.get(String(trip.bus))!;
     const route = routeById.get(String(trip.route))!;
-    const seat = bus.seats.find((s) => !trip.bookedSeats.includes(s.number))!.number;
+    const seat = bus.seats.find((s) => !s.ladiesOnly && !trip.bookedSeats.includes(s.number))!.number;
     await Trip.updateOne({ _id: trip._id }, { $addToSet: { bookedSeats: seat } });
     const boarding = route.stops.find((s) => s.type === 'boarding')!;
     const dropping = route.stops.filter((s) => s.type === 'dropping').at(-1)!;

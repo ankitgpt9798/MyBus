@@ -47,6 +47,8 @@ const bookingSchema = new Schema(
     pnr: { type: String, unique: true, sparse: true },
     status: { type: String, enum: BOOKING_STATUSES, default: 'pending' },
     seats: { type: [String], required: true },
+    // Snapshot of which of `seats` are reserved for women (from the bus layout at hold time).
+    ladiesSeats: { type: [String], default: [] },
     // Filled in after the seats are held (checked again before payment).
     passengers: { type: [passengerSchema], default: [] },
     contact: {
