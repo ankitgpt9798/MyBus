@@ -41,6 +41,11 @@ export class TripPage {
   protected readonly boardingPoints = computed(() => this.data()?.route.stops.filter((s) => s.type === 'boarding') ?? []);
   protected readonly droppingPoints = computed(() => this.data()?.route.stops.filter((s) => s.type === 'dropping') ?? []);
   protected readonly maxSeats = computed(() => this.data()?.policy.maxSeats ?? 6);
+  /** Selected seats that are reserved for women (shown with a note; enforced on the passenger step). */
+  protected readonly selectedLadies = computed(() => {
+    const ladies = new Set(this.data()?.bus.seats.filter((s) => s.ladiesOnly).map((s) => s.number));
+    return this.selected().filter((s) => ladies.has(s));
+  });
   protected readonly total = computed(() => (this.data()?.trip.fare ?? 0) * this.selected().length);
 
   protected readonly points = inject(FormBuilder).nonNullable.group({

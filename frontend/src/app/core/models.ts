@@ -79,6 +79,8 @@ export interface Seat {
   row: number;
   col: number;
   kind: BusType;
+  /** Reserved for women: the passenger on it must be female. */
+  ladiesOnly?: boolean;
 }
 
 export interface TripDetails {
@@ -94,6 +96,8 @@ export interface TripDetails {
     bookedSeats: string[];
     /** Subset of bookedSeats reserved by an unpaid hold (may free up). */
     heldSeats: string[];
+    /** Booked seats whose passenger is female (no other passenger data is exposed). */
+    femaleSeats: string[];
     seatsAvailable: number;
   };
   route: RouteSummary & { stops: Stop[] };
@@ -128,6 +132,8 @@ export interface Booking {
   tripId: string;
   routeId: string;
   seats: string[];
+  /** Which of `seats` are reserved for women. */
+  ladiesSeats: string[];
   passengers: Passenger[];
   contact: { email: string; phone: string };
   detailsComplete: boolean;

@@ -23,6 +23,8 @@ interface DeckView {
       <span><i class="seat-swatch selected"></i>{{ 'SEATS.SELECTED' | translate }}</span>
       <span><i class="seat-swatch held"></i>{{ 'SEATS.HELD' | translate }}</span>
       <span><i class="seat-swatch booked"></i>{{ 'SEATS.BOOKED' | translate }}</span>
+      <span><i class="seat-swatch ladies"></i>{{ 'SEATS.LADIES' | translate }}</span>
+      <span><i class="seat-swatch female"></i>{{ 'SEATS.BOOKED_FEMALE' | translate }}</span>
     </div>
     <div class="decks">
       @for (d of decks(); track d.deck) {
@@ -38,11 +40,12 @@ interface DeckView {
             @for (s of d.seats; track s.number) {
               <button type="button" class="seat" [class.sleeper]="s.kind === 'sleeper'"
                 [class.booked]="isBooked(s.number) && !isHeld(s.number)" [class.held]="isHeld(s.number)" [class.selected]="isSelected(s.number)"
+                [class.ladies]="!!s.ladiesOnly" [class.female]="isFemale(s.number)"
                 [style.grid-row]="s.row + 1" [style.grid-column]="s.col + 1"
                 [disabled]="disabled() || isBooked(s.number)"
                 [attr.aria-pressed]="isSelected(s.number)"
-                [attr.aria-label]="('SEATS.SEAT' | translate: { n: s.number }) + ' — ' + (stateKey(s.number) | translate)"
-                [title]="('SEATS.SEAT' | translate: { n: s.number }) + ' — ' + (stateKey(s.number) | translate)"
+                [attr.aria-label]="('SEATS.SEAT' | translate: { n: s.number }) + ' — ' + (stateKey(s) | translate)"
+                [title]="('SEATS.SEAT' | translate: { n: s.number }) + ' — ' + (stateKey(s) | translate)"
                 (click)="toggle.emit(s.number)">
                 <span>{{ s.number }}</span>
               </button>
@@ -58,6 +61,8 @@ export class SeatMap {
   readonly seats = input.required<Seat[]>();
   readonly booked = input<string[]>([]);
   readonly held = input<string[]>([]);
+  /** Booked seats whose passenger is female. */
+  readonly female = input<string[]>([]);
   readonly selected = input<string[]>([]);
   readonly disabled = input(false);
   readonly toggle = output<string>();
@@ -65,6 +70,7 @@ export class SeatMap {
   protected readonly kind = computed(() => (this.seats().some((s) => s.kind === 'sleeper') ? 'sleeper' : 'seater'));
   private readonly bookedSet = computed(() => new Set(this.booked()));
   private readonly heldSet = computed(() => new Set(this.held()));
+  private readonly femaleSet = computed(() => new Set(this.female()));
   private readonly selectedSet = computed(() => new Set(this.selected()));
 
   protected readonly decks = computed<DeckView[]>(() =>
@@ -87,11 +93,18 @@ export class SeatMap {
   protected isHeld(n: string) {
     return this.heldSet().has(n);
   }
+  protected isFemale(n: string) {
+    return this.femaleSet().has(n);
+  }
   protected isSelected(n: string) {
     return this.selectedSet().has(n);
   }
-  protected stateKey(n: string) {
+  protected stateKey(seat: Seat): string {
+    const n = seat.number;
+    if (this.isFemale(n)) return 'SEATS.BOOKED_FEMALE';
     if (this.isHeld(n)) return 'SEATS.HELD';
-    return this.isBooked(n) ? 'SEATS.BOOKED' : this.isSelected(n) ? 'SEATS.SELECTED' : 'SEATS.AVAILABLE';
+    if (this.isBooked(n)) return 'SEATS.BOOKED';
+    if (seat.ladiesOnly) return this.isSelected(n) ? 'SEATS.LADIES_SELECTED' : 'SEATS.LADIES_AVAILABLE';
+    return this.isSelected(n) ? 'SEATS.SELECTED' : 'SEATS.AVAILABLE';
   }
 }

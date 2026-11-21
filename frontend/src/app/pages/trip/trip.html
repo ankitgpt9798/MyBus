@@ -41,8 +41,11 @@
             <h2>{{ 'TRIP.SELECT_SEATS' | translate }}</h2>
             <span class="muted small push">{{ 'TRIP.SEATS_AVAILABLE' | translate: { count: (d.trip.seatsAvailable | num) } }}</span>
           </div>
-          <app-seat-map [seats]="d.bus.seats" [booked]="d.trip.bookedSeats" [held]="d.trip.heldSeats" [selected]="selected()"
+          <app-seat-map [seats]="d.bus.seats" [booked]="d.trip.bookedSeats" [held]="d.trip.heldSeats" [female]="d.trip.femaleSeats" [selected]="selected()"
             [disabled]="!d.trip.bookable" (toggle)="toggleSeat($event)" />
+          @if (selectedLadies().length) {
+            <p class="ladies-note" role="note">{{ 'SEATS.LADIES_NOTE' | translate: { seats: selectedLadies().join(', ') } }}</p>
+          }
           <p class="muted small">{{ 'TRIP.MAX_SEATS_HINT' | translate: { n: maxSeats() } }}</p>
         </section>
 

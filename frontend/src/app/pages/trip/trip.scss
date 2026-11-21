@@ -16,6 +16,14 @@
   strong { font-size: 1.3rem; }
 }
 .not-bookable { margin-bottom: 1rem; }
+.ladies-note {
+  margin: 0.75rem 0 0;
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid var(--seat-ladies);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-2);
+  font-size: 0.88rem;
+}
 .booking-layout {
   display: grid;
   grid-template-columns: 1fr 320px;
