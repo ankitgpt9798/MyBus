@@ -2,13 +2,17 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { AuthResponse, User } from './models';
+import { LanguageService } from './language.service';
+import { AuthResponse, Lang, Theme, User } from './models';
 import { STORAGE_KEYS, readStorage, writeStorage } from './storage';
+import { ThemeService } from './theme.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
+  private readonly language = inject(LanguageService);
+  private readonly theme = inject(ThemeService);
 
   readonly token = signal<string | null>(readStorage(STORAGE_KEYS.token));
   readonly user = signal<User | null>(null);
@@ -21,7 +25,7 @@ export class AuthService {
     if (!this.token()) return;
     try {
       const { user } = await firstValueFrom(this.http.get<{ user: User }>('/api/users/me'));
-      this.user.set(user);
+      await this.setSession(this.token()!, user);
     } catch {
       this.clearSession();
     }
@@ -29,13 +33,16 @@ export class AuthService {
 
   async login(email: string, password: string): Promise<User> {
     const res = await firstValueFrom(this.http.post<AuthResponse>('/api/auth/login', { email, password }));
-    this.setSession(res.token, res.user);
+    await this.setSession(res.token, res.user);
     return res.user;
   }
 
+  /** New accounts start with the language and theme the guest was already using. */
   async register(data: { name: string; email: string; password: string }): Promise<User> {
-    const res = await firstValueFrom(this.http.post<AuthResponse>('/api/auth/register', data));
-    this.setSession(res.token, res.user);
+    const res = await firstValueFrom(
+      this.http.post<AuthResponse>('/api/auth/register', { ...data, language: this.language.current(), theme: this.theme.current() }),
+    );
+    await this.setSession(res.token, res.user);
     return res.user;
   }
 
@@ -60,7 +67,7 @@ export class AuthService {
     await firstValueFrom(this.http.post('/api/auth/resend-verification', {}));
   }
 
-  async updateProfile(patch: Partial<Pick<User, 'name' | 'phone'>>): Promise<User> {
+  async updateProfile(patch: Partial<Pick<User, 'name' | 'phone'>> & { language?: Lang; theme?: Theme }): Promise<User> {
     const { user } = await firstValueFrom(this.http.patch<{ user: User }>('/api/users/me', patch));
     this.user.set(user);
     return user;
@@ -76,9 +83,12 @@ export class AuthService {
     writeStorage(STORAGE_KEYS.token, null);
   }
 
-  private setSession(token: string, user: User): void {
+  /** The profile's saved preferences win on login and on revisit, so they follow the user across devices. */
+  private async setSession(token: string, user: User): Promise<void> {
     this.token.set(token);
     writeStorage(STORAGE_KEYS.token, token);
     this.user.set(user);
+    this.theme.apply(user.theme);
+    await this.language.use(user.language);
   }
 }
