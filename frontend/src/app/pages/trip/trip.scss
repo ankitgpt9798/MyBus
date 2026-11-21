@@ -1,0 +1,57 @@
+.trip-summary {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  .page-title { display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.25rem; }
+  p { margin: 0; }
+}
+.summary-times {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  > div { display: flex; flex-direction: column; }
+  strong { font-size: 1.3rem; }
+}
+.not-bookable { margin-bottom: 1rem; }
+.booking-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 1.25rem;
+  align-items: start;
+}
+.booking-main { display: grid; gap: 1.25rem; min-width: 0; }
+.booking-side { position: sticky; top: 80px; }
+.step-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+  h2 { margin: 0; font-size: 1.1rem; }
+  .push { margin-left: auto; }
+}
+.step {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+.fare-card {
+  h2 { margin: 0 0 1rem; font-size: 1.1rem; }
+  .row { display: flex; justify-content: space-between; gap: 1rem; padding: 0.4rem 0; }
+  .selected-seats { text-align: right; overflow-wrap: anywhere; }
+  .total { border-top: 1px solid var(--color-border); margin: 0.4rem 0 1rem; padding-top: 0.75rem; font-size: 1.15rem; }
+  .alert { margin-bottom: 0.75rem; }
+}
+@media (max-width: 960px) {
+  .booking-layout { grid-template-columns: 1fr; }
+  .booking-side { position: static; }
+  .summary-times { gap: 1rem; }
+}

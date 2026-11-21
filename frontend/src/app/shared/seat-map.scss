@@ -1,0 +1,74 @@
+:host {
+  display: block;
+  --seat-w: 40px;
+  --seat-h-seater: 40px;
+  --seat-h-sleeper: 74px;
+}
+.seat-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  span { display: flex; align-items: center; gap: 0.4rem; }
+}
+.seat-swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 2px solid var(--seat-available);
+  &.selected { background: var(--seat-selected); border-color: var(--seat-selected); }
+  &.booked { background: var(--seat-booked); border-color: var(--seat-booked); }
+  &.held { background: var(--seat-held); border-color: var(--seat-held); }
+}
+.decks { display: flex; flex-wrap: wrap; gap: 1.25rem; }
+.deck {
+  padding: 0.75rem 1rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-2);
+}
+.deck-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+}
+.steering { color: var(--color-text-muted); }
+.deck-grid { display: grid; gap: 8px; }
+.seat {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 4px;
+  border: 2px solid var(--seat-available);
+  border-radius: 6px 6px 3px 3px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  &.sleeper { border-radius: 6px; align-items: center; padding: 0; }
+  &:hover:not(:disabled) { background: var(--seat-hover); }
+  &:active:not(:disabled) { transform: scale(0.95); }
+  &.selected { background: var(--seat-selected); border-color: var(--seat-selected); color: #fff; }
+  &.booked {
+    background: var(--seat-booked);
+    border-color: var(--seat-booked);
+    color: var(--color-text-muted);
+    cursor: not-allowed;
+  }
+  &.held {
+    background: var(--seat-held);
+    border-color: var(--seat-held);
+    color: var(--color-text-muted);
+    cursor: not-allowed;
+  }
+  &:disabled:not(.booked):not(.held) { cursor: default; opacity: 0.7; }
+}

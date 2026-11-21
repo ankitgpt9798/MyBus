@@ -114,6 +114,8 @@ type Tab = 'points' | 'bus' | 'policy';
 })
 export class TripDetailsPanel {
   readonly tripId = input.required<string>();
+  /** Already-loaded trip data (skips the request), e.g. on the seat selection page. */
+  readonly details = input<TripDetails | null>(null);
 
   private readonly api = inject(ApiService);
   protected readonly tabs: Tab[] = ['points', 'bus', 'policy'];
@@ -137,7 +139,9 @@ export class TripDetailsPanel {
   constructor() {
     effect(() => {
       const id = this.tripId();
-      untracked(() => this.load(id));
+      const given = this.details();
+      if (given) this.data.set(given);
+      else untracked(() => this.load(id));
     });
   }
 

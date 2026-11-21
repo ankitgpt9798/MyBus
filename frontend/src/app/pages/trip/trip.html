@@ -1,0 +1,110 @@
+<div class="container section">
+  @if (loadError(); as e) {
+    <div class="empty-state card">
+      <app-icon name="alert" [size]="40" />
+      <h1 class="page-title">{{ e | translateOr: 'ERRORS.GENERIC' }}</h1>
+      <a routerLink="/" class="btn btn-outline">{{ 'COMMON.BACK_HOME' | translate }}</a>
+    </div>
+  } @else if (data(); as d) {
+    <div class="trip-summary card">
+      <div>
+        <h1 class="page-title">{{ d.route.from | city }} <app-icon name="chevron-right" [size]="20" /> {{ d.route.to | city }}</h1>
+        <p class="muted">
+          {{ d.operator.name }} · {{ d.bus.name }} ·
+          {{ (d.bus.ac ? 'BUS.AC' : 'BUS.NONAC') | translate }} {{ 'BUS.TYPE.' + d.bus.type | translate }}
+        </p>
+      </div>
+      <div class="summary-times">
+        <div>
+          <span class="muted small">{{ 'TRIP.DEPARTURE' | translate }}</span>
+          <strong>{{ d.trip.departureTime | appDate: 'time' }}</strong>
+          <span class="small">{{ d.trip.departureTime | appDate: 'day' }}</span>
+        </div>
+        <div class="muted small">{{ d.trip.durationMinutes | duration }}</div>
+        <div>
+          <span class="muted small">{{ 'TRIP.ARRIVAL' | translate }}</span>
+          <strong>{{ d.trip.arrivalTime | appDate: 'time' }}</strong>
+          <span class="small">{{ d.trip.arrivalTime | appDate: 'day' }}</span>
+        </div>
+      </div>
+    </div>
+
+    @if (!d.trip.bookable) {
+      <div class="alert alert-warning not-bookable">{{ (d.trip.status === 'cancelled' ? 'TRIP.CANCELLED' : 'TRIP.DEPARTED') | translate }}</div>
+    }
+
+    <div class="booking-layout">
+      <div class="booking-main">
+        <section class="card">
+          <div class="step-head">
+            <span class="step">1</span>
+            <h2>{{ 'TRIP.SELECT_SEATS' | translate }}</h2>
+            <span class="muted small push">{{ 'TRIP.SEATS_AVAILABLE' | translate: { count: (d.trip.seatsAvailable | num) } }}</span>
+          </div>
+          <app-seat-map [seats]="d.bus.seats" [booked]="d.trip.bookedSeats" [held]="d.trip.heldSeats" [selected]="selected()"
+            [disabled]="!d.trip.bookable" (toggle)="toggleSeat($event)" />
+          <p class="muted small">{{ 'TRIP.MAX_SEATS_HINT' | translate: { n: maxSeats() } }}</p>
+        </section>
+
+        <section class="card" [formGroup]="points">
+          <div class="step-head">
+            <span class="step">2</span>
+            <h2>{{ 'TRIP.POINTS' | translate }}</h2>
+          </div>
+          <div class="form-grid two">
+            <div class="form-field">
+              <label for="boarding">{{ 'TRIP.BOARDING_POINT' | translate }}</label>
+              <select id="boarding" formControlName="boardingPoint">
+                @for (p of boardingPoints(); track p.name) {
+                  <option [value]="p.name">{{ pointTime(p.offsetMinutes) | appDate: 'time' }} — {{ p.name }}</option>
+                }
+              </select>
+              <app-field-error [control]="points.controls.boardingPoint" [submitted]="submitted()" />
+            </div>
+            <div class="form-field">
+              <label for="dropping">{{ 'TRIP.DROPPING_POINT' | translate }}</label>
+              <select id="dropping" formControlName="droppingPoint">
+                @for (p of droppingPoints(); track p.name) {
+                  <option [value]="p.name">{{ pointTime(p.offsetMinutes) | appDate: 'time' }} — {{ p.name }}</option>
+                }
+              </select>
+              <app-field-error [control]="points.controls.droppingPoint" [submitted]="submitted()" />
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <app-trip-details [tripId]="d.trip.id" [details]="d" />
+        </section>
+      </div>
+
+      <aside class="booking-side">
+        <div class="card fare-card">
+          <h2>{{ 'TRIP.FARE_SUMMARY' | translate }}</h2>
+          <div class="row">
+            <span>{{ 'TRIP.SEATS' | translate }}</span>
+            <strong class="selected-seats">{{ selected().length ? selected().join(', ') : '—' }}</strong>
+          </div>
+          <div class="row">
+            <span>{{ 'TRIP.FARE_PER_SEAT' | translate }}</span>
+            <span>{{ d.trip.fare | inr }}</span>
+          </div>
+          <div class="row total">
+            <span>{{ 'TRIP.TOTAL' | translate }}</span>
+            <strong class="fare-total">{{ total() | inr }}</strong>
+          </div>
+          @if (holdError(); as e) {
+            <div class="alert alert-error" role="alert">{{ e | translateOr: 'ERRORS.GENERIC' }}</div>
+          }
+          <button type="button" class="btn btn-primary btn-block btn-lg continue-btn" [disabled]="holding() || !d.trip.bookable" (click)="continue()">
+            {{ (holding() ? 'COMMON.PLEASE_WAIT' : auth.isLoggedIn() ? 'TRIP.CONTINUE' : 'TRIP.LOGIN_TO_CONTINUE') | translate }}
+          </button>
+          <p class="muted small">{{ 'TRIP.HOLD_HINT' | translate: { n: d.policy.holdMinutes } }}</p>
+        </div>
+      </aside>
+    </div>
+  } @else {
+    <div class="card skeleton" style="height: 120px"></div>
+    <div class="card skeleton" style="height: 360px; margin-top: 1rem"></div>
+  }
+</div>
