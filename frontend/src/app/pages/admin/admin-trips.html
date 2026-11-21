@@ -1,0 +1,176 @@
+<form class="card filter-bar" [formGroup]="filters" (ngSubmit)="applyFilters()">
+  <div class="form-field">
+    <label for="f-date">{{ 'ADMIN.DATE' | translate }}</label>
+    <input id="f-date" type="date" formControlName="date" />
+  </div>
+  <div class="form-field">
+    <label for="f-route">{{ 'ADMIN.ROUTE' | translate }}</label>
+    <select id="f-route" formControlName="routeId">
+      <option value="">{{ 'ADMIN.ALL_ROUTES' | translate }}</option>
+      @for (r of routes(); track r.id) {
+        <option [value]="r.id">{{ r.from | city }} → {{ r.to | city }}</option>
+      }
+    </select>
+  </div>
+  <div class="form-field">
+    <label for="f-status">{{ 'ADMIN.STATUS' | translate }}</label>
+    <select id="f-status" formControlName="status">
+      <option value="">{{ 'ADMIN.ALL' | translate }}</option>
+      <option value="scheduled">{{ 'ADMIN.TRIP_STATUS.SCHEDULED' | translate }}</option>
+      <option value="cancelled">{{ 'ADMIN.TRIP_STATUS.CANCELLED' | translate }}</option>
+    </select>
+  </div>
+  <div class="filter-actions">
+    <button type="submit" class="btn btn-primary">{{ 'ADMIN.APPLY' | translate }}</button>
+    <button type="button" class="btn btn-outline" (click)="creating.set(!creating())">{{ 'ADMIN.NEW_TRIP' | translate }}</button>
+  </div>
+</form>
+
+@if (creating()) {
+  <form class="card panel" [formGroup]="createForm" (ngSubmit)="create()" novalidate>
+    <h2 class="sub-title">{{ 'ADMIN.NEW_TRIP' | translate }}</h2>
+    <div class="form-grid two">
+      <div class="form-field">
+        <label for="c-route">{{ 'ADMIN.ROUTE' | translate }}</label>
+        <select id="c-route" formControlName="routeId">
+          <option value="" disabled>{{ 'COMMON.SELECT' | translate }}</option>
+          @for (r of routes(); track r.id) {
+            <option [value]="r.id">{{ r.from | city }} → {{ r.to | city }} ({{ r.code }})</option>
+          }
+        </select>
+        <app-field-error [control]="createForm.controls.routeId" [submitted]="createSubmitted()" />
+      </div>
+      <div class="form-field">
+        <label for="c-bus">{{ 'ADMIN.BUS' | translate }}</label>
+        <select id="c-bus" formControlName="busId">
+          <option value="" disabled>{{ 'COMMON.SELECT' | translate }}</option>
+          @for (b of buses(); track b.id) {
+            <option [value]="b.id">{{ b.operatorName }} · {{ b.name }} · {{ b.registrationNumber }}</option>
+          }
+        </select>
+        <app-field-error [control]="createForm.controls.busId" [submitted]="createSubmitted()" />
+      </div>
+      <div class="form-field">
+        <label for="c-dep">{{ 'ADMIN.DEPARTURE_IST' | translate }}</label>
+        <input id="c-dep" type="datetime-local" formControlName="departureTime" />
+        <app-field-error [control]="createForm.controls.departureTime" [submitted]="createSubmitted()" />
+      </div>
+      <div class="form-field">
+        <label for="c-fare">{{ 'ADMIN.FARE' | translate }}</label>
+        <input id="c-fare" type="number" min="1" formControlName="fare" />
+        <app-field-error [control]="createForm.controls.fare" [submitted]="createSubmitted()" />
+      </div>
+    </div>
+    <p class="muted small">{{ 'ADMIN.ARRIVAL_AUTO' | translate }}</p>
+    @if (createError(); as e) {
+      <div class="alert alert-error" role="alert">{{ e | translateOr: 'ERRORS.GENERIC' }}</div>
+    }
+    <div class="actions">
+      <button type="submit" class="btn btn-primary" [disabled]="saving()">{{ 'ADMIN.CREATE' | translate }}</button>
+      <button type="button" class="btn btn-ghost" (click)="creating.set(false)">{{ 'COMMON.CANCEL' | translate }}</button>
+    </div>
+  </form>
+}
+
+@if (editing(); as t) {
+  <form class="card panel edit-panel" [formGroup]="editForm" (ngSubmit)="saveEdit()" novalidate>
+    <h2 class="sub-title">{{ 'ADMIN.EDIT_TRIP' | translate }}: {{ t.route.from | city }} → {{ t.route.to | city }}, {{ t.departureTime | appDate: 'datetime' }}</h2>
+    <div class="form-grid three-even">
+      <div class="form-field">
+        <label for="e-dep">{{ 'ADMIN.DEPARTURE_IST' | translate }}</label>
+        <input id="e-dep" type="datetime-local" formControlName="departureTime" />
+        <app-field-error [control]="editForm.controls.departureTime" />
+      </div>
+      <div class="form-field">
+        <label for="e-arr">{{ 'ADMIN.ARRIVAL_IST' | translate }}</label>
+        <input id="e-arr" type="datetime-local" formControlName="arrivalTime" />
+        <app-field-error [control]="editForm.controls.arrivalTime" />
+      </div>
+      <div class="form-field">
+        <label for="e-fare">{{ 'ADMIN.FARE' | translate }}</label>
+        <input id="e-fare" type="number" min="1" formControlName="fare" />
+        <app-field-error [control]="editForm.controls.fare" />
+      </div>
+    </div>
+    <p class="muted small">{{ 'ADMIN.RESCHEDULE_HINT' | translate: { n: t.seatsBooked } }}</p>
+    @if (editError(); as e) {
+      <div class="alert alert-error" role="alert">{{ e | translateOr: 'ERRORS.GENERIC' }}</div>
+    }
+    <div class="actions">
+      <button type="submit" class="btn btn-primary save-trip" [disabled]="saving()">{{ (saving() ? 'COMMON.PLEASE_WAIT' : 'COMMON.SAVE') | translate }}</button>
+      <button type="button" class="btn btn-ghost" (click)="editing.set(null)">{{ 'COMMON.CANCEL' | translate }}</button>
+    </div>
+  </form>
+}
+
+@if (cancelling(); as t) {
+  <div class="card panel danger-panel" role="region" [attr.aria-label]="'ADMIN.CANCEL_TRIP' | translate">
+    <h2 class="sub-title">{{ 'ADMIN.CANCEL_TRIP_TITLE' | translate: { route: (t.route.from | city) + ' → ' + (t.route.to | city), time: (t.departureTime | appDate: 'datetime') } }}</h2>
+    <p>{{ 'ADMIN.CANCEL_TRIP_TEXT' | translate: { n: t.seatsBooked } }}</p>
+    @if (cancelError(); as e) {
+      <div class="alert alert-error" role="alert">{{ e | translateOr: 'ERRORS.GENERIC' }}</div>
+    }
+    <div class="actions">
+      <button type="button" class="btn btn-danger" [disabled]="saving()" (click)="confirmCancel()">{{ 'ADMIN.CONFIRM_CANCEL_TRIP' | translate }}</button>
+      <button type="button" class="btn btn-ghost" (click)="cancelling.set(null)">{{ 'BOOKING.KEEP' | translate }}</button>
+    </div>
+  </div>
+}
+
+@if (error(); as e) {
+  <div class="alert alert-error">{{ e | translateOr: 'ERRORS.GENERIC' }}</div>
+}
+
+<div class="card table-card" [class.dim]="loading()">
+  <p class="muted small">{{ 'ADMIN.TRIPS_FOUND' | translate: { count: (total() | num) } }}</p>
+  @if (trips().length) {
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>{{ 'ADMIN.DEPARTURE' | translate }}</th>
+            <th>{{ 'ADMIN.ROUTE' | translate }}</th>
+            <th>{{ 'ADMIN.BUS' | translate }}</th>
+            <th>{{ 'ADMIN.FARE' | translate }}</th>
+            <th>{{ 'ADMIN.SEATS' | translate }}</th>
+            <th>{{ 'ADMIN.STATUS' | translate }}</th>
+            <th><span class="sr-only">{{ 'ADMIN.ACTIONS' | translate }}</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (t of trips(); track t.id) {
+            <tr [attr.data-trip]="t.id">
+              <td>
+                <strong>{{ t.departureTime | appDate: 'time' }}</strong>
+                <div class="muted small">{{ t.departureTime | appDate: 'day' }} → {{ t.arrivalTime | appDate: 'time' }}</div>
+              </td>
+              <td>{{ t.route.from | city }} → {{ t.route.to | city }}</td>
+              <td>
+                {{ t.operatorName }}
+                <div class="muted small">{{ t.bus.registrationNumber }}</div>
+              </td>
+              <td>{{ t.fare | inr }}</td>
+              <td>{{ t.seatsBooked | num }} / {{ t.totalSeats | num }}</td>
+              <td>
+                <span [class]="'badge ' + (t.status === 'scheduled' ? 'badge-success' : 'badge-danger')">{{ 'ADMIN.TRIP_STATUS.' + t.status.toUpperCase() | translate }}</span>
+              </td>
+              <td class="row-actions">
+                @if (t.status === 'scheduled') {
+                  <button type="button" class="btn btn-sm btn-outline edit-btn" (click)="startEdit(t)">{{ 'ADMIN.EDIT' | translate }}</button>
+                  <button type="button" class="btn btn-sm btn-ghost" (click)="startCancel(t)">{{ 'ADMIN.CANCEL_TRIP' | translate }}</button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="pager">
+      <button type="button" class="btn btn-sm btn-outline" [disabled]="page() <= 1" (click)="load(page() - 1)">{{ 'ADMIN.PREV' | translate }}</button>
+      <span class="small">{{ 'ADMIN.PAGE_OF' | translate: { page: page(), pages: pages() } }}</span>
+      <button type="button" class="btn btn-sm btn-outline" [disabled]="page() >= pages()" (click)="load(page() + 1)">{{ 'ADMIN.NEXT' | translate }}</button>
+    </div>
+  } @else if (!loading()) {
+    <p class="empty-row">{{ 'ADMIN.NO_TRIPS' | translate }}</p>
+  }
+</div>
