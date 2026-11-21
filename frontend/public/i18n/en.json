@@ -15,7 +15,11 @@
   "HEADER": {
     "MAIN_NAV": "Main navigation",
     "MENU": "Menu",
-    "ACCOUNT_MENU": "Account menu"
+    "ACCOUNT_MENU": "Account menu",
+    "LANGUAGE": "Language",
+    "SWITCH_TO_DARK": "Switch to dark mode",
+    "SWITCH_TO_LIGHT": "Switch to light mode",
+    "DARK_MODE": "Dark mode"
   },
   "NAV": {
     "BUS_TICKETS": "Bus tickets",
@@ -425,7 +429,14 @@
     "CURRENT_PASSWORD": "Current password",
     "NEW_PASSWORD": "New password",
     "UPDATE_PASSWORD": "Update password",
-    "PASSWORD_CHANGED": "Your password has been changed."
+    "PASSWORD_CHANGED": "Your password has been changed.",
+    "PREFERENCES": "Preferences",
+    "PREFS_HINT": "Your choices apply instantly and are saved to your account, so they follow you on every device.",
+    "LANGUAGE": "Language",
+    "THEME": "Theme",
+    "THEME_LIGHT": "Light",
+    "THEME_DARK": "Dark",
+    "PREFS_SAVED": "Preferences saved."
   },
   "VALIDATION": {
     "REQUIRED": "This field is required.",
