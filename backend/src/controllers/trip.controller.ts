@@ -5,7 +5,8 @@ import { BusAttrs } from '../models/Bus';
 import { OperatorAttrs } from '../models/Operator';
 import { Route, RouteAttrs } from '../models/Route';
 import { Trip } from '../models/Trip';
-import { REFUND_POLICY } from '../services/booking.service';
+import { Booking } from '../models/Booking';
+import { REFUND_POLICY, expireStaleHolds } from '../services/booking.service';
 import { badRequest, notFound } from '../utils/AppError';
 import { DATE_RE, DepartureSlot, MINUTE_MS, departureSlot, istDayRange } from '../utils/time';
 import { isObjectId } from '../utils/validate';
@@ -132,12 +133,15 @@ export async function searchTrips(req: Request, res: Response) {
 
 export async function getTrip(req: Request, res: Response) {
   if (!isObjectId(req.params.id)) throw notFound('TRIP_NOT_FOUND', 'Trip not found');
+  await expireStaleHolds();
   const trip = await Trip.findById(req.params.id)
     .populate<{ bus: BusAttrs & { _id: Types.ObjectId } }>('bus')
     .populate<{ operator: OperatorAttrs & { _id: Types.ObjectId } }>('operator', 'name')
     .populate<{ route: RouteDoc }>('route')
     .lean();
   if (!trip) throw notFound('TRIP_NOT_FOUND', 'Trip not found');
+  // bookedSeats covers sold and held seats; heldSeats lists the ones only reserved by an unpaid hold.
+  const heldSeats: string[] = await Booking.distinct('seats', { trip: trip._id, status: 'pending' });
 
   res.json({
     trip: {
@@ -149,6 +153,7 @@ export async function getTrip(req: Request, res: Response) {
       status: trip.status,
       bookable: trip.status === 'scheduled' && trip.departureTime > new Date(),
       bookedSeats: trip.bookedSeats,
+      heldSeats,
       seatsAvailable: trip.bus.totalSeats - trip.bookedSeats.length,
     },
     route: { ...publicRoute(trip.route), stops: trip.route.stops },

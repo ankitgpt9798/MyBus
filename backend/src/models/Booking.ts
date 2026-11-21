@@ -47,10 +47,11 @@ const bookingSchema = new Schema(
     pnr: { type: String, unique: true, sparse: true },
     status: { type: String, enum: BOOKING_STATUSES, default: 'pending' },
     seats: { type: [String], required: true },
-    passengers: { type: [passengerSchema], required: true },
+    // Filled in after the seats are held (checked again before payment).
+    passengers: { type: [passengerSchema], default: [] },
     contact: {
-      email: { type: String, required: true, lowercase: true, trim: true },
-      phone: { type: String, required: true, trim: true },
+      email: { type: String, lowercase: true, trim: true },
+      phone: { type: String, trim: true },
     },
     boardingPoint: { type: pointSchema, required: true },
     droppingPoint: { type: pointSchema, required: true },
@@ -63,6 +64,7 @@ const bookingSchema = new Schema(
       transactionId: String,
       paidAt: Date,
       status: { type: String, enum: ['unpaid', 'paid', 'refunded', 'partially_refunded'], default: 'unpaid' },
+      failedAttempts: { type: Number, default: 0 },
     },
     cancellation: {
       cancelledAt: Date,

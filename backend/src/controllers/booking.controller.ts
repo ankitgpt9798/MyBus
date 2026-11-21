@@ -20,6 +20,14 @@ import { MINUTE_MS } from '../utils/time';
 import { FieldError, Rule, isObjectId, validate } from '../utils/validate';
 import { MAX_SEATS_PER_BOOKING } from './trip.controller';
 
+/*
+ * Booking flow:
+ *   1. POST /bookings               hold seats (status "pending", expires after SEAT_HOLD_MINUTES)
+ *   2. PUT  /bookings/:id/passengers  passenger + contact details for the held seats
+ *   3. POST /bookings/:id/pay        mock payment -> "confirmed" with a PNR
+ * A pending booking can be cancelled at any time to release its seats.
+ */
+
 export const PHONE_RE = /^\+?[0-9][0-9\s-]{8,14}$/;
 type BookingDoc = BookingAttrs & { _id: Types.ObjectId; createdAt?: Date };
 
@@ -28,6 +36,9 @@ const pointWithTime = (p: { name: string; offsetMinutes: number }, departure: Da
   offsetMinutes: p.offsetMinutes,
   time: new Date(departure.getTime() + p.offsetMinutes * MINUTE_MS),
 });
+
+const hasDetails = (b: Pick<BookingAttrs, 'passengers' | 'seats' | 'contact'>) =>
+  b.passengers.length === b.seats.length && !!b.contact?.email && !!b.contact?.phone;
 
 export function publicBooking(b: BookingDoc) {
   const quote = b.status === 'confirmed' ? refundQuote(b.journey.departureTime, b.totalAmount) : null;
@@ -39,7 +50,8 @@ export function publicBooking(b: BookingDoc) {
     routeId: String(b.route),
     seats: b.seats,
     passengers: b.passengers,
-    contact: b.contact,
+    contact: { email: b.contact?.email ?? '', phone: b.contact?.phone ?? '' },
+    detailsComplete: hasDetails(b),
     journey: b.journey,
     boardingPoint: pointWithTime(b.boardingPoint, b.journey.departureTime),
     droppingPoint: pointWithTime(b.droppingPoint, b.journey.departureTime),
@@ -61,14 +73,11 @@ const PASSENGER_RULES: Record<string, Rule> = {
   gender: { type: 'string', required: true, enum: GENDERS },
 };
 
-function validateBookingBody(body: Record<string, any>) {
+/** Validates passengers (one per seat) and contact details; returns normalised values. */
+function parseDetails(body: Record<string, any>, seats: string[]) {
   validate(body, {
-    tripId: { type: 'string', required: true },
-    seats: { type: 'array', required: true, min: 1, max: MAX_SEATS_PER_BOOKING },
     passengers: { type: 'array', required: true, min: 1, max: MAX_SEATS_PER_BOOKING },
     contact: { type: 'object', required: true },
-    boardingPoint: { type: 'string', required: true },
-    droppingPoint: { type: 'string', required: true },
   });
   const errors: FieldError[] = [];
   const collect = (prefix: string, fn: () => void) => {
@@ -89,18 +98,31 @@ function validateBookingBody(body: Record<string, any>) {
   (body.passengers as unknown[]).forEach((p, i) => collect(`passengers.${i}`, () => validate(p, PASSENGER_RULES)));
   if (errors.length) throw badRequest('VALIDATION_ERROR', 'Invalid input', errors);
 
-  const seats: string[] = body.seats.map(String);
-  if (new Set(seats).size !== seats.length) throw badRequest('SEAT_DUPLICATE', 'Each seat can be selected once');
-  const passengerSeats = (body.passengers as { seat: string }[]).map((p) => String(p.seat));
-  if (passengerSeats.length !== seats.length || !seats.every((s) => passengerSeats.includes(s))) {
+  const bySeat = new Map((body.passengers as { seat: unknown }[]).map((p) => [String(p.seat), p as Record<string, any>]));
+  if (bySeat.size !== seats.length || !seats.every((s) => bySeat.has(s))) {
     throw badRequest('PASSENGERS_MISMATCH', 'Provide exactly one passenger per selected seat');
   }
-  return seats;
+  return {
+    passengers: seats.map((seat) => {
+      const p = bySeat.get(seat)!;
+      return { seat, name: String(p.name).trim(), age: Math.round(Number(p.age)), gender: p.gender };
+    }),
+    contact: { email: String(body.contact.email).trim(), phone: String(body.contact.phone).trim() },
+  };
 }
 
+/** Step 1: hold seats. Passenger details may be sent now or later via PUT /bookings/:id/passengers. */
 export async function createBooking(req: Request, res: Response) {
-  const seats = validateBookingBody(req.body);
-  const { tripId, passengers, contact, boardingPoint, droppingPoint } = req.body;
+  validate(req.body, {
+    tripId: { type: 'string', required: true },
+    seats: { type: 'array', required: true, min: 1, max: MAX_SEATS_PER_BOOKING },
+    boardingPoint: { type: 'string', required: true },
+    droppingPoint: { type: 'string', required: true },
+  });
+  const { tripId, boardingPoint, droppingPoint } = req.body;
+  const seats: string[] = req.body.seats.map(String);
+  if (new Set(seats).size !== seats.length) throw badRequest('SEAT_DUPLICATE', 'Each seat can be selected once');
+  const details = req.body.passengers !== undefined ? parseDetails(req.body, seats) : null;
   if (!isObjectId(tripId)) throw notFound('TRIP_NOT_FOUND', 'Trip not found');
 
   const trip = await Trip.findById(tripId)
@@ -123,10 +145,11 @@ export async function createBooking(req: Request, res: Response) {
   await expireStaleHolds();
   const previous = await Booking.find({ user: req.user!._id, trip: trip._id, status: 'pending' });
   for (const p of previous) {
-    p.status = 'cancelled';
-    p.cancellation = { cancelledAt: new Date(), by: 'user', reason: 'replaced', refundPercent: 0, refundAmount: 0 };
-    await p.save();
-    await releaseSeats(trip._id, p.seats);
+    const released = await Booking.updateOne(
+      { _id: p._id, status: 'pending' },
+      { $set: { status: 'cancelled', cancellation: { cancelledAt: new Date(), by: 'user', reason: 'replaced', refundPercent: 0, refundAmount: 0 } } },
+    );
+    if (released.modifiedCount) await releaseSeats(trip._id, p.seats);
   }
 
   // Atomic hold: succeeds only if none of the seats are already taken.
@@ -147,11 +170,8 @@ export async function createBooking(req: Request, res: Response) {
       route: trip.route._id,
       status: 'pending',
       seats,
-      passengers: seats.map((seat) => {
-        const p = passengers.find((x: { seat: string }) => String(x.seat) === seat);
-        return { seat, name: String(p.name).trim(), age: Math.round(Number(p.age)), gender: p.gender };
-      }),
-      contact: { email: String(contact.email).trim(), phone: String(contact.phone).trim() },
+      passengers: details?.passengers ?? [],
+      contact: details?.contact ?? { email: req.user!.email, phone: req.user!.phone || undefined },
       boardingPoint: { name: boarding.name, offsetMinutes: boarding.offsetMinutes },
       droppingPoint: { name: dropping.name, offsetMinutes: dropping.offsetMinutes },
       journey: {
@@ -184,35 +204,61 @@ async function findOwnBooking(req: Request) {
   return booking;
 }
 
-export async function payBooking(req: Request, res: Response) {
-  validate(req.body, { method: { type: 'string', required: true, enum: PAYMENT_METHODS } });
+/** Loads a booking the caller may pay for / edit, after expiring stale holds. */
+async function findActiveHold(req: Request) {
+  await expireStaleHolds();
   const booking = await findOwnBooking(req);
-  if (booking.status === 'confirmed') return res.json({ booking: publicBooking(booking.toObject()) });
-  if (booking.status === 'expired' || (booking.status === 'pending' && booking.holdExpiresAt! <= new Date())) {
-    await expireStaleHolds();
-    throw conflict('BOOKING_EXPIRED', 'Seat hold expired, please select seats again');
-  }
-  if (booking.status !== 'pending') throw conflict('BOOKING_NOT_PAYABLE', 'This booking cannot be paid');
+  if (booking.status === 'expired') throw conflict('BOOKING_EXPIRED', 'Seat hold expired, please select seats again');
+  return booking;
+}
 
-  // Mock gateway: payment always succeeds and returns a fake transaction id.
+/** Step 2: passenger and contact details for a held booking. */
+export async function updateBookingDetails(req: Request, res: Response) {
+  const booking = await findActiveHold(req);
+  if (booking.status !== 'pending') throw conflict('BOOKING_NOT_PAYABLE', 'This booking can no longer be changed');
+  const { passengers, contact } = parseDetails(req.body, booking.seats);
+  const updated = await Booking.findOneAndUpdate(
+    { _id: booking._id, status: 'pending' },
+    { $set: { passengers, contact } },
+    { returnDocument: 'after' },
+  );
+  if (!updated) throw conflict('BOOKING_EXPIRED', 'Seat hold expired, please select seats again');
+  res.json({ booking: publicBooking(updated.toObject()) });
+}
+
+/** Step 3: mock payment. `simulateFailure: true` exercises the failure path without touching the hold. */
+export async function payBooking(req: Request, res: Response) {
+  validate(req.body, {
+    method: { type: 'string', required: true, enum: PAYMENT_METHODS },
+    simulateFailure: { type: 'boolean' },
+  });
+  const booking = await findActiveHold(req);
+  if (booking.status === 'confirmed') return res.json({ booking: publicBooking(booking.toObject()) });
+  if (booking.status !== 'pending') throw conflict('BOOKING_NOT_PAYABLE', 'This booking cannot be paid');
+  if (!hasDetails(booking)) throw badRequest('BOOKING_DETAILS_MISSING', 'Add passenger and contact details before paying');
+
+  if (req.body.simulateFailure === true) {
+    await Booking.updateOne({ _id: booking._id, status: 'pending' }, { $inc: { 'payment.failedAttempts': 1 } });
+    throw new AppError(402, 'PAYMENT_FAILED', 'The payment was declined (demo)');
+  }
+
+  // Mock gateway: payment succeeds and returns a fake transaction id.
   const confirmed = await Booking.findOneAndUpdate(
     { _id: booking._id, status: 'pending' },
     {
       $set: {
         status: 'confirmed',
         pnr: generatePnr(),
-        payment: {
-          method: req.body.method,
-          transactionId: 'TXN' + crypto.randomBytes(6).toString('hex').toUpperCase(),
-          paidAt: new Date(),
-          status: 'paid',
-        },
+        'payment.method': req.body.method,
+        'payment.transactionId': 'TXN' + crypto.randomBytes(6).toString('hex').toUpperCase(),
+        'payment.paidAt': new Date(),
+        'payment.status': 'paid',
       },
       $unset: { holdExpiresAt: 1 },
     },
     { returnDocument: 'after' },
   );
-  if (!confirmed) throw conflict('BOOKING_NOT_PAYABLE', 'This booking cannot be paid');
+  if (!confirmed) throw conflict('BOOKING_EXPIRED', 'Seat hold expired, please select seats again');
   appEvents.emit('booking.confirmed', { bookingId: String(confirmed._id) });
   res.json({ booking: publicBooking(confirmed.toObject()) });
 }
@@ -259,6 +305,8 @@ export async function cancelBooking(req: Request, res: Response) {
 }
 
 export async function getBooking(req: Request, res: Response) {
+  // Keep the status accurate on read: expire a lapsed hold, complete a finished journey.
+  await expireStaleHolds();
   const booking = await findOwnBooking(req);
   await completeArrivedBookings(new Date(), { _id: booking._id });
   const fresh = await Booking.findById(booking._id).lean<BookingDoc>();
@@ -277,9 +325,9 @@ export async function myBookings(req: Request, res: Response) {
   await expireStaleHolds();
   await completeArrivedBookings(new Date(), { user: userId });
   const { statuses, sort } = TABS[tab];
-  const bookings = await Booking.find({ user: userId, status: { $in: statuses } })
-    .sort({ 'journey.departureTime': sort })
-    .limit(100)
-    .lean<BookingDoc[]>();
+  const filter: Record<string, unknown> = { user: userId, status: { $in: statuses } };
+  // Seats replaced by a newer hold on the same trip are housekeeping, not something the user cancelled.
+  if (tab === 'cancelled') filter['cancellation.reason'] = { $ne: 'replaced' };
+  const bookings = await Booking.find(filter).sort({ 'journey.departureTime': sort }).limit(100).lean<BookingDoc[]>();
   res.json({ bookings: bookings.map(publicBooking) });
 }

@@ -37,6 +37,7 @@ api.get('/trips/:id', trips.getTrip);
 api.post('/bookings', requireAuth, bookings.createBooking);
 api.get('/bookings/me', requireAuth, bookings.myBookings);
 api.get('/bookings/:id', requireAuth, bookings.getBooking);
+api.put('/bookings/:id/passengers', requireAuth, bookings.updateBookingDetails);
 api.post('/bookings/:id/pay', requireAuth, bookings.payBooking);
 api.post('/bookings/:id/cancel', requireAuth, bookings.cancelBooking);
 
