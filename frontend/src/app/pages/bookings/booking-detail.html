@@ -1,0 +1,170 @@
+<div class="container section narrow">
+  @if (booking(); as b) {
+    @if (confirmed() && b.status === 'confirmed') {
+      <div class="success-banner card" role="status">
+        <span class="success-icon"><app-icon name="check" [size]="28" /></span>
+        <div>
+          <h1>{{ 'BOOKING.CONFIRMED_TITLE' | translate }}</h1>
+          <p>{{ 'BOOKING.CONFIRMED_TEXT' | translate: { email: b.contact.email } }}</p>
+        </div>
+      </div>
+    }
+    @if (b.status === 'pending') {
+      <div class="alert alert-warning pending-note no-print">
+        <span>{{ 'BOOKING.PENDING_NOTE' | translate }}</span>
+        <a class="btn btn-primary btn-sm" [routerLink]="['/bookings', b.id, b.detailsComplete ? 'pay' : 'passengers']">{{ 'BOOKING.CONTINUE' | translate }}</a>
+      </div>
+    }
+
+    <article class="ticket card">
+      <header class="ticket-head">
+        <div>
+          <span class="muted small">{{ 'BOOKING.PNR' | translate }}</span>
+          <strong class="pnr">{{ b.pnr ?? '—' }}</strong>
+        </div>
+        <span [class]="'badge status-badge ' + badge()">{{ 'BOOKING.STATUS.' + b.status.toUpperCase() | translate }}</span>
+      </header>
+
+      <div class="ticket-route">
+        <div>
+          <strong class="time">{{ b.journey.departureTime | appDate: 'time' }}</strong>
+          <span>{{ b.journey.from | city }}</span>
+          <span class="muted small dep-day">{{ b.journey.departureTime | appDate: 'day' }}</span>
+        </div>
+        <app-icon name="bus" [size]="26" />
+        <div class="right">
+          <strong class="time">{{ b.journey.arrivalTime | appDate: 'time' }}</strong>
+          <span>{{ b.journey.to | city }}</span>
+          <span class="muted small">{{ b.journey.arrivalTime | appDate: 'day' }}</span>
+        </div>
+      </div>
+
+      <dl class="kv">
+        <dt>{{ 'BOOKING.OPERATOR' | translate }}</dt>
+        <dd>{{ b.journey.operatorName }}</dd>
+        <dt>{{ 'BOOKING.BUS' | translate }}</dt>
+        <dd>{{ b.journey.busName }} · {{ (b.journey.ac ? 'BUS.AC' : 'BUS.NONAC') | translate }} {{ 'BUS.TYPE.' + b.journey.busType | translate }}</dd>
+        <dt>{{ 'TRIP.BOARDING_POINT' | translate }}</dt>
+        <dd class="boarding">{{ b.boardingPoint.time | appDate: 'datetime' }} — {{ b.boardingPoint.name }}</dd>
+        <dt>{{ 'TRIP.DROPPING_POINT' | translate }}</dt>
+        <dd>{{ b.droppingPoint.time | appDate: 'datetime' }} — {{ b.droppingPoint.name }}</dd>
+        @if (b.contact.email) {
+          <dt>{{ 'CHECKOUT.CONTACT' | translate }}</dt>
+          <dd>{{ b.contact.email }} · {{ b.contact.phone }}</dd>
+        }
+      </dl>
+
+      @if (b.passengers.length) {
+        <h2 class="sub-title">{{ 'CHECKOUT.PASSENGERS' | translate }}</h2>
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>{{ 'TRIP.SEATS' | translate }}</th>
+                <th>{{ 'CHECKOUT.NAME' | translate }}</th>
+                <th>{{ 'CHECKOUT.AGE' | translate }}</th>
+                <th>{{ 'CHECKOUT.GENDER' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (p of b.passengers; track p.seat) {
+                <tr>
+                  <td>{{ p.seat }}</td>
+                  <td>{{ p.name }}</td>
+                  <td>{{ p.age }}</td>
+                  <td>{{ 'GENDER.' + p.gender.toUpperCase() | translate }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <p class="muted">{{ 'TRIP.SEATS' | translate }}: {{ b.seats.join(', ') }}</p>
+      }
+
+      <div class="amounts">
+        <div><span>{{ 'TRIP.FARE_PER_SEAT' | translate }}</span><span>{{ b.farePerSeat | inr }} × {{ b.seats.length }}</span></div>
+        <div class="total">
+          <span>{{ (b.payment.status === 'unpaid' ? 'TRIP.TOTAL' : 'BOOKING.AMOUNT_PAID') | translate }}</span>
+          <strong>{{ b.totalAmount | inr }}</strong>
+        </div>
+        @if (b.payment.method) {
+          <div class="muted small">
+            <span>{{ 'PAYMENT.METHODS.' + b.payment.method.toUpperCase() | translate }} · {{ b.payment.transactionId }}</span>
+            <span>{{ b.payment.paidAt | appDate: 'datetime' }}</span>
+          </div>
+        }
+        @if (b.cancellation; as c) {
+          @if (c.refundAmount) {
+            <div class="refund"><span>{{ 'BOOKING.REFUND' | translate: { p: c.refundPercent } }}</span><strong>{{ c.refundAmount | inr }}</strong></div>
+          }
+        }
+      </div>
+
+      @if (b.cancellation; as c) {
+        <div class="alert alert-warning cancel-info">
+          <strong>{{ 'BOOKING.CANCELLED_ON' | translate: { date: (c.cancelledAt | appDate: 'datetime') } }}</strong>
+          @if (c.reason === 'trip_cancelled') {
+            <div>{{ 'BOOKING.TRIP_CANCELLED_BY_OPERATOR' | translate }}</div>
+          }
+          <div>
+            @if (c.refundAmount) {
+              {{ 'BOOKING.REFUND_INFO' | translate: { amount: (c.refundAmount | inr), p: c.refundPercent } }}
+            } @else {
+              {{ (b.payment.status === 'unpaid' ? 'BOOKING.NOTHING_CHARGED' : 'BOOKING.NO_REFUND') | translate }}
+            }
+          </div>
+        </div>
+      }
+      @if (b.status === 'expired') {
+        <div class="alert alert-warning">{{ 'HOLD.EXPIRED_TEXT' | translate }}</div>
+      }
+      @if (b.status === 'completed') {
+        <div class="alert alert-info completed-note">{{ 'BOOKING.COMPLETED_NOTE' | translate }}</div>
+      }
+    </article>
+
+    <div class="actions no-print">
+      @if (b.status === 'confirmed' || b.status === 'completed') {
+        <button type="button" class="btn btn-outline" (click)="print()">{{ 'BOOKING.PRINT' | translate }}</button>
+      }
+      @if (canCancel() && !confirmCancel()) {
+        <button type="button" class="btn btn-danger-outline cancel-btn" (click)="confirmCancel.set(true)">
+          {{ (b.status === 'pending' ? 'BOOKING.RELEASE_HOLD' : 'BOOKING.CANCEL') | translate }}
+        </button>
+      }
+      <a routerLink="/bookings" class="btn btn-ghost">{{ 'BOOKING.BACK_TO_LIST' | translate }}</a>
+    </div>
+
+    @if (confirmCancel()) {
+      <div class="card cancel-panel no-print" role="region" [attr.aria-label]="'BOOKING.CANCEL_TITLE' | translate">
+        <h2 class="sub-title">{{ 'BOOKING.CANCEL_TITLE' | translate }}</h2>
+        @if (b.cancellationQuote; as q) {
+          <p class="refund-quote">{{ 'BOOKING.CANCEL_QUOTE' | translate: { amount: (q.refundAmount | inr), p: q.refundPercent } }}</p>
+        } @else {
+          <p>{{ 'BOOKING.CANCEL_PENDING' | translate }}</p>
+        }
+        <div class="form-field">
+          <label for="reason">{{ 'BOOKING.CANCEL_REASON' | translate }}</label>
+          <textarea id="reason" rows="2" maxlength="300" [(ngModel)]="reason"></textarea>
+        </div>
+        @if (cancelError(); as e) {
+          <div class="alert alert-error" role="alert">{{ e | translateOr: 'ERRORS.GENERIC' }}</div>
+        }
+        <div class="actions">
+          <button type="button" class="btn btn-danger confirm-cancel" [disabled]="cancelling()" (click)="cancel()">
+            {{ (cancelling() ? 'COMMON.PLEASE_WAIT' : 'BOOKING.CONFIRM_CANCEL') | translate }}
+          </button>
+          <button type="button" class="btn btn-ghost" (click)="confirmCancel.set(false)">{{ 'BOOKING.KEEP' | translate }}</button>
+        </div>
+      </div>
+    }
+  } @else if (error(); as e) {
+    <div class="empty-state card">
+      <h1 class="page-title">{{ e | translateOr: 'ERRORS.GENERIC' }}</h1>
+      <a routerLink="/bookings" class="btn btn-outline">{{ 'NAV.MY_BOOKINGS' | translate }}</a>
+    </div>
+  } @else {
+    <div class="card skeleton" style="height: 420px"></div>
+  }
+</div>

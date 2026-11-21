@@ -1,0 +1,91 @@
+<div class="container section">
+  <ol class="steps" [attr.aria-label]="'CHECKOUT.STEPS' | translate">
+    <li class="done">{{ 'CHECKOUT.STEP_SEATS' | translate }}</li>
+    <li class="current" aria-current="step">{{ 'CHECKOUT.STEP_PASSENGERS' | translate }}</li>
+    <li>{{ 'CHECKOUT.STEP_PAYMENT' | translate }}</li>
+  </ol>
+
+  @if (loadError(); as e) {
+    <div class="empty-state card">
+      <h1 class="page-title">{{ e | translateOr: 'ERRORS.GENERIC' }}</h1>
+      <a routerLink="/bookings" class="btn btn-outline">{{ 'NAV.MY_BOOKINGS' | translate }}</a>
+    </div>
+  } @else if (booking(); as b) {
+    @if (expired()) {
+      <div class="empty-state card expired-card">
+        <app-icon name="clock" [size]="40" />
+        <h1 class="page-title">{{ 'HOLD.EXPIRED_TITLE' | translate }}</h1>
+        <p class="muted">{{ 'HOLD.EXPIRED_TEXT' | translate }}</p>
+        <a class="btn btn-primary" [routerLink]="['/trip', b.tripId]">{{ 'HOLD.SELECT_AGAIN' | translate }}</a>
+      </div>
+    } @else {
+      <h1 class="page-title">{{ 'CHECKOUT.PASSENGERS_TITLE' | translate }}</h1>
+      <app-hold-timer [expiresAt]="b.holdExpiresAt" (expired)="onExpired()" />
+
+      <div class="checkout-layout">
+        <form class="card" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+          <div formArrayName="passengers" class="passenger-list">
+            @for (p of passengers.controls; track p.controls.seat.value; let i = $index) {
+              <fieldset class="passenger" [formGroupName]="i">
+                <legend>{{ 'CHECKOUT.PASSENGER_N' | translate: { n: i + 1 } }} · {{ 'SEATS.SEAT' | translate: { n: p.controls.seat.value } }}</legend>
+                <div class="form-grid three">
+                  <div class="form-field">
+                    <label [for]="'pname' + i">{{ 'CHECKOUT.NAME' | translate }}</label>
+                    <input [id]="'pname' + i" formControlName="name" autocomplete="name" />
+                    <app-field-error [control]="p.controls.name" [submitted]="submitted()" />
+                  </div>
+                  <div class="form-field">
+                    <label [for]="'page' + i">{{ 'CHECKOUT.AGE' | translate }}</label>
+                    <input [id]="'page' + i" type="number" min="1" max="120" inputmode="numeric" formControlName="age" />
+                    <app-field-error [control]="p.controls.age" [submitted]="submitted()" />
+                  </div>
+                  <div class="form-field">
+                    <label [for]="'pgender' + i">{{ 'CHECKOUT.GENDER' | translate }}</label>
+                    <select [id]="'pgender' + i" formControlName="gender">
+                      <option value="" disabled>{{ 'COMMON.SELECT' | translate }}</option>
+                      @for (g of genders; track g) {
+                        <option [value]="g">{{ 'GENDER.' + g.toUpperCase() | translate }}</option>
+                      }
+                    </select>
+                    <app-field-error [control]="p.controls.gender" [submitted]="submitted()" />
+                  </div>
+                </div>
+              </fieldset>
+            }
+          </div>
+
+          <h2 class="sub-title">{{ 'CHECKOUT.CONTACT' | translate }}</h2>
+          <div class="form-grid two" formGroupName="contact">
+            <div class="form-field">
+              <label for="cemail">{{ 'AUTH.EMAIL' | translate }}</label>
+              <input id="cemail" type="email" formControlName="email" autocomplete="email" />
+              <app-field-error [control]="form.controls.contact.controls.email" [submitted]="submitted()" />
+            </div>
+            <div class="form-field">
+              <label for="cphone">{{ 'PROFILE.PHONE' | translate }}</label>
+              <input id="cphone" type="tel" formControlName="phone" autocomplete="tel" />
+              <app-field-error [control]="form.controls.contact.controls.phone" [submitted]="submitted()" />
+            </div>
+          </div>
+          <p class="muted small">{{ 'CHECKOUT.CONTACT_HINT' | translate }}</p>
+
+          @if (error(); as e) {
+            <div class="alert alert-error" role="alert">{{ e | translateOr: 'ERRORS.GENERIC' }}</div>
+          }
+          <div class="actions">
+            <button type="submit" class="btn btn-primary btn-lg" [disabled]="saving()">
+              {{ (saving() ? 'COMMON.PLEASE_WAIT' : 'CHECKOUT.CONTINUE_TO_PAY') | translate }}
+            </button>
+            <button type="button" class="btn btn-ghost" [disabled]="releasing()" (click)="changeSeats()">{{ 'CHECKOUT.CHANGE_SEATS' | translate }}</button>
+          </div>
+        </form>
+
+        <aside class="card">
+          <app-booking-summary [booking]="b" />
+        </aside>
+      </div>
+    }
+  } @else {
+    <div class="card skeleton" style="height: 320px"></div>
+  }
+</div>

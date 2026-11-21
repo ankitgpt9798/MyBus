@@ -1,0 +1,61 @@
+.success-banner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  background: var(--color-success-soft);
+  border-color: transparent;
+  h1 { margin: 0 0 0.2rem; font-size: 1.3rem; color: var(--color-success); }
+  p { margin: 0; }
+}
+.success-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--color-success);
+  color: #fff;
+}
+.ticket-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  border-bottom: 2px dashed var(--color-border);
+  > div { display: flex; flex-direction: column; }
+}
+.pnr { font-size: 1.5rem; letter-spacing: 0.08em; }
+.ticket-route {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  color: var(--color-text-muted);
+  > div { display: flex; flex-direction: column; color: var(--color-text); }
+  .right { text-align: right; }
+}
+.time { font-size: 1.5rem; }
+.amounts {
+  display: grid;
+  gap: 0.35rem;
+  margin: 1rem 0;
+  > div { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+  .total { font-size: 1.15rem; padding-top: 0.5rem; border-top: 1px solid var(--color-border); }
+}
+.refund { color: var(--color-success); }
+.pending-note { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 1rem; }
+.cancel-info, .completed-note { margin-top: 0.5rem; }
+.kv { margin-bottom: 1rem; }
+.actions { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1rem; }
+.cancel-panel { margin-top: 1rem; border-color: var(--color-danger); }
+@media (max-width: 520px) {
+  .kv { grid-template-columns: 1fr; dd { margin-bottom: 0.4rem; } }
+  .time { font-size: 1.2rem; }
+}
+@media print {
+  .no-print { display: none !important; }
+}

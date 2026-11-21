@@ -1,0 +1,118 @@
+<div class="container section">
+  <ol class="steps" [attr.aria-label]="'CHECKOUT.STEPS' | translate">
+    <li class="done">{{ 'CHECKOUT.STEP_SEATS' | translate }}</li>
+    <li class="done">{{ 'CHECKOUT.STEP_PASSENGERS' | translate }}</li>
+    <li class="current" aria-current="step">{{ 'CHECKOUT.STEP_PAYMENT' | translate }}</li>
+  </ol>
+
+  @if (loadError(); as e) {
+    <div class="empty-state card">
+      <h1 class="page-title">{{ e | translateOr: 'ERRORS.GENERIC' }}</h1>
+      <a routerLink="/bookings" class="btn btn-outline">{{ 'NAV.MY_BOOKINGS' | translate }}</a>
+    </div>
+  } @else if (booking(); as b) {
+    @if (expired()) {
+      <div class="empty-state card expired-card">
+        <app-icon name="clock" [size]="40" />
+        <h1 class="page-title">{{ 'HOLD.EXPIRED_TITLE' | translate }}</h1>
+        <p class="muted">{{ 'HOLD.EXPIRED_TEXT' | translate }}</p>
+        <a class="btn btn-primary" [routerLink]="['/trip', b.tripId]">{{ 'HOLD.SELECT_AGAIN' | translate }}</a>
+      </div>
+    } @else {
+      <h1 class="page-title">{{ 'PAYMENT.TITLE' | translate }}</h1>
+      <app-hold-timer [expiresAt]="b.holdExpiresAt" (expired)="onExpired()" />
+
+      <div class="checkout-layout">
+        <section class="card">
+          <div class="alert alert-info demo-note">
+            <app-icon name="shield" [size]="16" />
+            <span>{{ 'PAYMENT.DEMO_NOTE' | translate }}</span>
+          </div>
+
+          <div class="tabs" role="tablist" [attr.aria-label]="'PAYMENT.METHOD' | translate">
+            @for (m of methods; track m) {
+              <button type="button" role="tab" class="tab" [class.active]="method() === m" [attr.aria-selected]="method() === m" (click)="selectMethod(m)">
+                {{ 'PAYMENT.METHODS.' + m.toUpperCase() | translate }}
+              </button>
+            }
+          </div>
+
+          <div class="method-body">
+            @switch (method()) {
+              @case ('upi') {
+                <form [formGroup]="upiForm" (ngSubmit)="pay()" novalidate>
+                  <div class="form-field">
+                    <label for="upi">{{ 'PAYMENT.UPI_ID' | translate }}</label>
+                    <input id="upi" formControlName="upiId" placeholder="name@upi" autocomplete="off" />
+                    <app-field-error [control]="upiForm.controls.upiId" [submitted]="submitted()" />
+                  </div>
+                </form>
+              }
+              @case ('card') {
+                <form [formGroup]="cardForm" (ngSubmit)="pay()" novalidate class="form-grid two">
+                  <div class="form-field span-2">
+                    <label for="cnum">{{ 'PAYMENT.CARD_NUMBER' | translate }}</label>
+                    <input id="cnum" formControlName="number" inputmode="numeric" maxlength="19" placeholder="4111 1111 1111 1111" autocomplete="off" />
+                    <app-field-error [control]="cardForm.controls.number" [submitted]="submitted()" />
+                  </div>
+                  <div class="form-field span-2">
+                    <label for="cname">{{ 'PAYMENT.CARD_NAME' | translate }}</label>
+                    <input id="cname" formControlName="name" autocomplete="off" />
+                    <app-field-error [control]="cardForm.controls.name" [submitted]="submitted()" />
+                  </div>
+                  <div class="form-field">
+                    <label for="cexp">{{ 'PAYMENT.EXPIRY' | translate }}</label>
+                    <input id="cexp" formControlName="expiry" placeholder="MM/YY" maxlength="5" autocomplete="off" />
+                    <app-field-error [control]="cardForm.controls.expiry" [submitted]="submitted()" />
+                  </div>
+                  <div class="form-field">
+                    <label for="ccvv">{{ 'PAYMENT.CVV' | translate }}</label>
+                    <input id="ccvv" type="password" formControlName="cvv" inputmode="numeric" maxlength="3" autocomplete="off" />
+                    <app-field-error [control]="cardForm.controls.cvv" [submitted]="submitted()" />
+                  </div>
+                </form>
+              }
+              @case ('netbanking') {
+                <form [formGroup]="bankForm" (ngSubmit)="pay()" novalidate>
+                  <div class="form-field">
+                    <label for="bank">{{ 'PAYMENT.BANK' | translate }}</label>
+                    <select id="bank" formControlName="bank">
+                      <option value="" disabled>{{ 'COMMON.SELECT' | translate }}</option>
+                      @for (bank of banks; track bank) {
+                        <option [value]="bank">{{ 'PAYMENT.BANKS.' + bank | translate }}</option>
+                      }
+                    </select>
+                    <app-field-error [control]="bankForm.controls.bank" [submitted]="submitted()" />
+                  </div>
+                </form>
+              }
+            }
+          </div>
+
+          <fieldset class="outcome">
+            <legend>{{ 'PAYMENT.DEMO_OUTCOME' | translate }}</legend>
+            <label class="check"><input type="radio" name="outcome" [checked]="outcome() === 'success'" (change)="outcome.set('success')" /> {{ 'PAYMENT.OUTCOME_SUCCESS' | translate }}</label>
+            <label class="check"><input type="radio" name="outcome" [checked]="outcome() === 'failure'" (change)="outcome.set('failure')" /> {{ 'PAYMENT.OUTCOME_FAILURE' | translate }}</label>
+          </fieldset>
+
+          @if (error(); as e) {
+            <div class="alert alert-error" role="alert">{{ e | translateOr: 'ERRORS.GENERIC' }}</div>
+          }
+          <div class="actions">
+            <button type="button" class="btn btn-primary btn-lg pay-btn" [disabled]="paying()" (click)="pay()">
+              {{ (paying() ? 'PAYMENT.PROCESSING' : 'PAYMENT.PAY') | translate: { amount: (b.totalAmount | inr) } }}
+            </button>
+            <a class="btn btn-ghost" [routerLink]="['/bookings', b.id, 'passengers']">{{ 'PAYMENT.EDIT_PASSENGERS' | translate }}</a>
+            <button type="button" class="btn btn-ghost" [disabled]="releasing()" (click)="changeSeats()">{{ 'CHECKOUT.CHANGE_SEATS' | translate }}</button>
+          </div>
+        </section>
+
+        <aside class="card">
+          <app-booking-summary [booking]="b" />
+        </aside>
+      </div>
+    }
+  } @else {
+    <div class="card skeleton" style="height: 320px"></div>
+  }
+</div>
