@@ -2,7 +2,8 @@ import { EventEmitter } from 'node:events';
 
 /**
  * Domain events emitted by the booking/admin modules.
- * The notification system (Phase 2) subscribes to these instead of being called directly.
+ * The notification system subscribes to these (booking confirmed/cancelled, trip rescheduled/cancelled)
+ * instead of being called directly, so booking code never waits on email or push delivery.
  */
 export interface AppEvents {
   'user.registered': { userId: string };

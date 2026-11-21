@@ -188,6 +188,8 @@ export async function updateTrip(req: Request, res: Response) {
       { $set: { 'journey.departureTime': newDeparture, 'journey.arrivalTime': newArrival } },
     );
     affected = result.modifiedCount;
+    // Notification hook: the notification service subscribes to 'trip.rescheduled' and alerts
+    // every passenger on this trip (email/push, in their language). Nothing else to call here.
     appEvents.emit('trip.rescheduled', {
       tripId: String(trip._id),
       oldDepartureTime,
@@ -206,7 +208,8 @@ export async function listBookings(req: Request, res: Response) {
   if (BOOKING_STATUSES.includes(req.query.status as (typeof BOOKING_STATUSES)[number])) filter.status = req.query.status;
   const q = String(req.query.q ?? '').trim();
   if (q) {
-    const users = await User.find({ email: new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') }).select('_id').lean();
+    const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+    const users = await User.find({ $or: [{ email: re }, { name: re }] }).select('_id').lean();
     filter.$or = [{ pnr: q.toUpperCase() }, { user: { $in: users.map((u) => u._id) } }];
   }
   if (isObjectId(req.query.tripId)) filter.trip = req.query.tripId;
