@@ -16,7 +16,7 @@
         var theme = localStorage.getItem('mybus.theme');
         var lang = localStorage.getItem('mybus.lang');
         root.setAttribute('data-theme', theme === 'dark' ? 'dark' : 'light');
-        if (lang === 'en' || lang === 'hi' || lang === 'mr') root.setAttribute('lang', lang);
+        if (['en', 'hi', 'mr', 'bn', 'te'].indexOf(lang) !== -1) root.setAttribute('lang', lang);
       } catch (e) {
         root.setAttribute('data-theme', 'light');
       }

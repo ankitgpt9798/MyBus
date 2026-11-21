@@ -4,8 +4,15 @@ import { TranslateService } from '@ngx-translate/core';
 // Formatting follows the active UI language: the pipes read ngx-translate's currentLang signal,
 // so templates re-render with the new locale when the language changes.
 
-// Marathi keeps its month/day names but uses Latin digits, matching seat numbers and times elsewhere in the UI.
-const LOCALES: Record<string, string> = { en: 'en-IN', hi: 'hi-IN', mr: 'mr-IN-u-nu-latn' };
+// Marathi, Bengali and Telugu keep their month/day names but use Latin digits (-u-nu-latn),
+// matching seat numbers and times elsewhere in the UI.
+const LOCALES: Record<string, string> = {
+  en: 'en-IN',
+  hi: 'hi-IN',
+  mr: 'mr-IN-u-nu-latn',
+  bn: 'bn-IN-u-nu-latn',
+  te: 'te-IN-u-nu-latn',
+};
 const localeOf = (translate: TranslateService) => LOCALES[translate.currentLang() ?? 'en'] ?? 'en-IN';
 
 type DateStyle = 'time' | 'date' | 'datetime' | 'day';

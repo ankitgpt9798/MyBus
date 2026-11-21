@@ -1,4 +1,4 @@
-export type Lang = 'en' | 'hi' | 'mr';
+export type Lang = 'en' | 'hi' | 'mr' | 'bn' | 'te';
 export type Theme = 'light' | 'dark';
 
 export interface NotificationPreferences {

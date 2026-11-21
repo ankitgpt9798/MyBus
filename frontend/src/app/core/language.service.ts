@@ -10,6 +10,8 @@ export const LANGUAGES: { code: Lang; label: string }[] = [
   { code: 'en', label: 'English' },
   { code: 'hi', label: 'हिन्दी' },
   { code: 'mr', label: 'मराठी' },
+  { code: 'bn', label: 'বাংলা' },
+  { code: 'te', label: 'తెలుగు' },
 ];
 
 export const isLang = (v: unknown): v is Lang => LANGUAGES.some((l) => l.code === v);
