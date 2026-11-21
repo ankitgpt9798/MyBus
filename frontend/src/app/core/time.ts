@@ -13,3 +13,13 @@ export function shiftDate(date: string, days: number): string {
 }
 
 export const isIsoDate = (v: unknown): v is string => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(v));
+
+/** Value for <input type="datetime-local">, shown in IST. */
+export function toIstInput(iso: string): string {
+  return new Date(new Date(iso).getTime() + IST_OFFSET_MS).toISOString().slice(0, 16);
+}
+
+/** Parses a datetime-local value as IST and returns an ISO timestamp. */
+export function fromIstInput(value: string): string {
+  return new Date(`${value}:00+05:30`).toISOString();
+}

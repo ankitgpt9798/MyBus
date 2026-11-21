@@ -1,13 +1,23 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { RouteSummary, SearchResponse, TripDetails } from './models';
+import {
+  AdminStats,
+  AdminTrip,
+  Booking,
+  HoldRequest,
+  Passenger,
+  PaymentMethod,
+  RouteSummary,
+  SearchResponse,
+  TripDetails,
+} from './models';
 
 type Params = Record<string, string | number | boolean | undefined | null>;
 const toParams = (p: Params) =>
   Object.entries(p).reduce((acc, [k, v]) => (v === undefined || v === null || v === '' ? acc : acc.set(k, String(v))), new HttpParams());
 
-/** Promise-based client for the catalogue and booking endpoints. */
+/** Promise-based client for the catalogue, booking and admin endpoints. */
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private readonly http = inject(HttpClient);
@@ -15,7 +25,17 @@ export class ApiService {
   private get<T>(url: string, params: Params = {}) {
     return firstValueFrom(this.http.get<T>(`/api${url}`, { params: toParams(params) }));
   }
+  private post<T>(url: string, body: unknown = {}) {
+    return firstValueFrom(this.http.post<T>(`/api${url}`, body));
+  }
+  private put<T>(url: string, body: unknown) {
+    return firstValueFrom(this.http.put<T>(`/api${url}`, body));
+  }
+  private patch<T>(url: string, body: unknown) {
+    return firstValueFrom(this.http.patch<T>(`/api${url}`, body));
+  }
 
+  // Catalogue
   cities() {
     return this.get<{ cities: string[] }>('/cities');
   }
@@ -27,5 +47,48 @@ export class ApiService {
   }
   trip(id: string) {
     return this.get<TripDetails>(`/trips/${id}`);
+  }
+
+  // Bookings: hold seats -> passenger details -> pay
+  holdSeats(body: HoldRequest) {
+    return this.post<{ booking: Booking }>('/bookings', body);
+  }
+  saveDetails(id: string, body: { passengers: Passenger[]; contact: { email: string; phone: string } }) {
+    return this.put<{ booking: Booking }>(`/bookings/${id}/passengers`, body);
+  }
+  pay(id: string, method: PaymentMethod, simulateFailure = false) {
+    return this.post<{ booking: Booking }>(`/bookings/${id}/pay`, { method, simulateFailure });
+  }
+  booking(id: string) {
+    return this.get<{ booking: Booking }>(`/bookings/${id}`);
+  }
+  myBookings(tab: 'upcoming' | 'completed' | 'cancelled') {
+    return this.get<{ bookings: Booking[] }>('/bookings/me', { tab });
+  }
+  cancelBooking(id: string, reason?: string) {
+    return this.post<{ booking: Booking }>(`/bookings/${id}/cancel`, { reason });
+  }
+
+  // Admin
+  adminStats() {
+    return this.get<AdminStats>('/admin/stats');
+  }
+  adminRoutes() {
+    return this.get<{ routes: { id: string; from: string; to: string; code: string; durationMinutes: number }[] }>('/admin/routes');
+  }
+  adminBuses() {
+    return this.get<{ buses: { id: string; name: string; registrationNumber: string; operatorName: string; totalSeats: number }[] }>('/admin/buses');
+  }
+  adminTrips(params: Params) {
+    return this.get<{ trips: AdminTrip[]; total: number; page: number; limit: number }>('/admin/trips', params);
+  }
+  adminCreateTrip(body: { routeId: string; busId: string; departureTime: string; fare: number }) {
+    return this.post<{ trip: AdminTrip }>('/admin/trips', body);
+  }
+  adminUpdateTrip(id: string, body: { departureTime?: string; arrivalTime?: string; fare?: number; status?: 'cancelled' }) {
+    return this.patch<{ trip: AdminTrip; affectedBookings: number }>(`/admin/trips/${id}`, body);
+  }
+  adminBookings(params: Params) {
+    return this.get<{ bookings: Booking[]; total: number; page: number; limit: number }>('/admin/bookings', params);
   }
 }
