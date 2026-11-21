@@ -8,7 +8,9 @@
     "CLOSE": "Close",
     "SAVE": "Save changes",
     "PLEASE_WAIT": "Please wait…",
-    "DURATION": "{{h}}h {{m}}m"
+    "DURATION": "{{h}}h {{m}}m",
+    "SELECT": "Select",
+    "CANCEL": "Cancel"
   },
   "HEADER": {
     "MAIN_NAV": "Main navigation",
@@ -41,7 +43,12 @@
     "NOTIFICATIONS": "Notifications",
     "NOT_FOUND": "Page not found",
     "SEARCH": "Bus search results",
-    "TRIP": "Select seats"
+    "TRIP": "Select seats",
+    "PASSENGERS": "Passenger details",
+    "PAYMENT": "Payment",
+    "BOOKING": "Booking details",
+    "ADMIN_TRIPS": "Manage trips",
+    "ADMIN_BOOKINGS": "All bookings"
   },
   "HOME": {
     "TITLE": "Book bus tickets across India",
@@ -177,7 +184,193 @@
     "POLICY_LESS_THAN": "Less than {{h}} hours before departure",
     "POLICY_REFUND": "{{p}}% refund",
     "POLICY_NO_REFUND": "No refund",
-    "POLICY_NOTE": "Tickets cannot be cancelled after the bus has departed."
+    "POLICY_NOTE": "Tickets cannot be cancelled after the bus has departed.",
+    "DEPARTURE": "Departure",
+    "ARRIVAL": "Arrival",
+    "CANCELLED": "This trip has been cancelled by the operator.",
+    "DEPARTED": "This bus has already departed. Please choose another trip.",
+    "SELECT_SEATS": "Select your seats",
+    "SEATS_AVAILABLE": "{{count}} seats available",
+    "MAX_SEATS_HINT": "You can book up to {{n}} seats in one booking.",
+    "POINTS": "Boarding and dropping points",
+    "BOARDING_POINT": "Boarding point",
+    "DROPPING_POINT": "Dropping point",
+    "FARE_SUMMARY": "Fare summary",
+    "FARE_PER_SEAT": "Fare per seat",
+    "TOTAL": "Total",
+    "CONTINUE": "Continue",
+    "LOGIN_TO_CONTINUE": "Log in to continue",
+    "HOLD_HINT": "Your seats are held for {{n}} minutes while you complete the booking."
+  },
+  "SEATS": {
+    "AVAILABLE": "Available",
+    "SELECTED": "Selected",
+    "HELD": "On hold",
+    "BOOKED": "Booked",
+    "LOWER_DECK": "Lower deck",
+    "UPPER_DECK": "Upper deck",
+    "DRIVER": "Driver",
+    "SEAT": "Seat {{n}}",
+    "MAX_REACHED": "You can select up to {{n}} seats.",
+    "SELECT_AT_LEAST_ONE": "Select at least one seat to continue."
+  },
+  "HOLD": {
+    "TIMER": "Seats held for {{time}}. Complete your booking before the timer runs out.",
+    "EXPIRED_TITLE": "Your seat hold has expired",
+    "EXPIRED_TEXT": "The seats were released so other travellers can book them. Please choose your seats again.",
+    "SELECT_AGAIN": "Choose seats again"
+  },
+  "CHECKOUT": {
+    "STEPS": "Booking steps",
+    "STEP_SEATS": "Seats",
+    "STEP_PASSENGERS": "Passengers",
+    "STEP_PAYMENT": "Payment",
+    "PASSENGERS_TITLE": "Passenger details",
+    "PASSENGERS": "Passengers",
+    "PASSENGER_N": "Passenger {{n}}",
+    "NAME": "Full name",
+    "AGE": "Age",
+    "GENDER": "Gender",
+    "CONTACT": "Contact details",
+    "CONTACT_HINT": "Your ticket and trip updates will be sent to this email and phone number.",
+    "CONTINUE_TO_PAY": "Continue to payment",
+    "CHANGE_SEATS": "Change seats",
+    "SUMMARY": "Booking summary"
+  },
+  "GENDER": {
+    "MALE": "Male",
+    "FEMALE": "Female",
+    "OTHER": "Other"
+  },
+  "PAYMENT": {
+    "TITLE": "Payment",
+    "DEMO_NOTE": "Demo payment: no real charge is made and no card or UPI details leave your browser.",
+    "METHOD": "Payment method",
+    "METHODS": {
+      "UPI": "UPI",
+      "CARD": "Credit / debit card",
+      "NETBANKING": "Net banking"
+    },
+    "UPI_ID": "UPI ID",
+    "CARD_NUMBER": "Card number",
+    "CARD_NAME": "Name on card",
+    "EXPIRY": "Expiry (MM/YY)",
+    "CVV": "CVV",
+    "BANK": "Select your bank",
+    "BANKS": {
+      "SBI": "State Bank of India",
+      "HDFC": "HDFC Bank",
+      "ICICI": "ICICI Bank",
+      "AXIS": "Axis Bank",
+      "KOTAK": "Kotak Mahindra Bank"
+    },
+    "DEMO_OUTCOME": "Demo outcome",
+    "OUTCOME_SUCCESS": "Payment succeeds",
+    "OUTCOME_FAILURE": "Payment is declined",
+    "PAY": "Pay {{amount}}",
+    "PROCESSING": "Processing payment…",
+    "EDIT_PASSENGERS": "Edit passengers"
+  },
+  "BOOKING": {
+    "PNR": "PNR",
+    "STATUS": {
+      "PENDING": "Awaiting payment",
+      "CONFIRMED": "Confirmed",
+      "COMPLETED": "Completed",
+      "CANCELLED": "Cancelled",
+      "EXPIRED": "Expired"
+    },
+    "CONFIRMED_TITLE": "Booking confirmed!",
+    "CONFIRMED_TEXT": "Your ticket details have been sent to {{email}}. Have a great journey!",
+    "PENDING_NOTE": "Your seats are on hold. Complete the booking before the hold expires.",
+    "CONTINUE": "Continue booking",
+    "OPERATOR": "Operator",
+    "BUS": "Bus",
+    "AMOUNT_PAID": "Amount paid",
+    "REFUND": "Refund ({{p}}%)",
+    "CANCELLED_ON": "Cancelled on {{date}}",
+    "TRIP_CANCELLED_BY_OPERATOR": "The operator cancelled this trip, so you get a full refund.",
+    "REFUND_INFO": "Refund of {{amount}} ({{p}}%) will be credited to your original payment method.",
+    "NO_REFUND": "No refund applies under the cancellation policy.",
+    "NOTHING_CHARGED": "No payment was taken for this booking.",
+    "COMPLETED_NOTE": "Journey completed. Thanks for travelling with MyBus!",
+    "PRINT": "Print ticket",
+    "CANCEL": "Cancel booking",
+    "RELEASE_HOLD": "Release seats",
+    "BACK_TO_LIST": "Back to my bookings",
+    "CANCEL_TITLE": "Cancel this booking?",
+    "CANCEL_QUOTE": "Under the cancellation policy you will get {{amount}} back ({{p}}% of the fare).",
+    "CANCEL_PENDING": "Your held seats will be released. Nothing has been charged.",
+    "CANCEL_REASON": "Reason (optional)",
+    "CONFIRM_CANCEL": "Yes, cancel",
+    "KEEP": "Keep it",
+    "CANCELLED_TOAST": "Your booking has been cancelled."
+  },
+  "BOOKINGS": {
+    "TABS": {
+      "UPCOMING": "Upcoming",
+      "COMPLETED": "Completed",
+      "CANCELLED": "Cancelled"
+    },
+    "EMPTY": {
+      "UPCOMING": "You have no upcoming trips.",
+      "COMPLETED": "No completed journeys yet.",
+      "CANCELLED": "No cancelled bookings."
+    },
+    "BOOK_NOW": "Book a bus"
+  },
+  "ADMIN": {
+    "TITLE": "Admin console",
+    "NAV": "Admin sections",
+    "DASHBOARD": "Dashboard",
+    "TRIPS": "Trips",
+    "BOOKINGS": "Bookings",
+    "STAT_USERS": "Registered travellers",
+    "STAT_UPCOMING_TRIPS": "Upcoming trips",
+    "STAT_REVENUE": "Net revenue",
+    "BOOKINGS_BY_STATUS": "Bookings by status",
+    "DATE": "Date",
+    "ROUTE": "Route",
+    "ALL_ROUTES": "All routes",
+    "STATUS": "Status",
+    "ALL": "All",
+    "APPLY": "Apply",
+    "TRIP_STATUS": {
+      "SCHEDULED": "Scheduled",
+      "CANCELLED": "Cancelled"
+    },
+    "NEW_TRIP": "Add trip",
+    "BUS": "Bus",
+    "DEPARTURE": "Departure",
+    "DEPARTURE_IST": "Departure (IST)",
+    "ARRIVAL_IST": "Arrival (IST)",
+    "FARE": "Fare (₹)",
+    "SEATS": "Seats",
+    "AMOUNT": "Amount",
+    "CUSTOMER": "Customer",
+    "ACTIONS": "Actions",
+    "ARRIVAL_AUTO": "Arrival is calculated from the route duration.",
+    "CREATE": "Create trip",
+    "TRIP_CREATED": "Trip added.",
+    "EDIT": "Edit",
+    "EDIT_TRIP": "Edit trip",
+    "RESCHEDULE_HINT": "Moving the departure also moves the arrival unless you change it. {{n}} booked seats will see the new times, and passengers will be notified.",
+    "TRIP_RESCHEDULED": "Trip rescheduled. {{n}} bookings updated.",
+    "TRIP_UPDATED": "Trip updated.",
+    "CANCEL_TRIP": "Cancel trip",
+    "CANCEL_TRIP_TITLE": "Cancel {{route}} on {{time}}?",
+    "CANCEL_TRIP_TEXT": "All {{n}} booked seats will be cancelled with a full refund.",
+    "CONFIRM_CANCEL_TRIP": "Yes, cancel trip",
+    "TRIP_CANCELLED": "Trip cancelled. {{n}} bookings refunded.",
+    "TRIPS_FOUND": "{{count}} trips",
+    "NO_TRIPS": "No trips match these filters.",
+    "SEARCH_BOOKINGS": "Search",
+    "SEARCH_PLACEHOLDER": "PNR, name or email",
+    "BOOKINGS_FOUND": "{{count}} bookings",
+    "NO_BOOKINGS": "No bookings match these filters.",
+    "PREV": "Previous",
+    "NEXT": "Next",
+    "PAGE_OF": "Page {{page}} of {{pages}}"
   },
   "AUTH": {
     "LOGIN_TITLE": "Welcome back",
@@ -275,7 +468,9 @@
     "BOOKING_NOT_CANCELLABLE": "This booking can no longer be cancelled.",
     "TRIP_DEPARTURE_PAST": "The departure time must be in the future.",
     "TRIP_ARRIVAL_BEFORE_DEPARTURE": "The arrival time must be after the departure time.",
-    "TRIP_ALREADY_CANCELLED": "This trip has already been cancelled."
+    "TRIP_ALREADY_CANCELLED": "This trip has already been cancelled.",
+    "PAYMENT_FAILED": "Your payment was declined. No money was taken. Please try again.",
+    "BOOKING_DETAILS_MISSING": "Please add passenger and contact details before paying."
   },
   "FORBIDDEN": {
     "TITLE": "Access denied",
@@ -283,14 +478,6 @@
   },
   "COMING_SOON": {
     "BADGE": "Coming soon",
-    "ADMIN": {
-      "TITLE": "Admin console",
-      "TEXT": "Trip management and booking overview for administrators."
-    },
-    "BOOKINGS": {
-      "TITLE": "My bookings",
-      "TEXT": "Your upcoming, completed and cancelled trips will appear here."
-    },
     "COMMUNITY": {
       "TITLE": "Traveller community",
       "TEXT": "Share journey stories, travel tips and photos with fellow travellers."
@@ -302,10 +489,6 @@
     "NOTIFICATIONS": {
       "TITLE": "Notifications",
       "TEXT": "Booking updates, reminders and offers will be listed here."
-    },
-    "SEATS": {
-      "TITLE": "Seat selection",
-      "TEXT": "Choose your seats, add passenger details and pay securely."
     }
   },
   "NOT_FOUND": {
