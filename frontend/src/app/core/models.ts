@@ -4,6 +4,7 @@ export type Theme = 'light' | 'dark';
 export interface NotificationPreferences {
   email: boolean;
   push: boolean;
+  inApp: boolean;
   promotional: boolean;
 }
 
@@ -194,4 +195,63 @@ export interface Page<T> {
   total: number;
   page: number;
   limit: number;
+}
+
+// Notifications
+
+export type NotificationType = 'booking_confirmed' | 'booking_cancelled' | 'schedule_changed' | 'journey_reminder' | 'promotion';
+export type NotificationChannel = 'in_app' | 'email' | 'push';
+export type DeliveryStatus = 'pending' | 'sent' | 'failed' | 'skipped';
+
+/** Raw values stored with a notification, so it can be rendered in the reader's current language. */
+export interface NotificationParams {
+  bookingId?: string;
+  pnr?: string;
+  from?: string;
+  to?: string;
+  departureTime?: string;
+  oldDepartureTime?: string;
+  seats?: string[];
+  ladiesSeats?: string[];
+  boardingPoint?: string;
+  amount?: number;
+  refundAmount?: number;
+  refundPercent?: number;
+  paid?: boolean;
+  tripCancelled?: boolean;
+  title?: string;
+  body?: string;
+}
+
+export interface AppNotification {
+  id: string;
+  type: NotificationType;
+  templateKey: string;
+  params: NotificationParams;
+  /** Copy as sent, in `language`. */
+  title: string;
+  body: string;
+  language: Lang;
+  pnr: string | null;
+  bookingId: string | null;
+  read: boolean;
+  createdAt: string;
+  deliveries: { channel: NotificationChannel; status: DeliveryStatus }[];
+}
+
+export interface DeliveryLog {
+  channel: NotificationChannel;
+  status: DeliveryStatus;
+  attempts: number;
+  lastError: string | null;
+  skipReason: 'preference_off' | 'promotions_opt_out' | 'not_available' | null;
+  transport: string | null;
+  sentAt: string | null;
+  nextAttemptAt: string | null;
+}
+
+export interface AdminNotification extends Omit<AppNotification, 'deliveries'> {
+  user: { id: string; name: string; email: string } | null;
+  emailTo: string | null;
+  deliveries: DeliveryLog[];
 }

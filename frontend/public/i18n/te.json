@@ -52,7 +52,8 @@
     "PAYMENT": "చెల్లింపు",
     "BOOKING": "బుకింగ్ వివరాలు",
     "ADMIN_TRIPS": "ప్రయాణాల నిర్వహణ",
-    "ADMIN_BOOKINGS": "అన్ని బుకింగ్‌లు"
+    "ADMIN_BOOKINGS": "అన్ని బుకింగ్‌లు",
+    "ADMIN_NOTIFICATIONS": "నోటిఫికేషన్ లాగ్"
   },
   "HOME": {
     "TITLE": "భారతదేశమంతటా బస్ టికెట్లు బుక్ చేయండి",
@@ -380,7 +381,15 @@
     "NO_BOOKINGS": "ఈ ఫిల్టర్లకు సరిపోయే బుకింగ్‌లు లేవు.",
     "PREV": "మునుపటి",
     "NEXT": "తదుపరి",
-    "PAGE_OF": "పేజీ {{page}} / {{pages}}"
+    "PAGE_OF": "పేజీ {{page}} / {{pages}}",
+    "NOTIFICATIONS": "నోటిఫికేషన్లు",
+    "TYPE": "రకం",
+    "CHANNEL": "ఛానెల్",
+    "TIME": "సమయం",
+    "ALL_TYPES": "అన్ని రకాలు",
+    "ALL_CHANNELS": "అన్ని ఛానెళ్లు",
+    "NOTIFICATIONS_FOUND": "{{count}} నోటిఫికేషన్లు",
+    "NO_NOTIFICATIONS": "ఈ ఫిల్టర్లకు సరిపోయే నోటిఫికేషన్లు లేవు."
   },
   "AUTH": {
     "LOGIN_TITLE": "మళ్లీ స్వాగతం",
@@ -489,7 +498,8 @@
     "TRIP_ALREADY_CANCELLED": "ఈ ప్రయాణం ఇప్పటికే రద్దయింది.",
     "PAYMENT_FAILED": "మీ చెల్లింపు తిరస్కరించబడింది. డబ్బు ఏమీ కట్ కాలేదు. దయచేసి మళ్లీ ప్రయత్నించండి.",
     "BOOKING_DETAILS_MISSING": "చెల్లించే ముందు దయచేసి ప్రయాణికుల, సంప్రదింపు వివరాలు జోడించండి.",
-    "SEAT_LADIES_ONLY": "మహిళలకు కేటాయించిన సీట్లను మహిళా ప్రయాణికులకు మాత్రమే బుక్ చేయవచ్చు."
+    "SEAT_LADIES_ONLY": "మహిళలకు కేటాయించిన సీట్లను మహిళా ప్రయాణికులకు మాత్రమే బుక్ చేయవచ్చు.",
+    "NOTIFICATION_NOT_FOUND": "ఈ నోటిఫికేషన్ దొరకలేదు."
   },
   "FORBIDDEN": {
     "TITLE": "ప్రవేశం నిరాకరించబడింది",
@@ -518,5 +528,45 @@
     "TAGLINE": "భారతదేశమంతటా సురక్షితమైన, సులభమైన బస్సు ప్రయాణం.",
     "LINKS": "ఫుటర్ లింకులు",
     "COPYRIGHT": "© {{year}} MyBus. అన్ని హక్కులు ప్రత్యేకించబడ్డాయి."
+  },
+  "NOTIFY": {
+    "BELL": "నోటిఫికేషన్లు",
+    "BELL_UNREAD": "నోటిఫికేషన్లు, {{count}} చదవనివి",
+    "PANEL_TITLE": "నోటిఫికేషన్లు",
+    "MARK_ALL_READ": "అన్నీ చదివినట్లు గుర్తించండి",
+    "EMPTY": "మీకు ఇంకా నోటిఫికేషన్లు ఏవీ లేవు.",
+    "SEE_ALL": "అన్ని నోటిఫికేషన్లు చూడండి",
+    "UNREAD": "చదవనిది",
+    "TYPES": {
+      "booking_confirmed": "బుకింగ్ ఖరారైంది",
+      "booking_cancelled": "బుకింగ్ రద్దయింది",
+      "schedule_changed": "బయలుదేరే సమయం మారింది",
+      "journey_reminder": "ప్రయాణ రిమైండర్",
+      "promotion": "ఆఫర్"
+    },
+    "BODY": {
+      "booking_confirmed": "{{route}} · {{date}} · PNR {{pnr}}",
+      "booking_cancelled": "{{route}} · PNR {{pnr}} · రీఫండ్ {{refund}}",
+      "booking_cancelled_plain": "{{route}} · PNR {{pnr}}",
+      "schedule_changed": "{{route}} ఇప్పుడు {{date}} కి బయలుదేరుతుంది",
+      "journey_reminder": "{{route}} {{date}} కి బయలుదేరుతుంది"
+    },
+    "CHANNEL": {
+      "in_app": "యాప్‌లో",
+      "email": "ఇమెయిల్",
+      "push": "పుష్"
+    },
+    "STATUS": {
+      "pending": "పెండింగ్",
+      "sent": "పంపబడింది",
+      "failed": "విఫలమైంది",
+      "skipped": "దాటవేయబడింది"
+    },
+    "SKIP": {
+      "preference_off": "వినియోగదారు ఆపివేశారు",
+      "promotions_opt_out": "ఆఫర్ల నుండి వైదొలిగారు",
+      "not_available": "ఛానెల్ ఇంకా అందుబాటులో లేదు"
+    },
+    "ATTEMPTS": "ప్రయత్నాలు: {{n}}"
   }
 }

@@ -52,7 +52,8 @@
     "PAYMENT": "पेमेंट",
     "BOOKING": "बुकिंग तपशील",
     "ADMIN_TRIPS": "प्रवास व्यवस्थापन",
-    "ADMIN_BOOKINGS": "सर्व बुकिंग"
+    "ADMIN_BOOKINGS": "सर्व बुकिंग",
+    "ADMIN_NOTIFICATIONS": "सूचना नोंद"
   },
   "HOME": {
     "TITLE": "संपूर्ण भारतात बस तिकीट बुक करा",
@@ -380,7 +381,15 @@
     "NO_BOOKINGS": "या फिल्टरशी जुळणारी बुकिंग नाही.",
     "PREV": "मागील",
     "NEXT": "पुढील",
-    "PAGE_OF": "पान {{page}} / {{pages}}"
+    "PAGE_OF": "पान {{page}} / {{pages}}",
+    "NOTIFICATIONS": "सूचना",
+    "TYPE": "प्रकार",
+    "CHANNEL": "चॅनेल",
+    "TIME": "वेळ",
+    "ALL_TYPES": "सर्व प्रकार",
+    "ALL_CHANNELS": "सर्व चॅनेल",
+    "NOTIFICATIONS_FOUND": "{{count}} सूचना",
+    "NO_NOTIFICATIONS": "या फिल्टरशी जुळणारी सूचना नाही."
   },
   "AUTH": {
     "LOGIN_TITLE": "पुन्हा स्वागत आहे",
@@ -489,7 +498,8 @@
     "TRIP_ALREADY_CANCELLED": "हा प्रवास आधीच रद्द झाला आहे.",
     "PAYMENT_FAILED": "तुमचे पेमेंट नाकारले गेले. कोणतेही पैसे कापले गेले नाहीत. कृपया पुन्हा प्रयत्न करा.",
     "BOOKING_DETAILS_MISSING": "पेमेंट करण्यापूर्वी कृपया प्रवासी आणि संपर्क तपशील जोडा.",
-    "SEAT_LADIES_ONLY": "महिलांसाठी राखीव सीट फक्त महिला प्रवाशांसाठी बुक करता येतात."
+    "SEAT_LADIES_ONLY": "महिलांसाठी राखीव सीट फक्त महिला प्रवाशांसाठी बुक करता येतात.",
+    "NOTIFICATION_NOT_FOUND": "ही सूचना सापडली नाही."
   },
   "FORBIDDEN": {
     "TITLE": "प्रवेश नाकारला",
@@ -518,5 +528,45 @@
     "TAGLINE": "संपूर्ण भारतात सुरक्षित आणि सोपा बस प्रवास.",
     "LINKS": "फूटर लिंक",
     "COPYRIGHT": "© {{year}} MyBus. सर्व हक्क राखीव."
+  },
+  "NOTIFY": {
+    "BELL": "सूचना",
+    "BELL_UNREAD": "सूचना, {{count}} न वाचलेल्या",
+    "PANEL_TITLE": "सूचना",
+    "MARK_ALL_READ": "सर्व वाचल्या म्हणून खूण करा",
+    "EMPTY": "अजून तुम्हाला कोणतीही सूचना नाही.",
+    "SEE_ALL": "सर्व सूचना पाहा",
+    "UNREAD": "न वाचलेली",
+    "TYPES": {
+      "booking_confirmed": "बुकिंग निश्चित",
+      "booking_cancelled": "बुकिंग रद्द",
+      "schedule_changed": "सुटण्याची वेळ बदलली",
+      "journey_reminder": "प्रवासाची आठवण",
+      "promotion": "ऑफर"
+    },
+    "BODY": {
+      "booking_confirmed": "{{route}} · {{date}} · PNR {{pnr}}",
+      "booking_cancelled": "{{route}} · PNR {{pnr}} · परतावा {{refund}}",
+      "booking_cancelled_plain": "{{route}} · PNR {{pnr}}",
+      "schedule_changed": "{{route}} आता {{date}} ला सुटेल",
+      "journey_reminder": "{{route}} {{date}} ला सुटेल"
+    },
+    "CHANNEL": {
+      "in_app": "अ‍ॅपमध्ये",
+      "email": "ईमेल",
+      "push": "पुश"
+    },
+    "STATUS": {
+      "pending": "प्रलंबित",
+      "sent": "पाठवली",
+      "failed": "अयशस्वी",
+      "skipped": "वगळली"
+    },
+    "SKIP": {
+      "preference_off": "वापरकर्त्याने बंद केले",
+      "promotions_opt_out": "ऑफरमधून बाहेर",
+      "not_available": "चॅनेल अजून उपलब्ध नाही"
+    },
+    "ATTEMPTS": "प्रयत्न: {{n}}"
   }
 }

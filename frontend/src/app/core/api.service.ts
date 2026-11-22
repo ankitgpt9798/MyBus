@@ -2,7 +2,9 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import {
+  AdminNotification,
   AdminStats,
+  AppNotification,
   AdminTrip,
   Booking,
   HoldRequest,
@@ -69,7 +71,24 @@ export class ApiService {
     return this.post<{ booking: Booking }>(`/bookings/${id}/cancel`, { reason });
   }
 
+  // Notifications
+  notifications(page = 1, limit = 20) {
+    return this.get<{ notifications: AppNotification[]; total: number; unread: number; page: number; limit: number }>('/notifications', { page, limit });
+  }
+  unreadCount() {
+    return this.get<{ unread: number }>('/notifications/unread-count');
+  }
+  markNotificationRead(id: string) {
+    return this.post<{ unread: number }>(`/notifications/${id}/read`);
+  }
+  markAllNotificationsRead() {
+    return this.post<{ unread: number }>('/notifications/read-all');
+  }
+
   // Admin
+  adminNotifications(params: Params) {
+    return this.get<{ notifications: AdminNotification[]; total: number; page: number; limit: number }>('/admin/notifications', params);
+  }
   adminStats() {
     return this.get<AdminStats>('/admin/stats');
   }

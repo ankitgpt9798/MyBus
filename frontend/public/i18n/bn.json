@@ -52,7 +52,8 @@
     "PAYMENT": "পেমেন্ট",
     "BOOKING": "বুকিংয়ের বিবরণ",
     "ADMIN_TRIPS": "যাত্রা পরিচালনা",
-    "ADMIN_BOOKINGS": "সব বুকিং"
+    "ADMIN_BOOKINGS": "সব বুকিং",
+    "ADMIN_NOTIFICATIONS": "বিজ্ঞপ্তি লগ"
   },
   "HOME": {
     "TITLE": "সারা ভারতে বাসের টিকিট বুক করুন",
@@ -380,7 +381,15 @@
     "NO_BOOKINGS": "এই ফিল্টারের সঙ্গে কোনো বুকিং মিলছে না।",
     "PREV": "আগের",
     "NEXT": "পরের",
-    "PAGE_OF": "পৃষ্ঠা {{page}} / {{pages}}"
+    "PAGE_OF": "পৃষ্ঠা {{page}} / {{pages}}",
+    "NOTIFICATIONS": "বিজ্ঞপ্তি",
+    "TYPE": "ধরন",
+    "CHANNEL": "চ্যানেল",
+    "TIME": "সময়",
+    "ALL_TYPES": "সব ধরন",
+    "ALL_CHANNELS": "সব চ্যানেল",
+    "NOTIFICATIONS_FOUND": "{{count}}টি বিজ্ঞপ্তি",
+    "NO_NOTIFICATIONS": "এই ফিল্টারের সঙ্গে কোনো বিজ্ঞপ্তি মিলছে না।"
   },
   "AUTH": {
     "LOGIN_TITLE": "আবার স্বাগতম",
@@ -489,7 +498,8 @@
     "TRIP_ALREADY_CANCELLED": "এই যাত্রা আগেই বাতিল হয়েছে।",
     "PAYMENT_FAILED": "আপনার পেমেন্ট প্রত্যাখ্যাত হয়েছে। কোনো টাকা কাটা হয়নি। অনুগ্রহ করে আবার চেষ্টা করুন।",
     "BOOKING_DETAILS_MISSING": "পেমেন্টের আগে অনুগ্রহ করে যাত্রী ও যোগাযোগের বিবরণ দিন।",
-    "SEAT_LADIES_ONLY": "মহিলাদের জন্য সংরক্ষিত সিট শুধু মহিলা যাত্রীদের জন্য বুক করা যায়।"
+    "SEAT_LADIES_ONLY": "মহিলাদের জন্য সংরক্ষিত সিট শুধু মহিলা যাত্রীদের জন্য বুক করা যায়।",
+    "NOTIFICATION_NOT_FOUND": "এই বিজ্ঞপ্তিটি পাওয়া যায়নি।"
   },
   "FORBIDDEN": {
     "TITLE": "প্রবেশাধিকার নেই",
@@ -518,5 +528,45 @@
     "TAGLINE": "সারা ভারতে নিরাপদ ও সহজ বাস যাত্রা।",
     "LINKS": "ফুটার লিঙ্ক",
     "COPYRIGHT": "© {{year}} MyBus. সর্বস্বত্ব সংরক্ষিত।"
+  },
+  "NOTIFY": {
+    "BELL": "বিজ্ঞপ্তি",
+    "BELL_UNREAD": "বিজ্ঞপ্তি, {{count}}টি অপঠিত",
+    "PANEL_TITLE": "বিজ্ঞপ্তি",
+    "MARK_ALL_READ": "সব পঠিত হিসেবে চিহ্নিত করুন",
+    "EMPTY": "আপনার এখনও কোনো বিজ্ঞপ্তি নেই।",
+    "SEE_ALL": "সব বিজ্ঞপ্তি দেখুন",
+    "UNREAD": "অপঠিত",
+    "TYPES": {
+      "booking_confirmed": "বুকিং নিশ্চিত",
+      "booking_cancelled": "বুকিং বাতিল",
+      "schedule_changed": "ছাড়ার সময় বদলেছে",
+      "journey_reminder": "যাত্রার রিমাইন্ডার",
+      "promotion": "অফার"
+    },
+    "BODY": {
+      "booking_confirmed": "{{route}} · {{date}} · PNR {{pnr}}",
+      "booking_cancelled": "{{route}} · PNR {{pnr}} · ফেরত {{refund}}",
+      "booking_cancelled_plain": "{{route}} · PNR {{pnr}}",
+      "schedule_changed": "{{route}} এখন {{date}}-এ ছাড়বে",
+      "journey_reminder": "{{route}} {{date}}-এ ছাড়বে"
+    },
+    "CHANNEL": {
+      "in_app": "অ্যাপে",
+      "email": "ইমেল",
+      "push": "পুশ"
+    },
+    "STATUS": {
+      "pending": "অপেক্ষমাণ",
+      "sent": "পাঠানো হয়েছে",
+      "failed": "ব্যর্থ",
+      "skipped": "বাদ দেওয়া হয়েছে"
+    },
+    "SKIP": {
+      "preference_off": "ব্যবহারকারী বন্ধ রেখেছেন",
+      "promotions_opt_out": "অফার থেকে বেরিয়ে আছেন",
+      "not_available": "চ্যানেল এখনও উপলব্ধ নয়"
+    },
+    "ATTEMPTS": "চেষ্টা: {{n}}"
   }
 }

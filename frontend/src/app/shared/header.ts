@@ -5,11 +5,12 @@ import { filter } from 'rxjs';
 import { AuthService } from '../core/auth.service';
 import { ToastService } from '../core/toast.service';
 import { Icon } from './icons';
+import { NotificationBell } from './notification-bell';
 import { PreferenceControls } from './preference-controls';
 
 @Component({
   selector: 'app-header',
-  imports: [RouterLink, RouterLinkActive, TranslatePipe, Icon, PreferenceControls],
+  imports: [RouterLink, RouterLinkActive, TranslatePipe, Icon, PreferenceControls, NotificationBell],
   template: `
     <header class="site-header">
       <div class="container header-inner">
@@ -31,10 +32,7 @@ import { PreferenceControls } from './preference-controls';
 
         <div class="header-actions">
           <app-preference-controls class="header-prefs" place="header" />
-          <a routerLink="/notifications" class="icon-btn" [attr.aria-label]="'NAV.NOTIFICATIONS' | translate"
-            [title]="'NAV.NOTIFICATIONS' | translate">
-            <app-icon name="bell" />
-          </a>
+          <app-notification-bell />
 
           @if (auth.user(); as user) {
             <div class="user-menu">

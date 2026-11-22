@@ -52,7 +52,8 @@
     "PAYMENT": "Payment",
     "BOOKING": "Booking details",
     "ADMIN_TRIPS": "Manage trips",
-    "ADMIN_BOOKINGS": "All bookings"
+    "ADMIN_BOOKINGS": "All bookings",
+    "ADMIN_NOTIFICATIONS": "Notification log"
   },
   "HOME": {
     "TITLE": "Book bus tickets across India",
@@ -380,7 +381,15 @@
     "NO_BOOKINGS": "No bookings match these filters.",
     "PREV": "Previous",
     "NEXT": "Next",
-    "PAGE_OF": "Page {{page}} of {{pages}}"
+    "PAGE_OF": "Page {{page}} of {{pages}}",
+    "NOTIFICATIONS": "Notifications",
+    "TYPE": "Type",
+    "CHANNEL": "Channel",
+    "TIME": "Time",
+    "ALL_TYPES": "All types",
+    "ALL_CHANNELS": "All channels",
+    "NOTIFICATIONS_FOUND": "{{count}} notifications",
+    "NO_NOTIFICATIONS": "No notifications match these filters."
   },
   "AUTH": {
     "LOGIN_TITLE": "Welcome back",
@@ -489,7 +498,8 @@
     "TRIP_ALREADY_CANCELLED": "This trip has already been cancelled.",
     "PAYMENT_FAILED": "Your payment was declined. No money was taken. Please try again.",
     "BOOKING_DETAILS_MISSING": "Please add passenger and contact details before paying.",
-    "SEAT_LADIES_ONLY": "Seats reserved for women can only be booked for female passengers."
+    "SEAT_LADIES_ONLY": "Seats reserved for women can only be booked for female passengers.",
+    "NOTIFICATION_NOT_FOUND": "This notification could not be found."
   },
   "FORBIDDEN": {
     "TITLE": "Access denied",
@@ -518,5 +528,45 @@
     "TAGLINE": "Safe, simple bus travel across India.",
     "LINKS": "Footer links",
     "COPYRIGHT": "© {{year}} MyBus. All rights reserved."
+  },
+  "NOTIFY": {
+    "BELL": "Notifications",
+    "BELL_UNREAD": "Notifications, {{count}} unread",
+    "PANEL_TITLE": "Notifications",
+    "MARK_ALL_READ": "Mark all as read",
+    "EMPTY": "You have no notifications yet.",
+    "SEE_ALL": "See all notifications",
+    "UNREAD": "Unread",
+    "TYPES": {
+      "booking_confirmed": "Booking confirmed",
+      "booking_cancelled": "Booking cancelled",
+      "schedule_changed": "Departure time changed",
+      "journey_reminder": "Journey reminder",
+      "promotion": "Offer"
+    },
+    "BODY": {
+      "booking_confirmed": "{{route}} · {{date}} · PNR {{pnr}}",
+      "booking_cancelled": "{{route}} · PNR {{pnr}} · refund {{refund}}",
+      "booking_cancelled_plain": "{{route}} · PNR {{pnr}}",
+      "schedule_changed": "{{route}} now departs {{date}}",
+      "journey_reminder": "{{route}} departs {{date}}"
+    },
+    "CHANNEL": {
+      "in_app": "In-app",
+      "email": "Email",
+      "push": "Push"
+    },
+    "STATUS": {
+      "pending": "Pending",
+      "sent": "Sent",
+      "failed": "Failed",
+      "skipped": "Skipped"
+    },
+    "SKIP": {
+      "preference_off": "Turned off by the user",
+      "promotions_opt_out": "Opted out of offers",
+      "not_available": "Channel not available yet"
+    },
+    "ATTEMPTS": "Attempts: {{n}}"
   }
 }
