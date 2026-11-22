@@ -45,6 +45,11 @@ api.post('/bookings/:id/cancel', requireAuth, bookings.cancelBooking);
 // Notifications (in-app inbox)
 api.get('/notifications', requireAuth, notifications.listMine);
 api.get('/notifications/unread-count', requireAuth, notifications.unreadCount);
+api.get('/notifications/push/public-key', notifications.pushPublicKey);
+api.post('/notifications/push/subscribe', requireAuth, notifications.pushSubscribe);
+api.post('/notifications/push/unsubscribe', requireAuth, notifications.pushUnsubscribe);
+api.post('/notifications/stream-token', requireAuth, notifications.streamToken);
+api.get('/notifications/stream', notifications.stream); // authenticated by the short-lived stream token
 api.post('/notifications/read-all', requireAuth, notifications.markAllRead);
 api.post('/notifications/:id/read', requireAuth, notifications.markRead);
 
@@ -59,4 +64,5 @@ adminRouter.post('/trips', admin.createTrip);
 adminRouter.patch('/trips/:id', admin.updateTrip);
 adminRouter.get('/bookings', admin.listBookings);
 adminRouter.get('/notifications', notifications.adminList);
+adminRouter.post('/notifications/:id/retry', notifications.adminRetry);
 api.use('/admin', adminRouter);

@@ -45,6 +45,8 @@ npm install
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME` | Admin account created by the seed script |
 | `SMTP_*`, `MAIL_FROM` | Outgoing email. Leave `SMTP_HOST` empty to print emails and verification links in the backend console instead |
 | `SEAT_HOLD_MINUTES` | How long selected seats are held while paying |
+| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | Web push keys. Leave empty to generate a pair on first start (saved to the git-ignored `backend/.vapid-keys.json`) |
+| `NOTIFY_RETRY_DELAYS_MS`, `NOTIFY_RETRY_INTERVAL_MS`, `NOTIFY_STREAM_HEARTBEAT_MS` | Tests only: shorten the email/push retry backoff (default 1, 5, 15 min), the retry check (30 s) and the live-stream heartbeat (15 s) |
 
 ## Seed the database
 
