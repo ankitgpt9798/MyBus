@@ -6,3 +6,6 @@ uploads/
 *.log
 .DS_Store
 Thumbs.db
+
+# Locally generated web-push (VAPID) keys
+backend/.vapid-keys.json

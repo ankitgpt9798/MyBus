@@ -7,14 +7,16 @@ export const DELIVERY_STATUSES = ['pending', 'sent', 'failed', 'skipped'] as con
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 export type Channel = (typeof CHANNELS)[number];
 
-// One entry per channel. Retries (attempts / nextAttemptAt) are driven by the notification worker.
+// One entry per channel. Failed email/push deliveries are retried by the notification worker (attempts / nextAttemptAt).
 const deliverySchema = new Schema(
   {
     channel: { type: String, enum: CHANNELS, required: true },
     status: { type: String, enum: DELIVERY_STATUSES, default: 'pending' },
     attempts: { type: Number, default: 0 },
     lastError: String,
-    skipReason: { type: String, enum: ['preference_off', 'promotions_opt_out', 'not_available'] },
+    skipReason: { type: String, enum: ['preference_off', 'promotions_opt_out', 'not_available', 'no_subscription'] },
+    // Set once the retry schedule is used up: the delivery stays 'failed' and is not retried automatically.
+    gaveUp: { type: Boolean, default: false },
     transport: String, // e.g. 'smtp' or 'console' for email
     sentAt: Date,
     nextAttemptAt: Date,

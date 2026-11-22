@@ -1,27 +1,42 @@
 import { Types } from 'mongoose';
+import { env } from '../config/env';
 import { DEFAULT_LANGUAGE, isLang } from '../i18n';
 import { Channel, Notification, NotificationDoc, NotificationType } from '../models/Notification';
+import { PushSubscription } from '../models/PushSubscription';
 import { User, UserDoc } from '../models/User';
 import { sendMail } from './mail.service';
 import { NotificationParams, renderNotification } from './notification.templates';
+import { NotificationLean, publicNotification } from './notification.view';
+import { sendPushToUser } from './push.service';
+import { publish } from './realtime.service';
 
-/** Wait before the next attempt after the n-th failure (used by the retry worker). */
-export const RETRY_DELAYS_MS = [60_000, 5 * 60_000, 15 * 60_000];
+/** Wait before the next attempt after the 1st, 2nd, 3rd failure (default 1 min → 5 min → 15 min). */
+export const RETRY_DELAYS_MS = env.notifications.retryDelaysMs;
 export const MAX_ATTEMPTS = RETRY_DELAYS_MS.length + 1;
+/** Notifications created after this are dispatched by notify() itself, so startup resume leaves them alone. */
+const STARTED_AT = new Date();
 
-type Sender = (n: NotificationDoc, user: UserDoc) => Promise<{ transport: string }>;
+type SendResult = { status: 'sent'; transport: string } | { status: 'skipped'; skipReason: 'no_subscription' };
+type Sender = (n: NotificationDoc, user: UserDoc) => Promise<SendResult>;
 
 const SENDERS: Record<Channel, Sender> = {
-  // The stored notification *is* the in-app message (shown in the bell and history).
-  in_app: async () => ({ transport: 'inbox' }),
+  // The stored notification *is* the in-app message (bell, history, live stream) — it never needs a retry.
+  in_app: async () => ({ status: 'sent', transport: 'inbox' }),
   email: async (n, user) => {
     const { email } = renderNotification(n.type, n.language, (n.params ?? {}) as NotificationParams, user.name);
     const result = await sendMail({ to: n.emailTo || user.email, ...email });
-    return { transport: result.transport };
+    return { status: 'sent', transport: result.transport };
   },
-  // Web push is not available yet; push deliveries are recorded as skipped (not_available) and never reach here.
-  push: async () => {
-    throw new Error('Push channel is not available');
+  push: async (n) => {
+    const params = (n.params ?? {}) as NotificationParams;
+    const result = await sendPushToUser(n.user, {
+      title: n.title,
+      body: n.body,
+      url: params.bookingId ? `/bookings/${params.bookingId}` : '/notifications',
+      tag: `mybus-${n.type}-${params.pnr ?? String(n._id)}`,
+      lang: n.language,
+    });
+    return result.outcome === 'sent' ? { status: 'sent', transport: `webpush×${result.delivered}` } : { status: 'skipped', skipReason: 'no_subscription' };
   },
 };
 
@@ -40,12 +55,13 @@ export async function notify(
   const language = isLang(user.language) ? user.language : DEFAULT_LANGUAGE;
   const prefs: { email?: boolean; push?: boolean; inApp?: boolean; promotional?: boolean } = user.notificationPreferences ?? {};
   const rendered = renderNotification(type, language, params, user.name);
+  const hasPush = prefs.push !== false && (await PushSubscription.exists({ user: user._id })) !== null;
 
   const promoOptOut = type === 'promotion' && !prefs.promotional;
-  const delivery = (channel: Channel, enabled: boolean, unavailable = false) => {
+  const delivery = (channel: Channel, enabled: boolean, missing?: 'no_subscription') => {
     if (promoOptOut) return { channel, status: 'skipped', skipReason: 'promotions_opt_out' };
     if (!enabled) return { channel, status: 'skipped', skipReason: 'preference_off' };
-    if (unavailable) return { channel, status: 'skipped', skipReason: 'not_available' };
+    if (missing) return { channel, status: 'skipped', skipReason: missing };
     return { channel, status: 'pending' };
   };
 
@@ -63,9 +79,15 @@ export async function notify(
     deliveries: [
       delivery('in_app', prefs.inApp !== false),
       delivery('email', prefs.email !== false),
-      delivery('push', prefs.push !== false, true),
+      delivery('push', prefs.push !== false, hasPush ? undefined : 'no_subscription'),
     ],
   });
+
+  // Live update for every open tab of this user (in-app channel).
+  if (prefs.inApp !== false && !promoOptOut) {
+    const unread = await Notification.countDocuments({ user: user._id, read: false });
+    publish(String(user._id), 'notification', { notification: publicNotification(notification.toObject() as NotificationLean), unread });
+  }
 
   setImmediate(() => {
     dispatch(notification._id).catch((err) => console.error('[notify] dispatch failed', err));
@@ -74,39 +96,79 @@ export async function notify(
 }
 
 /**
- * Attempts every pending delivery of a notification (and, when `retry` is set, failed ones that are due).
- * Each outcome is written to that channel's delivery entry: sent, or failed with lastError and nextAttemptAt.
+ * Attempts the deliveries of one notification and records each outcome on its channel entry.
+ *  - default: pending deliveries (a new notification, or one interrupted by a restart)
+ *  - retry:   also failed deliveries whose nextAttemptAt is due (retry worker)
+ *  - force:   also any failed delivery, even one that gave up (admin "Retry now")
  */
-export async function dispatch(notificationId: Types.ObjectId | string, retry = false): Promise<void> {
+export async function dispatch(notificationId: Types.ObjectId | string, mode: { retry?: boolean; force?: boolean } = {}): Promise<void> {
   const n = await Notification.findById(notificationId);
   if (!n) return;
   const user = await User.findById(n.user);
   if (!user) return;
+  const now = new Date();
 
   for (const d of n.deliveries) {
-    const due = d.status === 'pending' || (retry && d.status === 'failed' && (!d.nextAttemptAt || d.nextAttemptAt <= new Date()));
-    if (!due) continue;
+    const dueRetry = mode.retry && d.status === 'failed' && !d.gaveUp && (!d.nextAttemptAt || d.nextAttemptAt <= now);
+    const forced = mode.force && d.status === 'failed';
+    if (d.status !== 'pending' && !dueRetry && !forced) continue;
+
+    if (d.status === 'failed') {
+      // Claim the delivery so overlapping workers never send it twice.
+      const claimed = await Notification.updateOne(
+        { _id: n._id, deliveries: { $elemMatch: { channel: d.channel, status: 'failed' } } },
+        { $set: { 'deliveries.$.status': 'pending' } },
+      );
+      if (!claimed.modifiedCount) continue;
+    }
+
     const where = { _id: n._id, 'deliveries.channel': d.channel };
     try {
-      const { transport } = await SENDERS[d.channel](n, user);
-      await Notification.updateOne(where, {
-        $set: { 'deliveries.$.status': 'sent', 'deliveries.$.sentAt': new Date(), 'deliveries.$.transport': transport },
-        $inc: { 'deliveries.$.attempts': 1 },
-        $unset: { 'deliveries.$.lastError': 1, 'deliveries.$.nextAttemptAt': 1 },
-      });
+      const result = await SENDERS[d.channel](n, user);
+      if (result.status === 'sent') {
+        await Notification.updateOne(where, {
+          $set: { 'deliveries.$.status': 'sent', 'deliveries.$.sentAt': new Date(), 'deliveries.$.transport': result.transport, 'deliveries.$.gaveUp': false },
+          $inc: { 'deliveries.$.attempts': 1 },
+          $unset: { 'deliveries.$.lastError': 1, 'deliveries.$.nextAttemptAt': 1 },
+        });
+      } else {
+        await Notification.updateOne(where, {
+          $set: { 'deliveries.$.status': 'skipped', 'deliveries.$.skipReason': result.skipReason },
+          $unset: { 'deliveries.$.nextAttemptAt': 1 },
+        });
+      }
     } catch (err) {
       const attempts = (d.attempts ?? 0) + 1;
-      const delay = RETRY_DELAYS_MS[attempts - 1];
+      const gaveUp = attempts >= MAX_ATTEMPTS;
       await Notification.updateOne(where, {
         $set: {
           'deliveries.$.status': 'failed',
           'deliveries.$.lastError': (err instanceof Error ? err.message : String(err)).slice(0, 300),
-          // No further attempt once the retry schedule is used up.
-          'deliveries.$.nextAttemptAt': delay !== undefined ? new Date(Date.now() + delay) : null,
+          'deliveries.$.gaveUp': gaveUp,
+          'deliveries.$.nextAttemptAt': gaveUp ? null : new Date(Date.now() + RETRY_DELAYS_MS[attempts - 1]),
         },
         $inc: { 'deliveries.$.attempts': 1 },
       });
-      console.error(`[notify] ${d.channel} delivery failed for notification ${n._id}:`, err instanceof Error ? err.message : err);
+      console.error(`[notify] ${d.channel} attempt ${attempts}/${MAX_ATTEMPTS} failed for ${n._id}: ${err instanceof Error ? err.message : err}${gaveUp ? ' (giving up)' : ''}`);
     }
   }
+}
+
+/** Retry worker: re-dispatches failed email/push deliveries whose next attempt is due. */
+export async function processDueRetries(): Promise<number> {
+  const due = await Notification.find({
+    deliveries: { $elemMatch: { status: 'failed', gaveUp: { $ne: true }, nextAttemptAt: { $lte: new Date() } } },
+  })
+    .select('_id')
+    .limit(100)
+    .lean();
+  for (const { _id } of due) await dispatch(_id, { retry: true });
+  return due.length;
+}
+
+/** On server start: finish deliveries that were still pending when the process stopped. */
+export async function resumePending(): Promise<number> {
+  const pending = await Notification.find({ 'deliveries.status': 'pending', createdAt: { $lt: STARTED_AT } }).select('_id').limit(500).lean();
+  for (const { _id } of pending) await dispatch(_id);
+  return pending.length;
 }

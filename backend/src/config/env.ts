@@ -40,4 +40,20 @@ export const env = {
     from: str('MAIL_FROM', 'MyBus <no-reply@mybus.local>'),
   },
   seatHoldMinutes: num('SEAT_HOLD_MINUTES', 10),
+  // Web push (VAPID). If the keys are not set, they are generated once and kept in backend/.vapid-keys.json.
+  vapid: {
+    publicKey: str('VAPID_PUBLIC_KEY'),
+    privateKey: str('VAPID_PRIVATE_KEY'),
+    subject: str('VAPID_SUBJECT'),
+  },
+  notifications: {
+    // Wait after the 1st, 2nd, 3rd failed attempt (1 min, 5 min, 15 min). Tests may compress this, e.g. "2000,4000,6000".
+    retryDelaysMs: str('NOTIFY_RETRY_DELAYS_MS', '60000,300000,900000')
+      .split(',')
+      .map((v) => Number(v.trim()))
+      .filter((v) => Number.isFinite(v) && v > 0),
+    retryIntervalMs: num('NOTIFY_RETRY_INTERVAL_MS', 30_000),
+    // Live stream heartbeat; clients reconnect if they hear nothing for ~2.5 heartbeats.
+    streamHeartbeatMs: num('NOTIFY_STREAM_HEARTBEAT_MS', 15_000),
+  },
 };

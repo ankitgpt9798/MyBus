@@ -3,6 +3,7 @@ export * from './Booking';
 export * from './Bus';
 export * from './Notification';
 export * from './Operator';
+export * from './PushSubscription';
 export * from './RevokedToken';
 export * from './Route';
 export * from './Trip';
