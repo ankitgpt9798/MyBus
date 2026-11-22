@@ -47,26 +47,42 @@ const escapeHtml = (s: string) =>
 /** Shared, localized email layout. `paragraphs` are plain text; `action` renders a button. */
 export function renderEmail(
   lang: string,
-  opts: { name: string; paragraphs: string[]; action?: { label: string; url: string }; note?: string },
+  opts: {
+    name: string;
+    paragraphs: string[];
+    details?: { label: string; value: string }[];
+    action?: { label: string; url: string };
+    note?: string;
+  },
 ): { html: string; text: string } {
   const greeting = t(lang, 'email.greeting', { name: opts.name });
   const signature = t(lang, 'email.signature');
   const footer = t(lang, 'email.footer');
   const body = opts.paragraphs.map((p) => `<p style="margin:0 0 14px">${escapeHtml(p)}</p>`).join('');
+  // Key/value table (booking details). Rows stack nicely on narrow mail clients.
+  const details = opts.details?.length
+    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:6px 0 18px;border-collapse:collapse;font-size:14px">${opts.details
+        .map(
+          (d) =>
+            `<tr><td style="padding:8px 10px 8px 0;border-bottom:1px solid #eee;color:#666;vertical-align:top;white-space:nowrap">${escapeHtml(d.label)}</td><td style="padding:8px 0;border-bottom:1px solid #eee;font-weight:600">${escapeHtml(d.value)}</td></tr>`,
+        )
+        .join('')}</table>`
+    : '';
   const button = opts.action
-    ? `<p style="margin:24px 0"><a href="${opts.action.url}" style="background:#d84e55;color:#fff;padding:12px 22px;border-radius:6px;text-decoration:none;font-weight:600">${escapeHtml(opts.action.label)}</a></p>`
+    ? `<p style="margin:24px 0"><a href="${opts.action.url}" style="background:#cc444c;color:#fff;padding:12px 22px;border-radius:6px;text-decoration:none;font-weight:600">${escapeHtml(opts.action.label)}</a></p>`
     : '';
   const note = opts.note ? `<p style="color:#666;font-size:13px">${escapeHtml(opts.note)}</p>` : '';
-  const html = `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;color:#222">
-<div style="background:#d84e55;color:#fff;padding:16px 20px;font-size:20px;font-weight:700;border-radius:8px 8px 0 0">MyBus</div>
+  const html = `<div style="font-family:Arial,'Nirmala UI','Noto Sans',sans-serif;width:100%;max-width:560px;margin:auto;color:#222;line-height:1.5">
+<div style="background:#cc444c;color:#fff;padding:16px 20px;font-size:20px;font-weight:700;border-radius:8px 8px 0 0">MyBus</div>
 <div style="border:1px solid #eee;border-top:0;padding:20px;border-radius:0 0 8px 8px">
-<p style="margin:0 0 14px">${escapeHtml(greeting)}</p>${body}${button}${note}
+<p style="margin:0 0 14px">${escapeHtml(greeting)}</p>${body}${details}${button}${note}
 <p style="margin:20px 0 0">${signature}</p></div>
 <p style="color:#999;font-size:12px;text-align:center">${escapeHtml(footer)}</p></div>`;
   const text = [
     greeting,
     '',
     ...opts.paragraphs,
+    ...(opts.details?.length ? ['', ...opts.details.map((d) => `${d.label}: ${d.value}`)] : []),
     ...(opts.action ? ['', `${opts.action.label}: ${opts.action.url}`] : []),
     ...(opts.note ? ['', opts.note] : []),
     '',

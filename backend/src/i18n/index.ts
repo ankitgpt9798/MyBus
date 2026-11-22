@@ -28,3 +28,37 @@ export function t(lang: string | undefined, key: string, params: Record<string, 
   const template = lookup(dictionaries[language], key) ?? lookup(dictionaries[DEFAULT_LANGUAGE], key) ?? key;
   return template.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, name: string) => String(params[name] ?? ''));
 }
+
+// Same locale rules as the web app: IST, 24-hour times, Latin digits for mr/bn/te.
+const LOCALES: Record<Lang, string> = {
+  en: 'en-IN',
+  hi: 'hi-IN',
+  mr: 'mr-IN-u-nu-latn',
+  bn: 'bn-IN-u-nu-latn',
+  te: 'te-IN-u-nu-latn',
+};
+const localeOf = (lang: string | undefined) => LOCALES[isLang(lang) ? lang : DEFAULT_LANGUAGE];
+
+/** e.g. "Sun, 22 Nov, 21:30" in the user's language (IST). */
+export function formatDateTime(lang: string | undefined, value: Date | string): string {
+  return new Intl.DateTimeFormat(localeOf(lang), {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+    timeZone: 'Asia/Kolkata',
+  }).format(new Date(value));
+}
+
+/** Rupee amount in the user's language, e.g. "₹1,240". */
+export function formatMoney(lang: string | undefined, amount: number): string {
+  return new Intl.NumberFormat(localeOf(lang), { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
+}
+
+/** Translated city name; unknown cities are returned unchanged. */
+export function cityName(lang: string | undefined, city: string): string {
+  const value = t(lang, `city.${city}`);
+  return value === `city.${city}` ? city : value;
+}
