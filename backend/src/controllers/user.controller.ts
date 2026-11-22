@@ -25,7 +25,7 @@ export async function updateMe(req: Request, res: Response) {
   if (language !== undefined) user.language = language;
   if (theme !== undefined) user.theme = theme;
   if (notificationPreferences) {
-    for (const key of ['email', 'push', 'promotional'] as const) {
+    for (const key of ['email', 'push', 'inApp', 'promotional'] as const) {
       const value = notificationPreferences[key];
       if (value === undefined) continue;
       if (typeof value !== 'boolean') {

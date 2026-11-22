@@ -16,10 +16,11 @@ const userSchema = new Schema(
     verificationExpires: { type: Date, select: false },
     language: { type: String, enum: SUPPORTED_LANGUAGES, default: 'en' },
     theme: { type: String, enum: THEMES, default: 'light' },
-    // Extended by the notification system (Phase 2).
+    // Channels the user receives notifications on; promotional offers are opt-in.
     notificationPreferences: {
       email: { type: Boolean, default: true },
       push: { type: Boolean, default: true },
+      inApp: { type: Boolean, default: true },
       promotional: { type: Boolean, default: false },
     },
   },
@@ -44,6 +45,7 @@ export function toPublicUser(u: UserDoc | (UserAttrs & { _id: unknown })) {
     notificationPreferences: {
       email: u.notificationPreferences?.email ?? true,
       push: u.notificationPreferences?.push ?? true,
+      inApp: u.notificationPreferences?.inApp ?? true,
       promotional: u.notificationPreferences?.promotional ?? false,
     },
     createdAt: u.createdAt,
