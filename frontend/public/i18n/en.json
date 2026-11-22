@@ -389,7 +389,10 @@
     "ALL_TYPES": "All types",
     "ALL_CHANNELS": "All channels",
     "NOTIFICATIONS_FOUND": "{{count}} notifications",
-    "NO_NOTIFICATIONS": "No notifications match these filters."
+    "NO_NOTIFICATIONS": "No notifications match these filters.",
+    "RETRY_NOW": "Retry now",
+    "RETRY_SENT": "Delivered on retry",
+    "RETRY_FAILED": "The retry failed again. See the error in the log."
   },
   "AUTH": {
     "LOGIN_TITLE": "Welcome back",
@@ -499,7 +502,9 @@
     "PAYMENT_FAILED": "Your payment was declined. No money was taken. Please try again.",
     "BOOKING_DETAILS_MISSING": "Please add passenger and contact details before paying.",
     "SEAT_LADIES_ONLY": "Seats reserved for women can only be booked for female passengers.",
-    "NOTIFICATION_NOT_FOUND": "This notification could not be found."
+    "NOTIFICATION_NOT_FOUND": "This notification could not be found.",
+    "NOTIFICATION_NOTHING_TO_RETRY": "There are no failed deliveries to retry.",
+    "STREAM_TOKEN_INVALID": "Live updates couldn't connect. Please sign in again."
   },
   "FORBIDDEN": {
     "TITLE": "Access denied",
@@ -565,8 +570,25 @@
     "SKIP": {
       "preference_off": "Turned off by the user",
       "promotions_opt_out": "Opted out of offers",
-      "not_available": "Channel not available yet"
+      "not_available": "Channel not available yet",
+      "no_subscription": "No device subscribed to push"
     },
-    "ATTEMPTS": "Attempts: {{n}}"
+    "ATTEMPTS": "Attempts: {{n}}",
+    "NEW": "New notification",
+    "PUSH": {
+      "TITLE": "Push notifications",
+      "HINT": "Get booking updates on this device, even when MyBus isn't open.",
+      "ENABLE": "Enable push notifications",
+      "DISABLE": "Turn off",
+      "ON": "Push notifications are on for this browser.",
+      "UNSUPPORTED": "This browser doesn't support push notifications.",
+      "DENIED": "Notifications are blocked for MyBus. Allow them in your browser's site settings, then reload this page.",
+      "DISMISSED": "Permission wasn't given. You can enable push notifications any time.",
+      "ERROR": "Push notifications couldn't be turned on. Please try again.",
+      "ENABLED": "Push notifications are on",
+      "DISABLED": "Push notifications turned off for this browser"
+    },
+    "GAVE_UP": "Gave up: no more automatic retries",
+    "NEXT_RETRY": "Next retry {{time}}"
   }
 }
