@@ -36,7 +36,7 @@
   border-bottom: 1px solid var(--color-border);
   .link { font-size: 0.85rem; }
 }
-.bell-list { max-height: 360px; overflow-y: auto; }
+.bell-list { max-height: 360px; overflow-y: auto; border-bottom: 1px solid var(--color-border); }
 .bell-item {
   display: flex;
   gap: 0.6rem;
@@ -49,16 +49,16 @@
   font: inherit;
   text-align: left;
   cursor: pointer;
+  &:last-child { border-bottom: 0; }
   &:hover { background: var(--color-surface-2); }
   .dot { flex: none; width: 8px; height: 8px; margin-top: 0.45rem; border-radius: 50%; }
   &.unread .dot { background: var(--color-primary); }
   &.unread { background: var(--color-primary-soft); }
   .text { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
-  .body { font-size: 0.86rem; overflow-wrap: anywhere; }
   small { color: var(--color-text-muted); font-size: 0.75rem; }
 }
 .empty { margin: 0; padding: 1.25rem 0.9rem; color: var(--color-text-muted); text-align: center; }
-.bell-all { display: block; padding: 0.65rem 0.9rem; text-align: center; font-weight: 600; text-decoration: none; }
+.bell-all { display: block; border-top: 1px solid var(--color-border); padding: 0.65rem 0.9rem; text-align: center; font-weight: 600; text-decoration: none; }
 @media (max-width: 520px) {
   .bell-panel { position: fixed; top: 64px; right: 12px; }
 }

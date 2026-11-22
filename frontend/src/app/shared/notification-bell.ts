@@ -5,7 +5,9 @@ import { AuthService } from '../core/auth.service';
 import { AppNotification } from '../core/models';
 import { NotificationService } from '../core/notification.service';
 import { Icon } from './icons';
-import { AppDatePipe, CityPipe, InrPipe } from './pipes';
+import { NotificationText } from './notification-text';
+import { AppDatePipe } from './pipes';
+import { PushToggle } from './push-toggle';
 
 /**
  * Header bell: unread badge and a panel with the latest notifications.
@@ -13,10 +15,10 @@ import { AppDatePipe, CityPipe, InrPipe } from './pipes';
  */
 @Component({
   selector: 'app-notification-bell',
-  imports: [RouterLink, TranslatePipe, Icon, AppDatePipe, CityPipe, InrPipe],
+  imports: [RouterLink, TranslatePipe, Icon, AppDatePipe, NotificationText, PushToggle],
   template: `
     @if (auth.isLoggedIn()) {
-      <button type="button" class="icon-btn bell-btn" (click)="toggle()" aria-haspopup="dialog" [attr.aria-expanded]="open()"
+      <button type="button" class="icon-btn bell-btn" (click)="toggle()" aria-haspopup="dialog" [attr.aria-expanded]="open()" [attr.data-live]="notifications.live()"
         [attr.aria-label]="(notifications.unread() ? 'NOTIFY.BELL_UNREAD' : 'NOTIFY.BELL') | translate: { count: notifications.unread() }"
         [title]="'NOTIFY.BELL' | translate">
         <app-icon name="bell" />
@@ -37,19 +39,7 @@ import { AppDatePipe, CityPipe, InrPipe } from './pipes';
               <button type="button" class="bell-item" [class.unread]="!n.read" (click)="openItem(n)">
                 <span class="dot" [attr.aria-label]="n.read ? null : ('NOTIFY.UNREAD' | translate)"></span>
                 <span class="text">
-                  <strong>{{ 'NOTIFY.TYPES.' + n.type | translate }}</strong>
-                  <span class="body">
-                    @if (n.type === 'promotion') {
-                      {{ n.body }}
-                    } @else {
-                      {{ bodyKey(n) | translate: {
-                        route: (n.params.from | city) + ' → ' + (n.params.to | city),
-                        date: (n.params.departureTime | appDate: 'datetime'),
-                        pnr: n.pnr,
-                        refund: (n.params.refundAmount | inr)
-                      } }}
-                    }
-                  </span>
+                  <app-notification-text [n]="n" />
                   <small>{{ n.createdAt | appDate: 'datetime' }}</small>
                 </span>
               </button>
@@ -57,6 +47,7 @@ import { AppDatePipe, CityPipe, InrPipe } from './pipes';
               <p class="empty">{{ (notifications.loading() ? 'COMMON.PLEASE_WAIT' : 'NOTIFY.EMPTY') | translate }}</p>
             }
           </div>
+          <app-push-toggle [compact]="true" />
           <a routerLink="/notifications" class="bell-all">{{ 'NOTIFY.SEE_ALL' | translate }}</a>
         </div>
       }
@@ -78,13 +69,6 @@ export class NotificationBell {
   protected toggle(): void {
     this.open.set(!this.open());
     if (this.open()) void this.notifications.loadLatest();
-  }
-
-  protected bodyKey(n: AppNotification): string {
-    if (n.type === 'booking_cancelled') {
-      return n.params.paid && n.params.refundAmount ? 'NOTIFY.BODY.booking_cancelled' : 'NOTIFY.BODY.booking_cancelled_plain';
-    }
-    return `NOTIFY.BODY.${n.type}`;
   }
 
   protected async openItem(n: AppNotification): Promise<void> {

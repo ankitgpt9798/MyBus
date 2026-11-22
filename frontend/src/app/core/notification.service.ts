@@ -1,38 +1,82 @@
-import { DestroyRef, Injectable, effect, inject, signal } from '@angular/core';
+import { DestroyRef, Injectable, effect, inject, signal, untracked } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
 import { ApiService } from './api.service';
 import { AuthService } from './auth.service';
 import { AppNotification } from './models';
+import { PushService } from './push.service';
+import { ToastService } from './toast.service';
 
-const POLL_MS = 60_000;
+/** Fallback polling interval while the live stream is not connected. */
+const POLL_MS = 30_000;
+const RECONNECT_MIN_MS = 1_000;
+const RECONNECT_MAX_MS = 20_000;
+const LATEST_LIMIT = 6;
 
 /**
  * Unread count + latest notifications for the header bell.
- * Refreshes on login, on every navigation and once a minute while signed in.
+ * While signed in, a Server-Sent Events stream delivers new notifications live (count, panel and a toast)
+ * and keeps tabs in sync. If the stream drops it reconnects with backoff, and the count is polled meanwhile.
  */
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
   private readonly api = inject(ApiService);
   private readonly auth = inject(AuthService);
+  private readonly toast = inject(ToastService);
+  private readonly push = inject(PushService);
 
   readonly unread = signal(0);
   readonly latest = signal<AppNotification[]>([]);
   readonly loading = signal(false);
+  /** True while the live stream is connected. */
+  readonly live = signal(false);
+
+  private source: EventSource | null = null;
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private watchdog: ReturnType<typeof setTimeout> | null = null;
+  private heartbeatMs = 15_000;
+  private reconnectDelay = RECONNECT_MIN_MS;
+  private generation = 0;
 
   constructor() {
     effect(() => {
-      if (this.auth.isLoggedIn()) void this.refreshCount();
-      else {
-        this.unread.set(0);
-        this.latest.set([]);
-      }
+      const signedIn = this.auth.isLoggedIn();
+      untracked(() => {
+        if (signedIn) {
+          void this.refreshCount();
+          void this.connect();
+        } else {
+          this.disconnect();
+          this.unread.set(0);
+          this.latest.set([]);
+        }
+        void this.push.refresh(signedIn);
+      });
     });
     inject(Router)
       .events.pipe(filter((e) => e instanceof NavigationEnd))
-      .subscribe(() => void this.refreshCount());
-    const timer = setInterval(() => void this.refreshCount(), POLL_MS);
-    inject(DestroyRef).onDestroy(() => clearInterval(timer));
+      .subscribe(() => {
+        if (!this.live()) void this.refreshCount();
+      });
+    const poll = setInterval(() => {
+      if (!this.live()) void this.refreshCount();
+    }, POLL_MS);
+    const online = () => this.reconnectNow();
+    // A page kept in the back/forward cache would otherwise hold its stream (and an HTTP/1.1 connection slot) open.
+    const pageHide = () => this.disconnect();
+    const pageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) this.reconnectNow();
+    };
+    window.addEventListener('online', online);
+    window.addEventListener('pagehide', pageHide);
+    window.addEventListener('pageshow', pageShow);
+    inject(DestroyRef).onDestroy(() => {
+      clearInterval(poll);
+      window.removeEventListener('online', online);
+      window.removeEventListener('pagehide', pageHide);
+      window.removeEventListener('pageshow', pageShow);
+      this.disconnect();
+    });
   }
 
   async refreshCount(): Promise<void> {
@@ -44,7 +88,7 @@ export class NotificationService {
     }
   }
 
-  async loadLatest(limit = 6): Promise<void> {
+  async loadLatest(limit = LATEST_LIMIT): Promise<void> {
     if (!this.auth.isLoggedIn()) return;
     this.loading.set(true);
     try {
@@ -67,7 +111,104 @@ export class NotificationService {
 
   async markAllRead(): Promise<void> {
     await this.api.markAllNotificationsRead();
+    this.markAllLocal();
+  }
+
+  // ---------- live stream
+
+  private async connect(): Promise<void> {
+    this.disconnect();
+    if (typeof EventSource === 'undefined') return; // polling only
+    const gen = this.generation;
+    try {
+      // EventSource can't send headers: exchange the session for a short-lived stream token.
+      const { token } = await this.api.notificationStreamToken();
+      if (gen !== this.generation || !this.auth.isLoggedIn()) return;
+      const es = new EventSource(`/api/notifications/stream?token=${encodeURIComponent(token)}`);
+      this.source = es;
+      // The token is only valid for a minute, so instead of letting EventSource retry with the same URL
+      // we close it and reconnect with a fresh token.
+      const drop = () => {
+        if (this.source !== es) return;
+        es.close();
+        this.source = null;
+        this.live.set(false);
+        this.clearWatchdog();
+        this.scheduleReconnect();
+      };
+      // Any event proves the connection is alive; silence for ~2.5 heartbeats means it is dead
+      // (e.g. a proxy kept the browser's side open after the API restarted).
+      const alive = () => {
+        this.clearWatchdog();
+        this.watchdog = setTimeout(drop, Math.max(5_000, this.heartbeatMs * 2.5));
+      };
+      es.addEventListener('ready', (e) => {
+        const data = JSON.parse((e as MessageEvent<string>).data) as { unread: number; heartbeatMs?: number };
+        if (data.heartbeatMs) this.heartbeatMs = data.heartbeatMs;
+        this.live.set(true);
+        this.reconnectDelay = RECONNECT_MIN_MS;
+        this.unread.set(data.unread);
+        alive();
+      });
+      es.addEventListener('ping', alive);
+      es.addEventListener('notification', (e) => {
+        alive();
+        this.onNotification(JSON.parse((e as MessageEvent<string>).data));
+      });
+      es.addEventListener('unread', (e) => {
+        alive();
+        const { unread } = JSON.parse((e as MessageEvent<string>).data) as { unread: number };
+        this.unread.set(unread);
+        if (unread === 0) this.markAllLocal();
+      });
+      es.onerror = drop;
+    } catch {
+      if (gen === this.generation) this.scheduleReconnect();
+    }
+  }
+
+  private onNotification({ notification, unread }: { notification: AppNotification; unread: number }): void {
+    this.unread.set(unread);
+    if (!this.latest().some((x) => x.id === notification.id)) {
+      this.latest.update((list) => [notification, ...list].slice(0, LATEST_LIMIT));
+    }
+    this.toast.notification(notification);
+  }
+
+  private scheduleReconnect(): void {
+    if (!this.auth.isLoggedIn() || this.reconnectTimer) return;
+    const delay = this.reconnectDelay;
+    this.reconnectDelay = Math.min(this.reconnectDelay * 2, RECONNECT_MAX_MS);
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = null;
+      void this.refreshCount();
+      void this.connect();
+    }, delay);
+  }
+
+  private reconnectNow(): void {
+    if (!this.auth.isLoggedIn() || this.live()) return;
+    this.reconnectDelay = RECONNECT_MIN_MS;
+    void this.connect();
+  }
+
+  private clearWatchdog(): void {
+    if (this.watchdog) clearTimeout(this.watchdog);
+    this.watchdog = null;
+  }
+
+  private disconnect(): void {
+    this.generation++;
+    this.clearWatchdog();
+    if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
+    this.reconnectTimer = null;
+    this.source?.close();
+    this.source = null;
+    this.live.set(false);
+  }
+
+  private markAllLocal(): void {
     this.unread.set(0);
-    this.latest.update((list) => list.map((x) => ({ ...x, read: true })));
+    this.latest.update((list) => list.map((x) => (x.read ? x : { ...x, read: true })));
   }
 }
