@@ -12,6 +12,7 @@ import { TranslatePipe } from '@ngx-translate/core';
         <a class="tab" routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">{{ 'ADMIN.DASHBOARD' | translate }}</a>
         <a class="tab" routerLink="/admin/trips" routerLinkActive="active">{{ 'ADMIN.TRIPS' | translate }}</a>
         <a class="tab" routerLink="/admin/bookings" routerLinkActive="active">{{ 'ADMIN.BOOKINGS' | translate }}</a>
+        <a class="tab" routerLink="/admin/notifications" routerLinkActive="active">{{ 'ADMIN.NOTIFICATIONS' | translate }}</a>
       </nav>
       <router-outlet />
     </div>

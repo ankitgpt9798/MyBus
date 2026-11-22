@@ -63,6 +63,11 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/admin/admin-bookings').then((m) => m.AdminBookingsPage),
         title: 'TITLES.ADMIN_BOOKINGS',
       },
+      {
+        path: 'notifications',
+        loadComponent: () => import('./pages/admin/admin-notifications').then((m) => m.AdminNotificationsPage),
+        title: 'TITLES.ADMIN_NOTIFICATIONS',
+      },
     ],
   },
   { path: 'forbidden', loadComponent: () => import('./pages/forbidden/forbidden').then((m) => m.ForbiddenPage), title: 'TITLES.FORBIDDEN' },
