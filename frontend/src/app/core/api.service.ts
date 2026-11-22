@@ -84,8 +84,25 @@ export class ApiService {
   markAllNotificationsRead() {
     return this.post<{ unread: number }>('/notifications/read-all');
   }
+  /** Short-lived token for the live notification stream (EventSource cannot send headers). */
+  notificationStreamToken() {
+    return this.post<{ token: string; expiresIn: number }>('/notifications/stream-token');
+  }
+  pushPublicKey() {
+    return this.get<{ publicKey: string }>('/notifications/push/public-key');
+  }
+  /** optIn: the user just turned push on here, so the account's push preference is switched on too. */
+  pushSubscribe(subscription: PushSubscriptionJSON, optIn = false) {
+    return this.post<{ subscribed: boolean; devices: number }>('/notifications/push/subscribe', { ...subscription, optIn });
+  }
+  pushUnsubscribe(endpoint: string) {
+    return this.post<{ subscribed: boolean; devices: number }>('/notifications/push/unsubscribe', { endpoint });
+  }
 
   // Admin
+  adminRetryNotification(id: string) {
+    return this.post<{ notification: AdminNotification }>(`/admin/notifications/${id}/retry`);
+  }
   adminNotifications(params: Params) {
     return this.get<{ notifications: AdminNotification[]; total: number; page: number; limit: number }>('/admin/notifications', params);
   }

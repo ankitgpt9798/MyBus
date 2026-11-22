@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, Injector, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { LanguageService } from './language.service';
+import { PushService } from './push.service';
 import { AuthResponse, Lang, Theme, User } from './models';
 import { STORAGE_KEYS, readStorage, writeStorage } from './storage';
 import { ThemeService } from './theme.service';
@@ -13,6 +14,7 @@ export class AuthService {
   private readonly router = inject(Router);
   private readonly language = inject(LanguageService);
   private readonly theme = inject(ThemeService);
+  private readonly injector = inject(Injector);
 
   readonly token = signal<string | null>(readStorage(STORAGE_KEYS.token));
   readonly user = signal<User | null>(null);
@@ -47,6 +49,11 @@ export class AuthService {
   }
 
   async logout(): Promise<void> {
+    // Stop push to this browser first, while the session can still unregister it on the server.
+    await this.injector
+      .get(PushService)
+      .disable()
+      .catch(() => undefined);
     try {
       await firstValueFrom(this.http.post('/api/auth/logout', {}));
     } catch {
