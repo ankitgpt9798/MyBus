@@ -4,6 +4,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { ApiService } from '../../core/api.service';
 import { errorKey } from '../../core/api-error';
 import { AdminNotification, DeliveryLog, DeliveryStatus, NotificationChannel, NotificationType } from '../../core/models';
+import { ToastService } from '../../core/toast.service';
 import { AppDatePipe, NumPipe } from '../../shared/pipes';
 import { TranslateOrPipe } from '../../shared/translate-or.pipe';
 
@@ -68,6 +69,7 @@ const STATUS_BADGE: Record<DeliveryStatus, string> = {
                 @for (c of channels; track c) {
                   <th>{{ 'NOTIFY.CHANNEL.' + c | translate }}</th>
                 }
+                <th>{{ 'ADMIN.ACTIONS' | translate }}</th>
               </tr>
             </thead>
             <tbody>
@@ -94,9 +96,23 @@ const STATUS_BADGE: Record<DeliveryStatus, string> = {
                         @if (d.lastError) {
                           <div class="error-text small" [title]="d.lastError">{{ d.lastError }}</div>
                         }
+                        @if (d.status === 'failed') {
+                          @if (d.gaveUp) {
+                            <div class="small gave-up">{{ 'NOTIFY.GAVE_UP' | translate }}</div>
+                          } @else if (d.nextAttemptAt) {
+                            <div class="muted small next-retry">{{ 'NOTIFY.NEXT_RETRY' | translate: { time: (d.nextAttemptAt | appDate: 'datetime') } }}</div>
+                          }
+                        }
                       }
                     </td>
                   }
+                  <td>
+                    @if (canRetry(n)) {
+                      <button type="button" class="btn btn-sm btn-outline retry-btn" [disabled]="retrying() === n.id" (click)="retry(n)">
+                        {{ (retrying() === n.id ? 'COMMON.PLEASE_WAIT' : 'ADMIN.RETRY_NOW') | translate }}
+                      </button>
+                    }
+                  </td>
                 </tr>
               }
             </tbody>
@@ -116,10 +132,13 @@ const STATUS_BADGE: Record<DeliveryStatus, string> = {
   styles: `
     .nowrap { white-space: nowrap; }
     .error-text { max-width: 220px; color: var(--color-danger); overflow-wrap: anywhere; }
+    .gave-up { color: var(--color-danger); font-weight: 600; }
+    .retry-btn { white-space: nowrap; }
   `,
 })
 export class AdminNotificationsPage implements OnInit {
   private readonly api = inject(ApiService);
+  private readonly toast = inject(ToastService);
   protected readonly types: NotificationType[] = ['booking_confirmed', 'booking_cancelled', 'schedule_changed', 'journey_reminder', 'promotion'];
   protected readonly channels: NotificationChannel[] = ['in_app', 'email', 'push'];
   protected readonly statuses: DeliveryStatus[] = ['pending', 'sent', 'failed', 'skipped'];
@@ -132,6 +151,8 @@ export class AdminNotificationsPage implements OnInit {
   protected readonly pages = computed(() => Math.max(1, Math.ceil(this.total() / this.limit)));
   protected readonly loading = signal(false);
   protected readonly error = signal<string | null>(null);
+  /** Id of the notification whose retry is running. */
+  protected readonly retrying = signal<string | null>(null);
 
   ngOnInit(): void {
     void this.load(1);
@@ -154,6 +175,26 @@ export class AdminNotificationsPage implements OnInit {
 
   protected delivery(n: AdminNotification, channel: NotificationChannel): DeliveryLog | undefined {
     return n.deliveries.find((d) => d.channel === channel);
+  }
+
+  protected canRetry(n: AdminNotification): boolean {
+    return n.deliveries.some((d) => d.status === 'failed');
+  }
+
+  /** Retries the failed deliveries right away (also ones that gave up) and shows the new outcome in place. */
+  protected async retry(n: AdminNotification): Promise<void> {
+    this.retrying.set(n.id);
+    try {
+      const { notification } = await this.api.adminRetryNotification(n.id);
+      this.items.update((list) => list.map((x) => (x.id === n.id ? notification : x)));
+      const ok = !notification.deliveries.some((d) => d.status === 'failed');
+      if (ok) this.toast.success('ADMIN.RETRY_SENT');
+      else this.toast.error('ADMIN.RETRY_FAILED');
+    } catch (err) {
+      this.toast.error(errorKey(err));
+    } finally {
+      this.retrying.set(null);
+    }
   }
 
   protected badge(status: DeliveryStatus): string {
