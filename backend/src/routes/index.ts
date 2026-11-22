@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import * as admin from '../controllers/admin.controller';
 import * as auth from '../controllers/auth.controller';
 import * as bookings from '../controllers/booking.controller';
+import * as notifications from '../controllers/notification.controller';
 import * as trips from '../controllers/trip.controller';
 import * as users from '../controllers/user.controller';
 import { requireAdmin, requireAuth } from '../middleware/auth';
@@ -41,6 +42,12 @@ api.put('/bookings/:id/passengers', requireAuth, bookings.updateBookingDetails);
 api.post('/bookings/:id/pay', requireAuth, bookings.payBooking);
 api.post('/bookings/:id/cancel', requireAuth, bookings.cancelBooking);
 
+// Notifications (in-app inbox)
+api.get('/notifications', requireAuth, notifications.listMine);
+api.get('/notifications/unread-count', requireAuth, notifications.unreadCount);
+api.post('/notifications/read-all', requireAuth, notifications.markAllRead);
+api.post('/notifications/:id/read', requireAuth, notifications.markRead);
+
 // Admin
 const adminRouter = Router();
 adminRouter.use(requireAuth, requireAdmin);
@@ -51,4 +58,5 @@ adminRouter.get('/trips', admin.listTrips);
 adminRouter.post('/trips', admin.createTrip);
 adminRouter.patch('/trips/:id', admin.updateTrip);
 adminRouter.get('/bookings', admin.listBookings);
+adminRouter.get('/notifications', notifications.adminList);
 api.use('/admin', adminRouter);
