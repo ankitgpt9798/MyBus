@@ -104,7 +104,7 @@ img { max-width: 100%; }
 
 /* Layout */
 .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
-.section { padding: 2rem 0; }
+.section { padding-top: 2rem; padding-bottom: 2rem; } /* vertical only: keeps .container's side gutter */
 .narrow { max-width: 900px; }
 .page-title { margin: 0 0 1rem; font-size: 1.6rem; }
 .section-title { margin: 0 0 1rem; font-size: 1.35rem; }
