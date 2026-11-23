@@ -53,7 +53,7 @@ export class PushToggle {
   }
 
   protected async disable(): Promise<void> {
-    await this.push.disable();
+    await this.push.disable(true);
     this.toast.show('NOTIFY.PUSH.DISABLED');
   }
 }

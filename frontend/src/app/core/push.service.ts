@@ -82,15 +82,18 @@ export class PushService {
     }
   }
 
-  /** Turns push off for this browser (server first, while still signed in). */
-  async disable(): Promise<void> {
+  /**
+   * Turns push off for this browser (server first, while still signed in).
+   * accountWide: the user switched push off, so the account preference goes off too (logout keeps it).
+   */
+  async disable(accountWide = false): Promise<void> {
     if (!this.supported) return;
     this.message.set(null);
     this.state.set('busy');
     try {
       const sub = await this.currentSubscription();
       if (sub) {
-        await this.api.pushUnsubscribe(sub.endpoint).catch(() => undefined);
+        await this.api.pushUnsubscribe(sub.endpoint, accountWide).catch(() => undefined);
         await sub.unsubscribe();
       }
     } finally {

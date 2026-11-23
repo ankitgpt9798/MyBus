@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { LanguageService } from './language.service';
 import { PushService } from './push.service';
-import { AuthResponse, Lang, Theme, User } from './models';
+import { AuthResponse, Lang, NotificationPreferences, Theme, User } from './models';
 import { STORAGE_KEYS, readStorage, writeStorage } from './storage';
 import { ThemeService } from './theme.service';
 
@@ -74,10 +74,18 @@ export class AuthService {
     await firstValueFrom(this.http.post('/api/auth/resend-verification', {}));
   }
 
-  async updateProfile(patch: Partial<Pick<User, 'name' | 'phone'>> & { language?: Lang; theme?: Theme }): Promise<User> {
+  async updateProfile(
+    patch: Partial<Pick<User, 'name' | 'phone'>> & { language?: Lang; theme?: Theme; notificationPreferences?: Partial<NotificationPreferences> },
+  ): Promise<User> {
     const { user } = await firstValueFrom(this.http.patch<{ user: User }>('/api/users/me', patch));
     this.user.set(user);
     return user;
+  }
+
+  /** Keeps the local copy in sync after a preference changed through another endpoint (push subscribe/unsubscribe). */
+  setLocalPreferences(patch: Partial<NotificationPreferences>): void {
+    const user = this.user();
+    if (user) this.user.set({ ...user, notificationPreferences: { ...user.notificationPreferences, ...patch } });
   }
 
   async changePassword(currentPassword: string, newPassword: string): Promise<void> {

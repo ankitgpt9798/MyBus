@@ -9,14 +9,14 @@ import { PreferencesService } from '../../core/preferences.service';
 import { ThemeService } from '../../core/theme.service';
 import { ToastService } from '../../core/toast.service';
 import { FieldError } from '../../shared/field-error';
-import { PushToggle } from '../../shared/push-toggle';
+import { NotificationSettings } from '../../shared/notification-settings';
 import { applyServerErrors } from '../../shared/form-errors';
 import { TranslateOrPipe } from '../../shared/translate-or.pipe';
 import { matchPasswords, notBlank, passwordStrength, phoneValidator } from '../../shared/validators';
 
 @Component({
   selector: 'app-profile',
-  imports: [ReactiveFormsModule, TranslatePipe, FieldError, TranslateOrPipe, PushToggle],
+  imports: [ReactiveFormsModule, TranslatePipe, FieldError, TranslateOrPipe, NotificationSettings],
   templateUrl: './profile.html',
   styleUrl: './profile.scss',
 })

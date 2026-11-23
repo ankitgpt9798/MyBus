@@ -3,13 +3,17 @@ import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import {
   AdminNotification,
+  AdminPromotion,
   AdminStats,
   AppNotification,
   AdminTrip,
   Booking,
   HoldRequest,
   Passenger,
+  NotificationType,
   PaymentMethod,
+  PromotionDraft,
+  PromotionTarget,
   RouteSummary,
   SearchResponse,
   TripDetails,
@@ -72,8 +76,13 @@ export class ApiService {
   }
 
   // Notifications
-  notifications(page = 1, limit = 20) {
-    return this.get<{ notifications: AppNotification[]; total: number; unread: number; page: number; limit: number }>('/notifications', { page, limit });
+  notifications(page = 1, limit = 20, filter: { type?: NotificationType | ''; unread?: boolean } = {}) {
+    return this.get<{ notifications: AppNotification[]; total: number; unread: number; page: number; limit: number }>('/notifications', {
+      page,
+      limit,
+      type: filter.type || undefined,
+      unread: filter.unread ? 'true' : undefined,
+    });
   }
   unreadCount() {
     return this.get<{ unread: number }>('/notifications/unread-count');
@@ -95,11 +104,21 @@ export class ApiService {
   pushSubscribe(subscription: PushSubscriptionJSON, optIn = false) {
     return this.post<{ subscribed: boolean; devices: number }>('/notifications/push/subscribe', { ...subscription, optIn });
   }
-  pushUnsubscribe(endpoint: string) {
-    return this.post<{ subscribed: boolean; devices: number }>('/notifications/push/unsubscribe', { endpoint });
+  /** optOut: the user turned push off, so the account's push preference is switched off on every device. */
+  pushUnsubscribe(endpoint: string, optOut = false) {
+    return this.post<{ subscribed: boolean; devices: number }>('/notifications/push/unsubscribe', { endpoint, optOut });
   }
 
   // Admin
+  adminPromotions() {
+    return this.get<{ promotions: AdminPromotion[] }>('/admin/promotions');
+  }
+  adminPromotionPreview(target: PromotionTarget) {
+    return this.post<{ recipients: number; matched: number }>('/admin/promotions/preview', { target });
+  }
+  adminSendPromotion(draft: PromotionDraft) {
+    return this.post<{ promotion: AdminPromotion }>('/admin/promotions', draft);
+  }
   adminRetryNotification(id: string) {
     return this.post<{ notification: AdminNotification }>(`/admin/notifications/${id}/retry`);
   }

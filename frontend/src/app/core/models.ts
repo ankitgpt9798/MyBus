@@ -211,9 +211,13 @@ export interface NotificationParams {
   to?: string;
   departureTime?: string;
   oldDepartureTime?: string;
+  arrivalTime?: string;
+  oldArrivalTime?: string;
   seats?: string[];
   ladiesSeats?: string[];
   boardingPoint?: string;
+  boardingTime?: string;
+  reminderKind?: '24h' | '2h';
   amount?: number;
   refundAmount?: number;
   refundPercent?: number;
@@ -221,6 +225,8 @@ export interface NotificationParams {
   tripCancelled?: boolean;
   title?: string;
   body?: string;
+  /** Offers: versions per language; missing ones fall back to English (title/body). */
+  translations?: Partial<Record<Lang, { title: string; body: string }>>;
 }
 
 export interface AppNotification {
@@ -236,7 +242,27 @@ export interface AppNotification {
   bookingId: string | null;
   read: boolean;
   createdAt: string;
-  deliveries: { channel: NotificationChannel; status: DeliveryStatus }[];
+  deliveries: { channel: NotificationChannel; status: DeliveryStatus; skipReason?: DeliveryLog['skipReason'] }[];
+}
+
+export type PromotionTarget = { kind: 'all' } | { kind: 'route'; from: string; to: string } | { kind: 'city'; city: string };
+
+export interface AdminPromotion {
+  id: string;
+  title: string;
+  target: PromotionTarget;
+  languages: Lang[];
+  status: 'sending' | 'sent';
+  recipients: number;
+  sent: number;
+  createdAt: string;
+}
+
+export interface PromotionDraft {
+  title: string;
+  body: string;
+  translations: Partial<Record<Lang, { title: string; body: string }>>;
+  target: PromotionTarget;
 }
 
 export interface DeliveryLog {
