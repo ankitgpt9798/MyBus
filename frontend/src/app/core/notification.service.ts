@@ -1,6 +1,6 @@
 import { DestroyRef, Injectable, effect, inject, signal, untracked } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
-import { filter } from 'rxjs';
+import { Subject, filter } from 'rxjs';
 import { ApiService } from './api.service';
 import { AuthService } from './auth.service';
 import { AppNotification } from './models';
@@ -30,6 +30,8 @@ export class NotificationService {
   readonly loading = signal(false);
   /** True while the live stream is connected. */
   readonly live = signal(false);
+  /** Live stream events for pages that keep their own list (the history page). */
+  readonly events = new Subject<{ kind: 'notification'; notification: AppNotification } | { kind: 'unread'; unread: number }>();
 
   private source: EventSource | null = null;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
@@ -160,6 +162,7 @@ export class NotificationService {
         const { unread } = JSON.parse((e as MessageEvent<string>).data) as { unread: number };
         this.unread.set(unread);
         if (unread === 0) this.markAllLocal();
+        this.events.next({ kind: 'unread', unread });
       });
       es.onerror = drop;
     } catch {
@@ -173,6 +176,7 @@ export class NotificationService {
       this.latest.update((list) => [notification, ...list].slice(0, LATEST_LIMIT));
     }
     this.toast.notification(notification);
+    this.events.next({ kind: 'notification', notification });
   }
 
   private scheduleReconnect(): void {

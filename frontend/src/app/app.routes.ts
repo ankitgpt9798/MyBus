@@ -68,13 +68,19 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/admin/admin-notifications').then((m) => m.AdminNotificationsPage),
         title: 'TITLES.ADMIN_NOTIFICATIONS',
       },
+      { path: 'offers', loadComponent: () => import('./pages/admin/admin-offers').then((m) => m.AdminOffersPage), title: 'TITLES.ADMIN_OFFERS' },
     ],
+  },
+  {
+    path: 'notifications',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/notifications/notifications').then((m) => m.NotificationsPage),
+    title: 'TITLES.NOTIFICATIONS',
   },
   { path: 'forbidden', loadComponent: () => import('./pages/forbidden/forbidden').then((m) => m.ForbiddenPage), title: 'TITLES.FORBIDDEN' },
 
   // Placeholders: each section is replaced by its real page as it is built.
   { path: 'community', loadComponent: comingSoon, data: { feature: 'COMMUNITY' }, title: 'TITLES.COMMUNITY' },
   { path: 'route-planner', loadComponent: comingSoon, data: { feature: 'ROUTE_PLANNER' }, title: 'TITLES.ROUTE_PLANNER' },
-  { path: 'notifications', loadComponent: comingSoon, data: { feature: 'NOTIFICATIONS' }, title: 'TITLES.NOTIFICATIONS' },
   { path: '**', loadComponent: () => import('./pages/not-found/not-found').then((m) => m.NotFoundPage), title: 'TITLES.NOT_FOUND' },
 ];
