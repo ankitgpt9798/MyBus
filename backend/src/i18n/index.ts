@@ -52,6 +52,11 @@ export function formatDateTime(lang: string | undefined, value: Date | string): 
   }).format(new Date(value));
 }
 
+/** e.g. "21:45" in the user's language (IST). */
+export function formatTime(lang: string | undefined, value: Date | string): string {
+  return new Intl.DateTimeFormat(localeOf(lang), { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'Asia/Kolkata' }).format(new Date(value));
+}
+
 /** Rupee amount in the user's language, e.g. "₹1,240". */
 export function formatMoney(lang: string | undefined, amount: number): string {
   return new Intl.NumberFormat(localeOf(lang), { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);

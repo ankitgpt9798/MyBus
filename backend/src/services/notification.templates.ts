@@ -1,5 +1,5 @@
 import { env } from '../config/env';
-import { cityName, formatDateTime, formatMoney, t } from '../i18n';
+import { cityName, formatDateTime, formatMoney, formatTime, t } from '../i18n';
 import type { NotificationType } from '../models/Notification';
 import { renderEmail } from './mail.service';
 
@@ -11,6 +11,9 @@ export interface NotificationParams {
   to?: string;
   departureTime?: string; // ISO
   oldDepartureTime?: string; // ISO (schedule changes)
+  arrivalTime?: string; // ISO
+  oldArrivalTime?: string; // ISO (schedule changes)
+  reminderKind?: '24h' | '2h';
   seats?: string[];
   ladiesSeats?: string[];
   boardingPoint?: string;
@@ -20,8 +23,16 @@ export interface NotificationParams {
   refundPercent?: number;
   paid?: boolean;
   tripCancelled?: boolean;
-  title?: string; // promotions: admin-written text
+  title?: string; // promotions: admin-written text (English)
   body?: string;
+  /** Promotions: optional versions per language; missing ones fall back to the English title/body. */
+  translations?: Partial<Record<string, { title: string; body: string }>>;
+}
+
+/** Offer text in a language, falling back to English. */
+export function promotionText(params: NotificationParams, lang: string): { title: string; body: string } {
+  const tr = params.translations?.[lang];
+  return tr?.title?.trim() && tr.body?.trim() ? { title: tr.title, body: tr.body } : { title: params.title ?? '', body: params.body ?? '' };
 }
 
 export interface RenderedNotification {
@@ -34,13 +45,18 @@ export interface RenderedNotification {
 export function renderNotification(type: NotificationType, lang: string, params: NotificationParams, userName: string): RenderedNotification {
   const k = (key: string, extra: Record<string, string | number> = {}) => t(lang, `notify.${type}.${key}`, { ...vars, ...extra });
   const label = (key: string) => t(lang, `notify.labels.${key}`);
+  const promo = type === 'promotion' ? promotionText(params, lang) : { title: '', body: '' };
   const vars: Record<string, string | number> = {
     pnr: params.pnr ?? '',
     from: params.from ? cityName(lang, params.from) : '',
     to: params.to ? cityName(lang, params.to) : '',
     date: params.departureTime ? formatDateTime(lang, params.departureTime) : '',
-    title: params.title ?? '',
-    body: params.body ?? '',
+    oldDate: params.oldDepartureTime ? formatDateTime(lang, params.oldDepartureTime) : '',
+    boarding: params.boardingPoint ?? '',
+    boardingTime: params.boardingTime ? formatTime(lang, params.boardingTime) : '',
+    seats: (params.seats ?? []).join(', '),
+    title: promo.title,
+    body: promo.body,
   };
 
   const details: { label: string; value: string }[] = [];
@@ -86,12 +102,17 @@ export function renderNotification(type: NotificationType, lang: string, params:
       add('route', route);
       add('new_departure', String(vars.date));
       add('old_departure', params.oldDepartureTime ? formatDateTime(lang, params.oldDepartureTime) : undefined);
+      add('new_arrival', params.arrivalTime ? formatDateTime(lang, params.arrivalTime) : undefined);
+      add('old_arrival', params.oldArrivalTime ? formatDateTime(lang, params.oldArrivalTime) : undefined);
+      add('boarding', boarding);
       break;
     case 'journey_reminder':
+      if (params.reminderKind === '2h') intro = k('intro_soon');
       add('pnr', params.pnr);
       add('route', route);
       add('departure', String(vars.date));
       add('boarding', boarding);
+      add('seats', seats);
       break;
     case 'promotion':
       break;
