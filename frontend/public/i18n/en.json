@@ -53,7 +53,8 @@
     "BOOKING": "Booking details",
     "ADMIN_TRIPS": "Manage trips",
     "ADMIN_BOOKINGS": "All bookings",
-    "ADMIN_NOTIFICATIONS": "Notification log"
+    "ADMIN_NOTIFICATIONS": "Notification log",
+    "ADMIN_OFFERS": "Send offers"
   },
   "HOME": {
     "TITLE": "Book bus tickets across India",
@@ -392,7 +393,37 @@
     "NO_NOTIFICATIONS": "No notifications match these filters.",
     "RETRY_NOW": "Retry now",
     "RETRY_SENT": "Delivered on retry",
-    "RETRY_FAILED": "The retry failed again. See the error in the log."
+    "RETRY_FAILED": "The retry failed again. See the error in the log.",
+    "OFFERS": "Offers",
+    "OFFER": {
+      "NEW": "Send an offer",
+      "HINT": "Offers go only to users who opted in to offers and promotions. Each user gets their own language, or English when there is no version in it.",
+      "ENGLISH": "English (required)",
+      "TITLE": "Title",
+      "BODY": "Message",
+      "OTHER_LANGUAGES": "Other languages (optional)",
+      "FALLBACK_HINT": "Fill in both the title and the message for a language, or leave both empty to use English.",
+      "AUDIENCE": "Audience",
+      "TARGET_ALL": "Everyone who opted in",
+      "TARGET_ROUTE": "Travellers on a route",
+      "TARGET_CITY": "Travellers to or from a city",
+      "CITY": "City",
+      "OPT_IN_NOTE": "Users who haven't opted in never receive offers and are not recorded.",
+      "PREVIEW": "Preview recipients",
+      "PREVIEW_RESULT": "This offer will go to {{count}} users who opted in ({{matched}} users match in total).",
+      "PREVIEW_NONE": "No users who opted in match this audience ({{matched}} match in total).",
+      "SEND": "Send to {{count}} users",
+      "SENT": "The offer is being sent to {{count}} users",
+      "RECENT": "Recent offers",
+      "LANGUAGES": "Languages",
+      "STATUS_SENDING": "Sending",
+      "STATUS_SENT": "Sent",
+      "PROGRESS": "{{sent}} of {{total}} sent",
+      "NONE_YET": "No offers sent yet.",
+      "AUDIENCE_ALL": "Everyone who opted in",
+      "AUDIENCE_ROUTE": "{{from}} → {{to}} travellers",
+      "AUDIENCE_CITY": "{{city}} travellers"
+    }
   },
   "AUTH": {
     "LOGIN_TITLE": "Welcome back",
@@ -504,7 +535,8 @@
     "SEAT_LADIES_ONLY": "Seats reserved for women can only be booked for female passengers.",
     "NOTIFICATION_NOT_FOUND": "This notification could not be found.",
     "NOTIFICATION_NOTHING_TO_RETRY": "There are no failed deliveries to retry.",
-    "STREAM_TOKEN_INVALID": "Live updates couldn't connect. Please sign in again."
+    "STREAM_TOKEN_INVALID": "Live updates couldn't connect. Please sign in again.",
+    "PROMOTION_NO_RECIPIENTS": "No users who opted in match this audience."
   },
   "FORBIDDEN": {
     "TITLE": "Access denied",
@@ -553,8 +585,9 @@
       "booking_confirmed": "{{route}} · {{date}} · PNR {{pnr}}",
       "booking_cancelled": "{{route}} · PNR {{pnr}} · refund {{refund}}",
       "booking_cancelled_plain": "{{route}} · PNR {{pnr}}",
-      "schedule_changed": "{{route}} now departs {{date}}",
-      "journey_reminder": "{{route}} departs {{date}}"
+      "schedule_changed": "{{route}} now departs {{date}} (was {{oldDate}})",
+      "journey_reminder": "{{route}} departs {{date}} · PNR {{pnr}} · Seats {{seats}} · Board at {{boarding}}, {{boardingTime}}",
+      "schedule_changed_plain": "{{route}} now departs {{date}}"
     },
     "CHANNEL": {
       "in_app": "In-app",
@@ -589,6 +622,39 @@
       "DISABLED": "Push notifications turned off for this browser"
     },
     "GAVE_UP": "Gave up: no more automatic retries",
-    "NEXT_RETRY": "Next retry {{time}}"
+    "NEXT_RETRY": "Next retry {{time}}",
+    "SETTINGS": {
+      "TITLE": "Notifications",
+      "HINT": "Choose how MyBus keeps you updated. Changes apply to new notifications right away.",
+      "CHANNELS": "Channels",
+      "EMAIL_HINT": "Booking confirmations, cancellations, schedule changes and journey reminders by email.",
+      "PUSH_HINT": "Alerts on this device, even when MyBus is closed. Turning push off stops it on all your devices.",
+      "IN_APP_HINT": "Booking and safety messages are always shown in-app. This switch only hides offers from your notifications.",
+      "OFFERS": "Offers",
+      "PROMO": "Offers and promotions",
+      "PROMO_HINT": "Occasional deals from MyBus. Off unless you turn it on.",
+      "SAVED": "Notification settings saved"
+    },
+    "HISTORY": {
+      "TITLE": "Notifications",
+      "UNREAD_COUNT": "{{count}} unread",
+      "FILTER": "Filter notifications",
+      "ALL": "All",
+      "BOOKINGS": "Bookings",
+      "CANCELLATIONS": "Cancellations",
+      "SCHEDULE": "Schedule changes",
+      "REMINDERS": "Reminders",
+      "OFFERS": "Offers",
+      "UNREAD_ONLY": "Unread only",
+      "VIEW_BOOKING": "View booking",
+      "MARK_READ": "Mark as read",
+      "SHOWING": "Showing {{shown}} of {{total}}",
+      "LOAD_MORE": "Load more",
+      "NONE_MATCH": "No notifications match these filters.",
+      "CLEAR_FILTERS": "Clear filters",
+      "EMPTY_TITLE": "No notifications yet",
+      "EMPTY_TEXT": "Booking confirmations, schedule changes and journey reminders will appear here.",
+      "FIND_BUSES": "Find buses"
+    }
   }
 }
