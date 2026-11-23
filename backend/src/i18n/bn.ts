@@ -37,6 +37,8 @@ export default {
       view_booking: 'বুকিং দেখুন',
       new_departure: 'নতুন ছাড়ার সময়',
       old_departure: 'আগের ছাড়ার সময়',
+      new_arrival: 'নতুন পৌঁছানোর সময়',
+      old_arrival: 'আগের পৌঁছানোর সময়',
     },
     prefs_note: 'কোন বিজ্ঞপ্তি পাবেন তা আপনি MyBus প্রোফাইলে বেছে নিতে পারেন।',
     booking_confirmed: {
@@ -58,14 +60,15 @@ export default {
     schedule_changed: {
       subject: 'ছাড়ার সময় বদলেছে · PNR {{pnr}}',
       title: 'ছাড়ার সময় বদলেছে',
-      intro: '{{from}} থেকে {{to}} পর্যন্ত আপনার বাসের ছাড়ার সময় বদলেছে।',
-      body: '{{from}} → {{to}} এখন {{date}}-এ ছাড়বে',
+      intro: '{{from}} থেকে {{to}} পর্যন্ত আপনার বাসের ছাড়ার সময় {{oldDate}} থেকে বদলে {{date}} হয়েছে।',
+      body: '{{from}} → {{to}} এখন {{date}}-এ ছাড়বে (আগে {{oldDate}})',
     },
     journey_reminder: {
       subject: 'আপনার বাস শিগগিরই ছাড়বে · PNR {{pnr}}',
       title: 'আসন্ন যাত্রা',
       intro: 'মনে করিয়ে দিচ্ছি: {{from}} থেকে {{to}} পর্যন্ত আপনার বাস {{date}}-এ ছাড়বে। অনুগ্রহ করে ওঠার জায়গায় 15 মিনিট আগে পৌঁছান।',
-      body: '{{from}} → {{to}}, {{date}}',
+      intro_soon: '{{from}} থেকে {{to}} পর্যন্ত আপনার বাস শীঘ্রই, {{date}}-এ ছাড়বে। অনুগ্রহ করে {{boardingTime}}-এর মধ্যে {{boarding}}-এ পৌঁছান।',
+      body: '{{from}} → {{to}}, {{date}} · PNR {{pnr}} · সিট {{seats}} · ওঠার জায়গা {{boarding}}, {{boardingTime}}',
     },
     promotion: {
       subject: '{{title}}',

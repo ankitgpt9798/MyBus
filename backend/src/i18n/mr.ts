@@ -37,6 +37,8 @@ export default {
       view_booking: 'बुकिंग पाहा',
       new_departure: 'नवीन सुटण्याची वेळ',
       old_departure: 'आधीची सुटण्याची वेळ',
+      new_arrival: 'नवी पोहोचण्याची वेळ',
+      old_arrival: 'आधीची पोहोचण्याची वेळ',
     },
     prefs_note: 'कोणत्या सूचना मिळाव्यात हे तुम्ही तुमच्या MyBus प्रोफाइलमध्ये निवडू शकता.',
     booking_confirmed: {
@@ -58,14 +60,15 @@ export default {
     schedule_changed: {
       subject: 'सुटण्याची वेळ बदलली · PNR {{pnr}}',
       title: 'सुटण्याची वेळ बदलली',
-      intro: '{{from}} ते {{to}} तुमच्या बसची सुटण्याची वेळ बदलली आहे.',
-      body: '{{from}} → {{to}} आता {{date}} ला सुटेल',
+      intro: '{{from}} ते {{to}} तुमच्या बसची सुटण्याची वेळ {{oldDate}} वरून {{date}} अशी बदलली आहे.',
+      body: '{{from}} → {{to}} आता {{date}} ला सुटेल (आधी {{oldDate}})',
     },
     journey_reminder: {
       subject: 'तुमची बस लवकरच सुटणार · PNR {{pnr}}',
       title: 'आगामी प्रवास',
       intro: 'आठवण: {{from}} ते {{to}} तुमची बस {{date}} ला सुटेल. कृपया चढण्याच्या ठिकाणी 15 मिनिटे आधी पोहोचा.',
-      body: '{{from}} → {{to}}, {{date}}',
+      intro_soon: '{{from}} ते {{to}} तुमची बस लवकरच, {{date}} ला सुटेल. कृपया {{boardingTime}} पर्यंत {{boarding}} येथे पोहोचा.',
+      body: '{{from}} → {{to}}, {{date}} · PNR {{pnr}} · सीट {{seats}} · चढण्याचे ठिकाण {{boarding}}, {{boardingTime}}',
     },
     promotion: {
       subject: '{{title}}',

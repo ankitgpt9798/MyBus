@@ -37,6 +37,8 @@ export default {
       view_booking: 'బుకింగ్ చూడండి',
       new_departure: 'కొత్త బయలుదేరే సమయం',
       old_departure: 'పాత బయలుదేరే సమయం',
+      new_arrival: 'కొత్త చేరే సమయం',
+      old_arrival: 'పాత చేరే సమయం',
     },
     prefs_note: 'మీకు ఏ నోటిఫికేషన్లు రావాలో మీ MyBus ప్రొఫైల్‌లో ఎంచుకోవచ్చు.',
     booking_confirmed: {
@@ -58,14 +60,15 @@ export default {
     schedule_changed: {
       subject: 'బయలుదేరే సమయం మారింది · PNR {{pnr}}',
       title: 'బయలుదేరే సమయం మారింది',
-      intro: '{{from}} నుండి {{to}} కి మీ బస్సు బయలుదేరే సమయం మారింది.',
-      body: '{{from}} → {{to}} ఇప్పుడు {{date}} కి బయలుదేరుతుంది',
+      intro: '{{from}} నుండి {{to}} కి మీ బస్సు బయలుదేరే సమయం {{oldDate}} నుండి {{date}} కి మారింది.',
+      body: '{{from}} → {{to}} ఇప్పుడు {{date}} కి బయలుదేరుతుంది (ముందు {{oldDate}})',
     },
     journey_reminder: {
       subject: 'మీ బస్సు త్వరలో బయలుదేరుతుంది · PNR {{pnr}}',
       title: 'రాబోయే ప్రయాణం',
       intro: 'గుర్తు: {{from}} నుండి {{to}} కి మీ బస్సు {{date}} కి బయలుదేరుతుంది. దయచేసి ఎక్కే స్థలానికి 15 నిమిషాల ముందే చేరుకోండి.',
-      body: '{{from}} → {{to}}, {{date}}',
+      intro_soon: '{{from}} నుండి {{to}} కి మీ బస్సు త్వరలో, {{date}} కి బయలుదేరుతుంది. దయచేసి {{boardingTime}} లోపు {{boarding}} చేరుకోండి.',
+      body: '{{from}} → {{to}}, {{date}} · PNR {{pnr}} · సీట్లు {{seats}} · ఎక్కే స్థలం {{boarding}}, {{boardingTime}}',
     },
     promotion: {
       subject: '{{title}}',

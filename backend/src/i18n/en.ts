@@ -37,6 +37,8 @@ export default {
       view_booking: 'View booking',
       new_departure: 'New departure',
       old_departure: 'Earlier departure',
+      new_arrival: 'New arrival',
+      old_arrival: 'Earlier arrival',
     },
     prefs_note: 'You can choose which notifications you receive in your MyBus profile.',
     booking_confirmed: {
@@ -58,14 +60,15 @@ export default {
     schedule_changed: {
       subject: 'Departure time changed · PNR {{pnr}}',
       title: 'Departure time changed',
-      intro: 'The departure time of your bus from {{from}} to {{to}} has changed.',
-      body: '{{from}} → {{to}} now departs {{date}}',
+      intro: 'The departure time of your bus from {{from}} to {{to}} has changed from {{oldDate}} to {{date}}.',
+      body: '{{from}} → {{to}} now departs {{date}} (was {{oldDate}})',
     },
     journey_reminder: {
       subject: 'Your bus leaves soon · PNR {{pnr}}',
       title: 'Upcoming journey',
       intro: 'Reminder: your bus from {{from}} to {{to}} departs on {{date}}. Please reach the boarding point 15 minutes early.',
-      body: '{{from}} → {{to}}, {{date}}',
+      intro_soon: 'Your bus from {{from}} to {{to}} leaves soon, at {{date}}. Please be at {{boarding}} by {{boardingTime}}.',
+      body: '{{from}} → {{to}}, {{date}} · PNR {{pnr}} · Seats {{seats}} · Board at {{boarding}}, {{boardingTime}}',
     },
     promotion: {
       subject: '{{title}}',

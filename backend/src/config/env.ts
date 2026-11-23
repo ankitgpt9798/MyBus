@@ -56,4 +56,9 @@ export const env = {
     // Live stream heartbeat; clients reconnect if they hear nothing for ~2.5 heartbeats.
     streamHeartbeatMs: num('NOTIFY_STREAM_HEARTBEAT_MS', 15_000),
   },
+  reminders: {
+    // How long before departure each reminder is sent: ~24 h and ~2 h. Tests may compress this, e.g. "120000,40000".
+    leadsMs: str('REMINDER_LEADS_MS', '86400000,7200000').split(',').map((v) => Number(v.trim())).filter((v) => Number.isFinite(v) && v > 0),
+    intervalMs: num('REMINDER_INTERVAL_MS', 60_000),
+  },
 };

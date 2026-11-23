@@ -1,11 +1,29 @@
 import { env } from '../config/env';
 import { completeArrivedBookings, expireStaleHolds } from '../services/booking.service';
 import { processDueRetries, resumePending } from '../services/notification.service';
+import { resumePromotions } from '../services/promotion.service';
+import { processReminders } from '../services/reminder.service';
 
 const INTERVAL_MS = 60 * 1000;
 let timer: NodeJS.Timeout | null = null;
 let retryTimer: NodeJS.Timeout | null = null;
 let retrying = false;
+let reminderTimer: NodeJS.Timeout | null = null;
+let reminding = false;
+
+/** Journey reminder scheduler (~24 h and ~2 h before departure). */
+async function reminderTick() {
+  if (reminding) return;
+  reminding = true;
+  try {
+    const n = await processReminders();
+    if (n) console.log(`[jobs] sent ${n} journey reminder(s)`);
+  } catch (err) {
+    console.error('[jobs] journey reminders failed', err);
+  } finally {
+    reminding = false;
+  }
+}
 
 /** Notification retry worker: failed email/push deliveries whose next attempt is due. */
 async function retryTick() {
@@ -40,10 +58,16 @@ export function startJobs() {
     .then((n) => n && console.log(`[jobs] resumed ${n} pending notification(s)`))
     .catch((err) => console.error('[jobs] resuming notifications failed', err));
   retryTimer = setInterval(retryTick, env.notifications.retryIntervalMs);
+  void reminderTick();
+  reminderTimer = setInterval(reminderTick, env.reminders.intervalMs);
+  resumePromotions()
+    .then((n) => n && console.log(`[jobs] resumed ${n} offer campaign(s)`))
+    .catch((err) => console.error('[jobs] resuming offers failed', err));
 }
 
 export function stopJobs() {
   if (timer) clearInterval(timer);
   if (retryTimer) clearInterval(retryTimer);
-  timer = retryTimer = null;
+  if (reminderTimer) clearInterval(reminderTimer);
+  timer = retryTimer = reminderTimer = null;
 }

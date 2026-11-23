@@ -39,6 +39,19 @@ const journeySchema = new Schema(
   { _id: false },
 );
 
+// Journey reminders (about 24 h and 2 h before departure). Due times follow the departure when a trip is rescheduled.
+export const REMINDER_KINDS = ['24h', '2h'] as const;
+const reminderSchema = new Schema(
+  {
+    kind: { type: String, enum: REMINDER_KINDS, required: true },
+    dueAt: { type: Date, required: true },
+    // skipped: the time had already passed when the booking was made, or a later reminder replaced it
+    status: { type: String, enum: ['pending', 'sent', 'skipped'], default: 'pending' },
+    sentAt: Date,
+  },
+  { _id: false },
+);
+
 const bookingSchema = new Schema(
   {
     user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
@@ -76,6 +89,7 @@ const bookingSchema = new Schema(
       refundAmount: Number,
     },
     completedAt: Date,
+    reminders: { type: [reminderSchema], default: undefined },
   },
   { timestamps: true },
 );
@@ -84,6 +98,7 @@ bookingSchema.index({ user: 1, 'journey.departureTime': -1 });
 bookingSchema.index({ status: 1, 'journey.arrivalTime': 1 });
 bookingSchema.index({ status: 1, holdExpiresAt: 1 });
 bookingSchema.index({ trip: 1, status: 1 });
+bookingSchema.index({ status: 1, 'reminders.status': 1, 'reminders.dueAt': 1 });
 
 export type BookingAttrs = InferSchemaType<typeof bookingSchema>;
 export const Booking = model('Booking', bookingSchema);

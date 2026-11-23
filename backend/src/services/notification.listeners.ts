@@ -1,26 +1,8 @@
 import { Booking, BookingAttrs } from '../models/Booking';
 import { appEvents } from './events';
+import { bookingParams } from './notification.params';
 import { notify } from './notification.service';
-import { NotificationParams } from './notification.templates';
-
-const MINUTE_MS = 60_000;
-
-/** Raw (language-neutral) values describing a booking, stored with its notifications. */
-function bookingParams(b: BookingAttrs & { _id: unknown }): NotificationParams {
-  const dep = new Date(b.journey.departureTime);
-  return {
-    bookingId: String(b._id),
-    pnr: b.pnr ?? undefined,
-    from: b.journey.from,
-    to: b.journey.to,
-    departureTime: dep.toISOString(),
-    seats: b.seats,
-    ladiesSeats: b.ladiesSeats ?? [],
-    boardingPoint: b.boardingPoint.name,
-    boardingTime: new Date(dep.getTime() + b.boardingPoint.offsetMinutes * MINUTE_MS).toISOString(),
-    amount: b.totalAmount,
-  };
-}
+import { retimeTripReminders, scheduleReminders } from './reminder.service';
 
 /** Subscribes the notification system to booking events. Called once at server start. */
 export function registerNotificationListeners(): void {
@@ -28,6 +10,7 @@ export function registerNotificationListeners(): void {
     const b = await Booking.findById(bookingId).lean<BookingAttrs & { _id: unknown }>();
     if (!b) return;
     await notify(b.user, 'booking_confirmed', bookingParams(b), { bookingId, pnr: b.pnr, emailTo: b.contact?.email });
+    await scheduleReminders(bookingId);
   });
 
   // Covers both a traveller cancelling and an admin cancelling the whole trip (reason 'trip_cancelled').
@@ -48,6 +31,18 @@ export function registerNotificationListeners(): void {
     );
   });
 
-  // 'trip.rescheduled' → 'schedule_changed' and journey reminders use the same notify() path; their
-  // templates exist already and they are subscribed together with the schedule-change alerts.
+  // An admin moved the departure/arrival (a fare-only edit emits nothing): alert every confirmed passenger
+  // with old → new times, and move their pending journey reminders to the new departure.
+  appEvents.on('trip.rescheduled', async ({ tripId, oldDepartureTime, oldArrivalTime, newDepartureTime }) => {
+    await retimeTripReminders(tripId, newDepartureTime);
+    const bookings = await Booking.find({ trip: tripId, status: 'confirmed' }).lean<(BookingAttrs & { _id: unknown })[]>();
+    for (const b of bookings) {
+      await notify(
+        b.user,
+        'schedule_changed',
+        { ...bookingParams(b), oldDepartureTime: new Date(oldDepartureTime).toISOString(), oldArrivalTime: new Date(oldArrivalTime).toISOString() },
+        { bookingId: String(b._id), pnr: b.pnr, emailTo: b.contact?.email },
+      );
+    }
+  });
 }

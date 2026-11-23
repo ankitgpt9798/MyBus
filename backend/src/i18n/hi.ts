@@ -37,6 +37,8 @@ export default {
       view_booking: 'बुकिंग देखें',
       new_departure: 'नया प्रस्थान',
       old_departure: 'पहले का प्रस्थान',
+      new_arrival: 'नया आगमन',
+      old_arrival: 'पहले का आगमन',
     },
     prefs_note: 'आप अपनी MyBus प्रोफ़ाइल में चुन सकते हैं कि कौन-सी सूचनाएँ मिलें।',
     booking_confirmed: {
@@ -58,14 +60,15 @@ export default {
     schedule_changed: {
       subject: 'प्रस्थान का समय बदला · PNR {{pnr}}',
       title: 'प्रस्थान का समय बदला',
-      intro: '{{from}} से {{to}} तक आपकी बस के प्रस्थान का समय बदल गया है।',
-      body: '{{from}} → {{to}} अब {{date}} को रवाना होगी',
+      intro: '{{from}} से {{to}} तक आपकी बस के प्रस्थान का समय {{oldDate}} से बदलकर {{date}} हो गया है।',
+      body: '{{from}} → {{to}} अब {{date}} को रवाना होगी (पहले {{oldDate}})',
     },
     journey_reminder: {
       subject: 'आपकी बस जल्द रवाना होगी · PNR {{pnr}}',
       title: 'आने वाली यात्रा',
       intro: 'याद दिलाना: {{from}} से {{to}} तक आपकी बस {{date}} को रवाना होगी। कृपया बोर्डिंग पॉइंट पर 15 मिनट पहले पहुँचें।',
-      body: '{{from}} → {{to}}, {{date}}',
+      intro_soon: '{{from}} से {{to}} तक आपकी बस जल्द ही, {{date}} को रवाना होगी। कृपया {{boardingTime}} तक {{boarding}} पहुँचें।',
+      body: '{{from}} → {{to}}, {{date}} · PNR {{pnr}} · सीटें {{seats}} · बोर्डिंग {{boarding}}, {{boardingTime}}',
     },
     promotion: {
       subject: '{{title}}',
