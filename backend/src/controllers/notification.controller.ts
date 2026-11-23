@@ -5,7 +5,7 @@ import { env } from '../config/env';
 import { CHANNELS, DELIVERY_STATUSES, NOTIFICATION_TYPES, Notification } from '../models/Notification';
 import { PushSubscription } from '../models/PushSubscription';
 import { User } from '../models/User';
-import { dispatch } from '../services/notification.service';
+import { countUnread, dispatch } from '../services/notification.service';
 import { NotificationLean, publicNotification } from '../services/notification.view';
 import { vapidKeys } from '../services/push.service';
 import { HEARTBEAT_MS, addStream, publish } from '../services/realtime.service';
@@ -18,15 +18,20 @@ const paging = (req: Request, max = 50) => {
   return { page, limit, skip: (page - 1) * limit };
 };
 
-const countUnread = (user: Types.ObjectId | string) => Notification.countDocuments({ user, read: false });
-
-/** GET /notifications: the signed-in user's notifications, newest first, plus the unread count. */
+/**
+ * GET /notifications: the signed-in user's notifications (bell + history), newest first, plus the unread count.
+ * Optional filters: ?type=<notification type> and ?unread=true.
+ */
 export async function listMine(req: Request, res: Response) {
   const { page, limit, skip } = paging(req);
   const user = req.user!._id;
+  const filter: Record<string, unknown> = { user, inbox: { $ne: false } };
+  const type = NOTIFICATION_TYPES.find((t) => t === req.query.type);
+  if (type) filter.type = type;
+  if (req.query.unread === 'true') filter.read = false;
   const [items, total, unread] = await Promise.all([
-    Notification.find({ user }).sort({ createdAt: -1 }).skip(skip).limit(limit).lean<NotificationLean[]>(),
-    Notification.countDocuments({ user }),
+    Notification.find(filter).sort({ createdAt: -1, _id: -1 }).skip(skip).limit(limit).lean<NotificationLean[]>(),
+    Notification.countDocuments(filter),
     countUnread(user),
   ]);
   res.json({ notifications: items.map(publicNotification), total, unread, page, limit });
@@ -80,6 +85,8 @@ export async function pushSubscribe(req: Request, res: Response) {
 export async function pushUnsubscribe(req: Request, res: Response) {
   validate(req.body, { endpoint: { type: 'string', required: true, max: 1000 } });
   await PushSubscription.deleteOne({ endpoint: req.body.endpoint, user: req.user!._id });
+  // Turning push off in the settings (optOut) stops it on every device, not just this browser.
+  if (req.body.optOut === true) await User.updateOne({ _id: req.user!._id }, { $set: { 'notificationPreferences.push': false } });
   res.json({ subscribed: false, devices: await PushSubscription.countDocuments({ user: req.user!._id }) });
 }
 

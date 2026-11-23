@@ -40,6 +40,10 @@ const notificationSchema = new Schema(
     pnr: String,
     read: { type: Boolean, default: false },
     readAt: Date,
+    // Shown in the bell and history. False when the in-app channel was skipped (an offer with in-app turned off).
+    inbox: { type: Boolean, default: true },
+    // Makes a send idempotent (journey reminders, offer campaigns): a second create with the same key fails.
+    dedupeKey: { type: String, unique: true, sparse: true },
     deliveries: { type: [deliverySchema], default: [] },
   },
   { timestamps: true },
@@ -47,6 +51,7 @@ const notificationSchema = new Schema(
 
 notificationSchema.index({ user: 1, createdAt: -1 });
 notificationSchema.index({ user: 1, read: 1 });
+notificationSchema.index({ user: 1, type: 1, createdAt: -1 });
 notificationSchema.index({ 'deliveries.status': 1, 'deliveries.nextAttemptAt': 1 });
 notificationSchema.index({ type: 1, createdAt: -1 });
 

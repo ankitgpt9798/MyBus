@@ -40,6 +40,19 @@ const SENDERS: Record<Channel, Sender> = {
   },
 };
 
+/** Booking, schedule and reminder messages are the traveller's record and safety information: always kept in-app. */
+export const CRITICAL_TYPES: readonly NotificationType[] = ['booking_confirmed', 'booking_cancelled', 'schedule_changed', 'journey_reminder'];
+
+export interface NotifyOptions {
+  bookingId?: Types.ObjectId | string;
+  pnr?: string | null;
+  emailTo?: string | null;
+  /** Idempotency key: if a notification with this key exists, nothing is created (returns null). */
+  dedupeKey?: string;
+  /** Caller runs dispatch() itself (batched sends); otherwise delivery starts in the background. */
+  deferDispatch?: boolean;
+}
+
 /**
  * Creates a notification for a user in their language and delivers it on every enabled channel.
  * Returns as soon as the record exists: delivery runs in the background and never blocks or fails the caller.
@@ -48,7 +61,7 @@ export async function notify(
   userId: Types.ObjectId | string,
   type: NotificationType,
   params: NotificationParams,
-  opts: { bookingId?: Types.ObjectId | string; pnr?: string | null; emailTo?: string | null } = {},
+  opts: NotifyOptions = {},
 ): Promise<NotificationDoc | null> {
   const user = await User.findById(userId);
   if (!user) return null;
@@ -58,42 +71,57 @@ export async function notify(
   const hasPush = prefs.push !== false && (await PushSubscription.exists({ user: user._id })) !== null;
 
   const promoOptOut = type === 'promotion' && !prefs.promotional;
+  const inAppOn = CRITICAL_TYPES.includes(type) || prefs.inApp !== false;
   const delivery = (channel: Channel, enabled: boolean, missing?: 'no_subscription') => {
     if (promoOptOut) return { channel, status: 'skipped', skipReason: 'promotions_opt_out' };
     if (!enabled) return { channel, status: 'skipped', skipReason: 'preference_off' };
     if (missing) return { channel, status: 'skipped', skipReason: missing };
     return { channel, status: 'pending' };
   };
+  const inbox = inAppOn && !promoOptOut;
 
-  const notification = await Notification.create({
-    user: user._id,
-    type,
-    templateKey: `notify.${type}`,
-    params,
-    language,
-    title: rendered.title,
-    body: rendered.body,
-    emailTo: opts.emailTo || user.email,
-    booking: opts.bookingId,
-    pnr: opts.pnr ?? params.pnr,
-    deliveries: [
-      delivery('in_app', prefs.inApp !== false),
-      delivery('email', prefs.email !== false),
-      delivery('push', prefs.push !== false, hasPush ? undefined : 'no_subscription'),
-    ],
-  });
+  let notification: NotificationDoc;
+  try {
+    notification = await Notification.create({
+      user: user._id,
+      type,
+      templateKey: `notify.${type}`,
+      params,
+      language,
+      title: rendered.title,
+      body: rendered.body,
+      emailTo: opts.emailTo || user.email,
+      booking: opts.bookingId,
+      pnr: opts.pnr ?? params.pnr,
+      inbox,
+      dedupeKey: opts.dedupeKey,
+      deliveries: [
+        delivery('in_app', inAppOn),
+        delivery('email', prefs.email !== false),
+        delivery('push', prefs.push !== false, hasPush ? undefined : 'no_subscription'),
+      ],
+    });
+  } catch (err) {
+    if (opts.dedupeKey && (err as { code?: number }).code === 11000) return null; // already sent
+    throw err;
+  }
 
   // Live update for every open tab of this user (in-app channel).
-  if (prefs.inApp !== false && !promoOptOut) {
-    const unread = await Notification.countDocuments({ user: user._id, read: false });
+  if (inbox) {
+    const unread = await countUnread(user._id);
     publish(String(user._id), 'notification', { notification: publicNotification(notification.toObject() as NotificationLean), unread });
   }
 
-  setImmediate(() => {
-    dispatch(notification._id).catch((err) => console.error('[notify] dispatch failed', err));
-  });
+  if (!opts.deferDispatch) {
+    setImmediate(() => {
+      dispatch(notification._id).catch((err) => console.error('[notify] dispatch failed', err));
+    });
+  }
   return notification;
 }
+
+/** Unread notifications shown in the user's bell / history. */
+export const countUnread = (user: Types.ObjectId | string) => Notification.countDocuments({ user, read: false, inbox: { $ne: false } });
 
 /**
  * Attempts the deliveries of one notification and records each outcome on its channel entry.

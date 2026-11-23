@@ -17,6 +17,6 @@ export function publicNotification(n: NotificationLean) {
     bookingId: n.booking ? String(n.booking) : null,
     read: n.read,
     createdAt: n.createdAt,
-    deliveries: n.deliveries.map((d) => ({ channel: d.channel, status: d.status })),
+    deliveries: n.deliveries.map((d) => ({ channel: d.channel, status: d.status, skipReason: d.skipReason ?? null })),
   };
 }
