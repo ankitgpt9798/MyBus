@@ -1,0 +1,95 @@
+<div class="container section narrow">
+  <h1 class="page-title">{{ (editing() ? 'REVIEWS.EDIT_TITLE' : 'REVIEWS.WRITE_TITLE') | translate }}</h1>
+
+  @if (loading()) {
+    <div class="card skeleton form-skeleton"></div>
+  } @else {
+    @if (info(); as i) {
+      <p class="journey muted">
+        <strong>{{ i.from | city }} → {{ i.to | city }}</strong>
+        @if (i.date) {
+          · {{ 'REVIEWS.TRAVELLED' | translate: { date: (i.date | appDate: 'date') } }}
+        }
+      </p>
+    }
+
+    @if (error(); as e) {
+      <div class="alert alert-error" role="alert">{{ e | translateOr: 'ERRORS.GENERIC' }}</div>
+    }
+
+    @if (blocked(); as b) {
+      <div class="card blocked" data-state="blocked">
+        <div class="alert alert-warning" role="alert">{{ b | translate }}</div>
+        @if (existing(); as r) {
+          <div class="locked-review">
+            <app-stars [value]="r.rating" [size]="18" />
+            <p>{{ r.text }}</p>
+          </div>
+          <a class="btn btn-outline" [routerLink]="['/routes', r.routeId]" fragment="reviews">{{ 'REVIEWS.SEE_ROUTE' | translate }}</a>
+        } @else {
+          <a class="btn btn-outline" routerLink="/bookings" [queryParams]="{ tab: 'completed' }">{{ 'REVIEWS.BACK_TO_BOOKINGS' | translate }}</a>
+        }
+      </div>
+    } @else if (!auth.isVerified()) {
+      <div class="card verify-card" data-state="verify">
+        <div class="alert alert-warning" role="alert">{{ 'REVIEWS.VERIFY_TO_REVIEW' | translate }}</div>
+        <button type="button" class="btn btn-primary" [disabled]="resent()" (click)="resend()">
+          {{ (resent() ? 'VERIFY.RESENT_SHORT' : 'VERIFY.RESEND') | translate }}
+        </button>
+      </div>
+    } @else {
+      <form class="card review-form" [formGroup]="form" (ngSubmit)="save()" novalidate>
+        @if (existing(); as r) {
+          <p class="small muted edit-left">{{ 'REVIEWS.EDIT_UNTIL' | translate: { date: (r.editableUntil | appDate: 'datetime') } }}</p>
+        }
+        <fieldset class="star-input">
+          <legend>{{ 'REVIEWS.YOUR_RATING' | translate }}</legend>
+          <div class="star-options" (mouseleave)="hover.set(null)">
+            @for (n of ratings; track n) {
+              <label class="star-opt" [class.on]="shownRating() >= n" (mouseenter)="hover.set(n)">
+                <input type="radio" formControlName="rating" [value]="n" [attr.data-rating]="n" />
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" /></svg>
+                <span class="sr-only">{{ 'REVIEWS.RATING_N' | translate: { n: n } }} – {{ labelFor(n) | translate }}</span>
+              </label>
+            }
+            @if (shownRating()) {
+              <span class="rating-word" aria-hidden="true">{{ labelFor(shownRating()) | translate }}</span>
+            }
+          </div>
+          <app-field-error [control]="form.controls.rating" [submitted]="submitted()" />
+        </fieldset>
+
+        <div class="form-field">
+          <label for="review-text">{{ 'REVIEWS.YOUR_REVIEW_TEXT' | translate }}</label>
+          <textarea id="review-text" formControlName="text" rows="6" [attr.maxlength]="max" aria-describedby="review-counter review-guidelines"></textarea>
+          <div class="counter-row">
+            <span id="review-counter" class="small" [class.short]="length() < min" aria-live="polite">
+              {{ 'REVIEWS.COUNTER' | translate: { n: (length() | num), max: (max | num) } }}
+              @if (length() < min) {
+                · {{ 'REVIEWS.MIN_MORE' | translate: { n: (min - length() | num) } }}
+              }
+            </span>
+          </div>
+          <app-field-error [control]="form.controls.text" [submitted]="submitted()" />
+        </div>
+
+        <div class="guidelines" id="review-guidelines">
+          <strong>{{ 'REVIEWS.GUIDELINES_TITLE' | translate }}</strong>
+          <ul>
+            <li>{{ 'REVIEWS.GUIDELINE_GENUINE' | translate }}</li>
+            <li>{{ 'REVIEWS.GUIDELINE_NO_CONTACT' | translate }}</li>
+            <li>{{ 'REVIEWS.GUIDELINE_RESPECT' | translate }}</li>
+            <li>{{ 'REVIEWS.GUIDELINE_EDIT' | translate }}</li>
+          </ul>
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="btn btn-primary submit-review" [disabled]="saving()">
+            {{ (saving() ? 'COMMON.PLEASE_WAIT' : existing() ? 'REVIEWS.SAVE_CHANGES' : 'REVIEWS.SUBMIT') | translate }}
+          </button>
+          <a class="btn btn-ghost" routerLink="/bookings" [queryParams]="{ tab: 'completed' }">{{ 'COMMON.CANCEL' | translate }}</a>
+        </div>
+      </form>
+    }
+  }
+</div>

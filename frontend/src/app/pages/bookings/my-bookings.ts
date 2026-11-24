@@ -3,9 +3,10 @@ import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ApiService } from '../../core/api.service';
 import { errorKey } from '../../core/api-error';
-import { Booking } from '../../core/models';
+import { Booking, EligibleJourney, MyReview } from '../../core/models';
 import { Icon } from '../../shared/icons';
-import { AppDatePipe, CityPipe, InrPipe } from '../../shared/pipes';
+import { AppDatePipe, CityPipe, InrPipe, NumPipe } from '../../shared/pipes';
+import { Stars } from '../../shared/stars';
 import { TranslateOrPipe } from '../../shared/translate-or.pipe';
 import { statusBadge } from './status-badge';
 
@@ -14,7 +15,7 @@ const TABS: Tab[] = ['upcoming', 'completed', 'cancelled'];
 
 @Component({
   selector: 'app-my-bookings',
-  imports: [RouterLink, TranslatePipe, Icon, AppDatePipe, CityPipe, InrPipe, TranslateOrPipe],
+  imports: [RouterLink, TranslatePipe, Icon, AppDatePipe, CityPipe, InrPipe, NumPipe, TranslateOrPipe, Stars],
   template: `
     <div class="container section narrow">
       <h1 class="page-title">{{ 'NAV.MY_BOOKINGS' | translate }}</h1>
@@ -41,7 +42,8 @@ const TABS: Tab[] = ['upcoming', 'completed', 'cancelled'];
       } @else {
         <div class="booking-list">
           @for (b of bookings(); track b.id) {
-            <a class="booking-card card" [routerLink]="['/bookings', b.id]">
+            <div class="booking-item card" [attr.data-booking]="b.id">
+            <a class="booking-card" [routerLink]="['/bookings', b.id]">
               <div class="bc-main">
                 <div class="bc-route">
                   <strong>{{ b.journey.from | city }}</strong>
@@ -64,6 +66,29 @@ const TABS: Tab[] = ['upcoming', 'completed', 'cancelled'];
                 <strong>{{ b.totalAmount | inr }}</strong>
               </div>
             </a>
+            @if (b.status === 'completed') {
+              <div class="review-row">
+                @if (reviewFor(b.id); as r) {
+                  <span class="small your-review">{{ 'REVIEWS.YOUR_REVIEW' | translate }}</span>
+                  <app-stars [value]="r.rating" [size]="15" />
+                  @if (r.status !== 'visible') {
+                    <span class="badge badge-warning">{{ 'REVIEWS.STATUS.' + r.status | translate }}</span>
+                  }
+                  @if (r.editable) {
+                    <a class="btn btn-sm btn-outline edit-review" [routerLink]="['/reviews', r.id, 'edit']">{{ 'REVIEWS.EDIT_LEFT' | translate: { h: (hoursLeft(r) | num) } }}</a>
+                  } @else {
+                    <span class="badge locked">{{ 'REVIEWS.LOCKED' | translate }}</span>
+                  }
+                  <a class="btn btn-sm btn-ghost" [routerLink]="['/routes', r.routeId]" fragment="reviews">{{ 'REVIEWS.SEE_ROUTE' | translate }}</a>
+                } @else if (isEligible(b.id)) {
+                  <span class="small muted">{{ 'REVIEWS.RATE_PROMPT' | translate }}</span>
+                  <a class="btn btn-sm btn-primary rate-btn" [routerLink]="['/reviews/new']" [queryParams]="{ booking: b.id }">
+                    <app-icon name="star" [size]="14" /> {{ 'REVIEWS.RATE' | translate }}
+                  </a>
+                }
+              </div>
+            }
+            </div>
           }
         </div>
       }
@@ -71,8 +96,15 @@ const TABS: Tab[] = ['upcoming', 'completed', 'cancelled'];
   `,
   styles: `
     .booking-list { display: grid; gap: 0.9rem; }
-    .booking-card { display: flex; justify-content: space-between; gap: 1rem; color: var(--color-text); text-decoration: none; }
-    .booking-card:hover { box-shadow: var(--shadow-md); }
+    .booking-item { padding: 0; overflow: hidden; }
+    .booking-item:hover { box-shadow: var(--shadow-md); }
+    .booking-card { display: flex; justify-content: space-between; gap: 1rem; padding: 1.25rem; color: var(--color-text); text-decoration: none; }
+    .review-row {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 0.45rem 0.6rem;
+      padding: 0.65rem 1.25rem; border-top: 1px solid var(--color-border); background: var(--color-surface-2);
+    }
+    .your-review { font-weight: 600; }
+    .rate-btn { margin-left: auto; }
     .bc-main { display: grid; gap: 0.3rem; min-width: 0; }
     .bc-route { display: flex; align-items: center; gap: 0.3rem; font-size: 1.05rem; }
     .bc-side { display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; gap: 0.5rem; }
@@ -91,6 +123,21 @@ export class MyBookingsPage {
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
   protected readonly badge = (b: Booking) => statusBadge(b.status);
+  /** Completed tab: journeys that can be reviewed and the user's existing reviews. */
+  private readonly eligible = signal<EligibleJourney[]>([]);
+  private readonly myReviews = signal<MyReview[]>([]);
+
+  protected isEligible(bookingId: string): boolean {
+    return this.eligible().some((e) => e.bookingId === bookingId);
+  }
+
+  protected reviewFor(bookingId: string): MyReview | undefined {
+    return this.myReviews().find((r) => r.bookingId === bookingId);
+  }
+
+  protected hoursLeft(r: MyReview): number {
+    return Math.max(1, Math.ceil(r.editMsLeft / 3_600_000));
+  }
 
   constructor() {
     effect(() => {
@@ -109,7 +156,13 @@ export class MyBookingsPage {
     this.loading.set(true);
     this.error.set(null);
     try {
-      this.bookings.set((await this.api.myBookings(tab)).bookings);
+      const [list, reviews] = await Promise.all([
+        this.api.myBookings(tab),
+        tab === 'completed' ? this.api.eligibleReviews().catch(() => ({ eligible: [], reviews: [] })) : null,
+      ]);
+      this.bookings.set(list.bookings);
+      this.eligible.set(reviews?.eligible ?? []);
+      this.myReviews.set(reviews?.reviews ?? []);
     } catch (err) {
       this.error.set(errorKey(err));
     } finally {

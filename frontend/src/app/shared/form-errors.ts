@@ -7,8 +7,16 @@ interface ServerFieldError {
   params?: { min?: number; max?: number };
 }
 
-function toControlError(e: ServerFieldError): ValidationErrors {
+function toControlError(e: ServerFieldError, code: string): ValidationErrors {
+  // Review content guidelines: link / email / phone / banned → VALIDATION.GUIDELINE_*
+  if (code === 'REVIEW_GUIDELINES') return { [`guideline_${e.rule}`]: true };
   switch (e.rule) {
+    case 'integer':
+      return { integer: true };
+    case 'min':
+      return { min: { min: e.params?.min } };
+    case 'max':
+      return { max: { max: e.params?.max } };
     case 'required':
       return { required: true };
     case 'email':
@@ -26,7 +34,7 @@ function toControlError(e: ServerFieldError): ValidationErrors {
   }
 }
 
-const FIELD_ERROR_CODES = ['VALIDATION_ERROR', 'SEAT_LADIES_ONLY'];
+const FIELD_ERROR_CODES = ['VALIDATION_ERROR', 'SEAT_LADIES_ONLY', 'REVIEW_GUIDELINES'];
 
 /**
  * Copies backend field errors (VALIDATION_ERROR / SEAT_LADIES_ONLY with details: [{ field, rule }]) onto the matching form controls,
@@ -39,7 +47,7 @@ export function applyServerErrors(form: FormGroup, err: unknown): boolean {
   for (const detail of err.error.details as ServerFieldError[]) {
     const control: AbstractControl | null = form.get(detail.field);
     if (!control) continue;
-    control.setErrors({ ...(control.errors ?? {}), ...toControlError(detail) });
+    control.setErrors({ ...(control.errors ?? {}), ...toControlError(detail, err.error.code) });
     control.markAsTouched();
     applied = true;
   }
