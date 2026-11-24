@@ -84,6 +84,8 @@ export function publicReview(r: ReviewLean, viewerId: string | null, stats: Map<
     createdAt: r.createdAt,
     editedAt: r.editedAt ?? null,
     author: { name: displayName(authorName), isTrustedReviewer: stats.get(authorId)?.trusted ?? false },
+    // When the reviewed journey departed (the booking is populated with journey.departureTime only).
+    travelledAt: (r.booking as unknown as { journey?: { departureTime?: Date } } | null)?.journey?.departureTime ?? null,
     helpfulCount: r.helpfulCount,
     helpfulByMe: viewerId ? r.helpfulBy.some((u) => String(u) === viewerId) : false,
     reportedByMe: viewerId ? r.reports.some((rep) => String(rep.user) === viewerId) : false,

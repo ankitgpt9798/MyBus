@@ -2,7 +2,7 @@ import type { Request, Response } from 'express';
 import { Types } from 'mongoose';
 import { env } from '../config/env';
 import { BusAttrs } from '../models/Bus';
-import { OperatorAttrs } from '../models/Operator';
+import { Operator, OperatorAttrs } from '../models/Operator';
 import { Route, RouteAttrs } from '../models/Route';
 import { Trip } from '../models/Trip';
 import { Booking } from '../models/Booking';
@@ -47,11 +47,37 @@ export async function getRoute(req: Request, res: Response) {
   if (!isObjectId(req.params.id)) throw notFound('ROUTE_NOT_FOUND');
   const route = await Route.findById(req.params.id).lean<RouteDoc>();
   if (!route) throw notFound('ROUTE_NOT_FOUND', 'Route not found');
-  const [upcomingTrips, trustedReviewers] = await Promise.all([
-    Trip.countDocuments({ route: route._id, status: 'scheduled', departureTime: { $gt: new Date() } }),
+  const upcoming = { route: route._id, status: 'scheduled' as const, departureTime: { $gt: new Date() } };
+  const [upcomingTrips, operatorIds, next, trustedReviewers] = await Promise.all([
+    Trip.countDocuments(upcoming),
+    Trip.distinct('operator', upcoming),
+    Trip.find(upcoming)
+      .sort({ departureTime: 1 })
+      .limit(5)
+      .populate<{ bus: BusAttrs & { _id: Types.ObjectId } }>('bus', '-seats')
+      .populate<{ operator: OperatorAttrs & { _id: Types.ObjectId } }>('operator', 'name')
+      .lean(),
     trustedReviewersOfRoute(route._id),
   ]);
-  res.json({ route: { ...publicRoute(route), stops: route.stops }, upcomingTrips, ratingSummary: routeSummary(route), trustedReviewers });
+  const operators = await Operator.find({ _id: { $in: operatorIds } }).select('name').sort({ name: 1 }).lean();
+  res.json({
+    route: { ...publicRoute(route), stops: route.stops },
+    upcomingTrips,
+    operators: operators.map((o) => o.name),
+    nextTrips: next.map((t) => ({
+      id: String(t._id),
+      departureTime: t.departureTime,
+      arrivalTime: t.arrivalTime,
+      fare: t.fare,
+      operatorName: t.operator.name,
+      busName: t.bus.name,
+      busType: t.bus.type,
+      ac: t.bus.ac,
+      seatsAvailable: t.bus.totalSeats - t.bookedSeats.length,
+    })),
+    ratingSummary: routeSummary(route),
+    trustedReviewers,
+  });
 }
 
 export const MAX_SEATS_PER_BOOKING = 6;

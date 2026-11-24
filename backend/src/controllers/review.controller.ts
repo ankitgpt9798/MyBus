@@ -56,7 +56,7 @@ async function loadVisible(id: unknown) {
 }
 
 async function viewOne(id: Types.ObjectId, viewer: string | null) {
-  const r = await Review.findById(id).populate('user', 'name').lean();
+  const r = await Review.findById(id).populate('user', 'name').populate('booking', 'journey.departureTime').lean();
   const stats = await reviewerStats([String((r!.user as unknown as { _id: Types.ObjectId })._id)]);
   return publicReview(r as never, viewer, stats);
 }
@@ -211,7 +211,7 @@ export async function listForRoute(req: Request, res: Response) {
   const sort = REVIEW_SORTS.find((s) => s === req.query.sort) ?? 'recent';
   const filter = { route: route._id, status: 'visible' as const };
   const [items, total, trustedReviewers] = await Promise.all([
-    Review.find(filter).sort(SORT_SPECS[sort]).skip(skip).limit(limit).populate('user', 'name').lean(),
+    Review.find(filter).sort(SORT_SPECS[sort]).skip(skip).limit(limit).populate('user', 'name').populate('booking', 'journey.departureTime').lean(),
     Review.countDocuments(filter),
     trustedReviewersOfRoute(route._id),
   ]);
@@ -306,9 +306,12 @@ export async function adminRemove(req: Request, res: Response) {
   res.json(await moderate(req, { status: 'removed', moderation: { reason: req.body.reason, note: req.body.note?.trim() || undefined, by: req.user!._id, auto: false, at: new Date() } }));
 }
 
-/** POST /admin/reviews/:id/restore { clearReports? } */
+/**
+ * POST /admin/reviews/:id/restore { clearReports? = true }
+ * Restoring means the admin judged the reports unfounded, so they are cleared unless clearReports is false.
+ */
 export async function adminRestore(req: Request, res: Response) {
   validate(req.body ?? {}, { clearReports: { type: 'boolean' } });
-  const clear = req.body?.clearReports === true;
+  const clear = req.body?.clearReports !== false;
   res.json(await moderate(req, { status: 'visible', ...(clear && { reports: [], reportCount: 0 }) }, { moderation: 1 }));
 }
