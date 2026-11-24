@@ -604,7 +604,8 @@
       "preference_off": "उपयोगकर्ता ने बंद किया",
       "promotions_opt_out": "ऑफ़र से बाहर",
       "not_available": "चैनल अभी उपलब्ध नहीं",
-      "no_subscription": "कोई डिवाइस पुश के लिए सब्सक्राइब नहीं है"
+      "no_subscription": "कोई डिवाइस पुश के लिए सब्सक्राइब नहीं है",
+      "undeliverable_address": "यह पता ईमेल प्राप्त नहीं कर सकता"
     },
     "ATTEMPTS": "प्रयास: {{n}}",
     "NEW": "नई सूचना",

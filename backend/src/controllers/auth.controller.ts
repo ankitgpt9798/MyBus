@@ -31,7 +31,8 @@ async function sendVerificationEmail(user: UserDoc): Promise<void> {
   });
   try {
     const result = await sendMail({ to: user.email, subject: t(lang, 'email.verify.subject'), html, text });
-    if (result.transport === 'console') console.log(`[auth] verification link for ${user.email}: ${url}`);
+    // Console mode or a reserved demo address (e.g. @mybus.local): print the link so the account can still be verified.
+    if (!result.delivered) console.log(`[auth] verification link for ${user.email}: ${url}`);
   } catch (err) {
     // Registration must not fail because of SMTP; the user can request a new link.
     console.error(`[auth] could not send verification email to ${user.email}:`, err);

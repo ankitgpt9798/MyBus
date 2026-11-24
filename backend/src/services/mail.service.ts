@@ -12,7 +12,20 @@ export interface MailMessage {
 export interface MailResult {
   delivered: boolean; // true when handed to an SMTP server
   messageId?: string;
-  transport: 'smtp' | 'console';
+  /** suppressed: reserved / non-routable recipient, printed to the console instead of being sent */
+  transport: 'smtp' | 'console' | 'suppressed';
+}
+
+// Reserved / non-routable recipients (RFC 2606 / 6761 names and the example.* domains). Real SMTP sends to them
+// can only bounce, which hurts the sender reputation, so they are never sent (demo accounts use @mybus.local).
+const RESERVED_TLDS = ['local', 'test', 'invalid', 'example', 'localhost'];
+const RESERVED_DOMAINS = ['example.com', 'example.net', 'example.org'];
+
+export function isUndeliverableAddress(email: string | null | undefined): boolean {
+  const domain = String(email ?? '').trim().toLowerCase().split('@')[1] ?? '';
+  if (!domain || !domain.includes('.')) return true; // missing or single-label domain
+  if (RESERVED_TLDS.includes(domain.split('.').pop()!)) return true;
+  return RESERVED_DOMAINS.some((d) => domain === d || domain.endsWith(`.${d}`));
 }
 
 let transporter: Transporter | null = null;
@@ -31,8 +44,19 @@ function getTransporter(): Transporter {
   return transporter;
 }
 
-/** Sends through SMTP when configured; otherwise prints the email to the console (dev mode). Throws on SMTP failure. */
+/**
+ * Sends through SMTP when configured; otherwise prints the email to the console (dev mode). Throws on SMTP failure.
+ * Reserved / non-routable recipients are never sent: the email is printed to the console instead.
+ */
 export async function sendMail(msg: MailMessage): Promise<MailResult> {
+  if (isUndeliverableAddress(msg.to)) {
+    console.log(`
+[mail:suppressed] To: ${msg.to} (reserved address, not sent)
+Subject: ${msg.subject}
+${msg.text}
+`);
+    return { delivered: false, transport: 'suppressed' };
+  }
   if (!smtpConfigured()) {
     console.log(`\n[mail:console] To: ${msg.to}\nSubject: ${msg.subject}\n${msg.text}\n`);
     return { delivered: false, transport: 'console' };

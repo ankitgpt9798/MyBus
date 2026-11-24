@@ -14,7 +14,7 @@ const deliverySchema = new Schema(
     status: { type: String, enum: DELIVERY_STATUSES, default: 'pending' },
     attempts: { type: Number, default: 0 },
     lastError: String,
-    skipReason: { type: String, enum: ['preference_off', 'promotions_opt_out', 'not_available', 'no_subscription'] },
+    skipReason: { type: String, enum: ['preference_off', 'promotions_opt_out', 'not_available', 'no_subscription', 'undeliverable_address'] },
     // Set once the retry schedule is used up: the delivery stays 'failed' and is not retried automatically.
     gaveUp: { type: Boolean, default: false },
     transport: String, // e.g. 'smtp' or 'console' for email

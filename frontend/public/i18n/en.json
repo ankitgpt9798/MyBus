@@ -604,7 +604,8 @@
       "preference_off": "Turned off by the user",
       "promotions_opt_out": "Opted out of offers",
       "not_available": "Channel not available yet",
-      "no_subscription": "No device subscribed to push"
+      "no_subscription": "No device subscribed to push",
+      "undeliverable_address": "Address cannot receive email"
     },
     "ATTEMPTS": "Attempts: {{n}}",
     "NEW": "New notification",

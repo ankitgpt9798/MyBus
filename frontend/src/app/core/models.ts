@@ -270,7 +270,7 @@ export interface DeliveryLog {
   status: DeliveryStatus;
   attempts: number;
   lastError: string | null;
-  skipReason: 'preference_off' | 'promotions_opt_out' | 'not_available' | 'no_subscription' | null;
+  skipReason: 'preference_off' | 'promotions_opt_out' | 'not_available' | 'no_subscription' | 'undeliverable_address' | null;
   /** Retry schedule used up; only an admin "Retry now" tries again. */
   gaveUp: boolean;
   transport: string | null;

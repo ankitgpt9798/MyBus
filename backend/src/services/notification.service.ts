@@ -4,7 +4,7 @@ import { DEFAULT_LANGUAGE, isLang } from '../i18n';
 import { Channel, Notification, NotificationDoc, NotificationType } from '../models/Notification';
 import { PushSubscription } from '../models/PushSubscription';
 import { User, UserDoc } from '../models/User';
-import { sendMail } from './mail.service';
+import { isUndeliverableAddress, sendMail } from './mail.service';
 import { NotificationParams, renderNotification } from './notification.templates';
 import { NotificationLean, publicNotification } from './notification.view';
 import { sendPushToUser } from './push.service';
@@ -16,15 +16,19 @@ export const MAX_ATTEMPTS = RETRY_DELAYS_MS.length + 1;
 /** Notifications created after this are dispatched by notify() itself, so startup resume leaves them alone. */
 const STARTED_AT = new Date();
 
-type SendResult = { status: 'sent'; transport: string } | { status: 'skipped'; skipReason: 'no_subscription' };
+type SkipReason = 'no_subscription' | 'undeliverable_address';
+type SendResult = { status: 'sent'; transport: string } | { status: 'skipped'; skipReason: SkipReason };
 type Sender = (n: NotificationDoc, user: UserDoc) => Promise<SendResult>;
 
 const SENDERS: Record<Channel, Sender> = {
   // The stored notification *is* the in-app message (bell, history, live stream) — it never needs a retry.
   in_app: async () => ({ status: 'sent', transport: 'inbox' }),
   email: async (n, user) => {
+    const to = n.emailTo || user.email;
+    // Reserved demo addresses (@mybus.local, example.com, ...) are never sent, and so never retried either.
+    if (isUndeliverableAddress(to)) return { status: 'skipped', skipReason: 'undeliverable_address' };
     const { email } = renderNotification(n.type, n.language, (n.params ?? {}) as NotificationParams, user.name);
-    const result = await sendMail({ to: n.emailTo || user.email, ...email });
+    const result = await sendMail({ to, ...email });
     return { status: 'sent', transport: result.transport };
   },
   push: async (n) => {
@@ -72,7 +76,8 @@ export async function notify(
 
   const promoOptOut = type === 'promotion' && !prefs.promotional;
   const inAppOn = CRITICAL_TYPES.includes(type) || prefs.inApp !== false;
-  const delivery = (channel: Channel, enabled: boolean, missing?: 'no_subscription') => {
+  const emailTo = opts.emailTo || user.email;
+  const delivery = (channel: Channel, enabled: boolean, missing?: SkipReason) => {
     if (promoOptOut) return { channel, status: 'skipped', skipReason: 'promotions_opt_out' };
     if (!enabled) return { channel, status: 'skipped', skipReason: 'preference_off' };
     if (missing) return { channel, status: 'skipped', skipReason: missing };
@@ -90,14 +95,14 @@ export async function notify(
       language,
       title: rendered.title,
       body: rendered.body,
-      emailTo: opts.emailTo || user.email,
+      emailTo,
       booking: opts.bookingId,
       pnr: opts.pnr ?? params.pnr,
       inbox,
       dedupeKey: opts.dedupeKey,
       deliveries: [
         delivery('in_app', inAppOn),
-        delivery('email', prefs.email !== false),
+        delivery('email', prefs.email !== false, isUndeliverableAddress(emailTo) ? 'undeliverable_address' : undefined),
         delivery('push', prefs.push !== false, hasPush ? undefined : 'no_subscription'),
       ],
     });
