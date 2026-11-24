@@ -4,6 +4,16 @@ import { firstValueFrom } from 'rxjs';
 import {
   AdminNotification,
   AdminPromotion,
+  AdminReview,
+  EligibleJourney,
+  MyReview,
+  RatingSummary,
+  RemoveReason,
+  ReportReason,
+  RouteDetails,
+  RouteReview,
+  RouteReviewsResponse,
+  ReviewSort,
   AdminStats,
   AppNotification,
   AdminTrip,
@@ -53,6 +63,29 @@ export class ApiService {
   }
   trip(id: string) {
     return this.get<TripDetails>(`/trips/${id}`);
+  }
+  route(id: string) {
+    return this.get<RouteDetails>(`/routes/${id}`);
+  }
+
+  // Reviews
+  routeReviews(routeId: string, sort: ReviewSort = 'recent', page = 1, limit = 10) {
+    return this.get<RouteReviewsResponse>(`/routes/${routeId}/reviews`, { sort, page, limit });
+  }
+  eligibleReviews() {
+    return this.get<{ eligible: EligibleJourney[]; reviews: MyReview[] }>('/reviews/eligible');
+  }
+  createReview(body: { bookingId: string; rating: number; text: string }) {
+    return this.post<{ review: RouteReview; summary: RatingSummary }>('/reviews', body);
+  }
+  updateReview(id: string, body: { rating: number; text: string }) {
+    return this.patch<{ review: RouteReview; summary: RatingSummary }>(`/reviews/${id}`, body);
+  }
+  reportReview(id: string, body: { reason: ReportReason; note?: string }) {
+    return this.post<{ reported: boolean; hidden: boolean }>(`/reviews/${id}/report`, body);
+  }
+  toggleHelpful(id: string) {
+    return this.post<{ helpful: boolean; helpfulCount: number }>(`/reviews/${id}/helpful`);
   }
 
   // Bookings: hold seats -> passenger details -> pay
@@ -110,6 +143,18 @@ export class ApiService {
   }
 
   // Admin
+  adminReviews(params: Params) {
+    return this.get<{ reviews: AdminReview[]; total: number; page: number; limit: number }>('/admin/reviews', params);
+  }
+  adminHideReview(id: string, note?: string) {
+    return this.post<{ review: { id: string; status: string }; summary: RatingSummary }>(`/admin/reviews/${id}/hide`, { note });
+  }
+  adminRemoveReview(id: string, reason: RemoveReason, note?: string) {
+    return this.post<{ review: { id: string; status: string }; summary: RatingSummary }>(`/admin/reviews/${id}/remove`, { reason, note });
+  }
+  adminRestoreReview(id: string, clearReports: boolean) {
+    return this.post<{ review: { id: string; status: string }; summary: RatingSummary }>(`/admin/reviews/${id}/restore`, { clearReports });
+  }
   adminPromotions() {
     return this.get<{ promotions: AdminPromotion[] }>('/admin/promotions');
   }

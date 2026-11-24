@@ -60,9 +60,11 @@ export class InrPipe implements PipeTransform {
 export class NumPipe implements PipeTransform {
   private readonly translate = inject(TranslateService);
 
-  transform(value: number | null | undefined): string {
+  /** fixed: exact number of decimals (e.g. 1 → "4.0" for ratings). */
+  transform(value: number | null | undefined, fixed?: number): string {
     if (value === null || value === undefined) return '';
-    return new Intl.NumberFormat(localeOf(this.translate), { maximumFractionDigits: 1 }).format(value);
+    const digits = fixed === undefined ? { maximumFractionDigits: 1 } : { minimumFractionDigits: fixed, maximumFractionDigits: fixed };
+    return new Intl.NumberFormat(localeOf(this.translate), digits).format(value);
   }
 }
 

@@ -283,3 +283,112 @@ export interface AdminNotification extends Omit<AppNotification, 'deliveries'> {
   emailTo: string | null;
   deliveries: DeliveryLog[];
 }
+
+// Reviews (R6)
+
+export type ReviewSort = 'recent' | 'helpful' | 'highest' | 'lowest';
+export type ReviewStatus = 'visible' | 'hidden' | 'removed';
+export type ReportReason = 'spam' | 'offensive' | 'irrelevant' | 'fake' | 'other';
+export type RemoveReason = ReportReason | 'personal_info';
+export type StarKey = '1' | '2' | '3' | '4' | '5';
+
+export interface RatingSummary {
+  avg: number;
+  count: number;
+  distribution: Record<StarKey, number>;
+}
+
+export interface TrustedReviewer {
+  name: string;
+  reviews: number;
+  helpful: number;
+}
+
+export interface NextTrip {
+  id: string;
+  departureTime: string;
+  arrivalTime: string;
+  fare: number;
+  operatorName: string;
+  busName: string;
+  busType: BusType;
+  ac: boolean;
+  seatsAvailable: number;
+}
+
+export interface RouteDetails {
+  route: RouteSummary & { stops: Stop[] };
+  upcomingTrips: number;
+  operators: string[];
+  nextTrips: NextTrip[];
+  ratingSummary: RatingSummary;
+  trustedReviewers: TrustedReviewer[];
+}
+
+export interface RouteReview {
+  id: string;
+  routeId: string;
+  rating: number;
+  text: string;
+  createdAt: string;
+  editedAt: string | null;
+  travelledAt: string | null;
+  author: { name: string; isTrustedReviewer: boolean };
+  helpfulCount: number;
+  helpfulByMe: boolean;
+  reportedByMe: boolean;
+  mine: boolean;
+  editable: boolean;
+  editableUntil?: string;
+}
+
+export interface RouteReviewsResponse {
+  summary: RatingSummary;
+  trustedReviewers: TrustedReviewer[];
+  reviews: RouteReview[];
+  total: number;
+  page: number;
+  limit: number;
+  sort: ReviewSort;
+}
+
+export interface EligibleJourney {
+  bookingId: string;
+  pnr: string | null;
+  routeId: string;
+  from: string;
+  to: string;
+  departureTime: string;
+  operatorName: string;
+}
+
+export interface MyReview {
+  id: string;
+  bookingId: string;
+  routeId: string;
+  from?: string;
+  to?: string;
+  rating: number;
+  text: string;
+  status: ReviewStatus;
+  createdAt: string;
+  editedAt: string | null;
+  editableUntil: string;
+  editable: boolean;
+  editMsLeft: number;
+}
+
+export interface AdminReview {
+  id: string;
+  rating: number;
+  text: string;
+  status: ReviewStatus;
+  createdAt: string;
+  editedAt: string | null;
+  user: { id: string; name: string; email: string } | null;
+  route: { id: string; from: string; to: string } | null;
+  helpfulCount: number;
+  reportCount: number;
+  reports: { user: string | null; reason: ReportReason; note: string | null; createdAt: string }[];
+  moderation: { reason: string; note: string | null; auto: boolean; by: string | null; at: string } | null;
+}
