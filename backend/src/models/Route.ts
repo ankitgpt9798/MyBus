@@ -19,9 +19,11 @@ const routeSchema = new Schema(
     distanceKm: { type: Number, required: true },
     durationMinutes: { type: Number, required: true },
     stops: { type: [stopSchema], default: [] },
-    // Maintained by the reviews module (Phase 3).
+    // Recomputed by the reviews module from visible reviews only.
     ratingAvg: { type: Number, default: 0 },
     ratingCount: { type: Number, default: 0 },
+    // Number of visible reviews per star: { 1: n, ..., 5: n }
+    ratingDistribution: { type: Schema.Types.Mixed, default: () => ({ 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }) },
   },
   { timestamps: true },
 );

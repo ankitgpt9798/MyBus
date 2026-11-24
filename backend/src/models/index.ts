@@ -4,6 +4,7 @@ export * from './Bus';
 export * from './Notification';
 export * from './Operator';
 export * from './PushSubscription';
+export * from './Review';
 export * from './Promotion';
 export * from './RevokedToken';
 export * from './Route';
