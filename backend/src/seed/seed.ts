@@ -1,5 +1,5 @@
 /**
- * Resets the catalogue (operators, buses, routes, trips, bookings) and upserts the admin + demo users.
+ * Resets the catalogue (operators, buses, routes, trips, bookings, reviews) and upserts the admin + demo users.
  * Run with: npm run seed
  */
 import bcrypt from 'bcryptjs';
@@ -9,11 +9,14 @@ import { env } from '../config/env';
 import { Booking } from '../models/Booking';
 import { Bus } from '../models/Bus';
 import { Operator } from '../models/Operator';
+import { Review } from '../models/Review';
 import { RevokedToken } from '../models/RevokedToken';
 import { Route } from '../models/Route';
 import { Trip } from '../models/Trip';
 import { User } from '../models/User';
 import { generatePnr } from '../services/booking.service';
+import { REVIEW_EDIT_WINDOW_MS, REVIEW_HIDE_THRESHOLD } from '../services/review.rules';
+import { recomputeRouteRating } from '../services/review.service';
 import { HOUR_MS, MINUTE_MS, istDateString, istDateTime } from '../utils/time';
 import {
   BUS_MODELS,
@@ -33,6 +36,35 @@ export const DEMO_USERS = {
   traveler: { name: 'Riya Sharma', email: 'traveler@mybus.local', password: 'Traveler@123', emailVerified: true },
   unverified: { name: 'Arjun Mehta', email: 'unverified@mybus.local', password: 'Traveler@123', emailVerified: false },
 };
+
+// Verified demo travellers whose completed journeys carry the seeded reviews (password Traveler@123).
+const REVIEWERS = [
+  { name: 'Priya Nair', email: 'priya.reviews@mybus.local', language: 'en' },
+  { name: 'Rahul Verma', email: 'rahul.reviews@mybus.local', language: 'hi' },
+  { name: 'Sneha Patil', email: 'sneha.reviews@mybus.local', language: 'mr' },
+  { name: 'Ananya Das', email: 'ananya.reviews@mybus.local', language: 'bn' },
+  { name: 'Kiran Reddy', email: 'kiran.reviews@mybus.local', language: 'te' },
+  { name: 'Vikram Singh', email: 'vikram.reviews@mybus.local', language: 'en' },
+  { name: 'Meena Iyer', email: 'meena.reviews@mybus.local', language: 'en' },
+] as const;
+
+// by = index in REVIEWERS. Priya (12 votes / 3 reviews) and Rahul (11 / 3) qualify as trusted reviewers.
+// One review sits one report below the auto-hide threshold; one was hidden by reports.
+const SEED_REVIEWS: { by: number; route: [string, string]; rating: number; text: string; helpful: number; reports?: number }[] = [
+  { by: 0, route: ['Mumbai', 'Pune'], rating: 5, helpful: 5, text: 'Very smooth ride on the expressway. The bus left on time, the seats were clean and the AC worked well throughout.' },
+  { by: 2, route: ['Mumbai', 'Pune'], rating: 4, helpful: 2, text: 'बस वेळेवर सुटली आणि प्रवास आरामदायक झाला. फक्त चढण्याच्या ठिकाणी थोडी गर्दी होती.' },
+  { by: 6, route: ['Mumbai', 'Pune'], rating: 3, helpful: 1, reports: REVIEW_HIDE_THRESHOLD - 1, text: 'Decent journey but the driver took a long tea break at the food mall, so we reached forty minutes late.' },
+  { by: 5, route: ['Mumbai', 'Pune'], rating: 1, helpful: 0, reports: REVIEW_HIDE_THRESHOLD, text: 'Worst bus ever, total waste of money, never book this operator again, avoid avoid avoid!!!' },
+  { by: 1, route: ['Pune', 'Mumbai'], rating: 5, helpful: 4, text: 'ड्राइवर बहुत सावधानी से चला रहा था और बस समय पर मुंबई पहुँच गई। सीटें आरामदायक थीं।' },
+  { by: 0, route: ['Bengaluru', 'Chennai'], rating: 4, helpful: 4, text: 'Comfortable sleeper berth and helpful staff. Charging points worked, though the blanket could have been cleaner.' },
+  { by: 4, route: ['Bengaluru', 'Chennai'], rating: 5, helpful: 2, text: 'బస్సు చాలా శుభ్రంగా ఉంది, సిబ్బంది మర్యాదగా ప్రవర్తించారు. సమయానికి చెన్నై చేరుకున్నాం.' },
+  { by: 1, route: ['Bengaluru', 'Chennai'], rating: 4, helpful: 4, text: 'रात का सफ़र अच्छा रहा, बस में ज़्यादा शोर नहीं था और पानी की बोतल भी मिली।' },
+  { by: 0, route: ['Delhi', 'Jaipur'], rating: 5, helpful: 3, text: 'Excellent service from start to finish. Boarding at the pickup point was well organised and we arrived early.' },
+  { by: 3, route: ['Delhi', 'Jaipur'], rating: 4, helpful: 1, text: 'যাত্রা বেশ আরামদায়ক ছিল, বাস পরিষ্কার ছিল এবং আমরা সময়মতো জয়পুর পৌঁছেছি।' },
+  { by: 1, route: ['Delhi', 'Jaipur'], rating: 3, helpful: 3, text: 'बस ठीक थी लेकिन एसी बहुत तेज़ था और कंबल नहीं दिया गया। बाकी सफ़र ठीक रहा।' },
+  { by: 4, route: ['Hyderabad', 'Bengaluru'], rating: 4, helpful: 1, text: 'ప్రయాణం సౌకర్యంగా సాగింది. మధ్యలో ఆగిన చోట భోజనం బాగుంది, కానీ కొంచెం ఆలస్యమైంది.' },
+  { by: 3, route: ['Hyderabad', 'Bengaluru'], rating: 5, helpful: 0, text: 'চমৎকার যাত্রা! সিটগুলো আরামদায়ক, কর্মীরা ভদ্র এবং বাস একদম সময়ে ছেড়েছে।' },
+];
 
 // Deterministic PRNG so every seed run produces the same catalogue.
 function mulberry32(seed: number) {
@@ -95,13 +127,13 @@ function fareFor(distanceKm: number, type: 'seater' | 'sleeper', ac: boolean) {
   return Math.max(199, Math.round(base / 10) * 10 - 1);
 }
 
-async function upsertUser(data: { name: string; email: string; password: string; emailVerified: boolean; role?: 'user' | 'admin' }) {
+async function upsertUser(data: { name: string; email: string; password: string; emailVerified: boolean; role?: 'user' | 'admin'; language?: string }) {
   const passwordHash = await bcrypt.hash(data.password, 10);
   return User.findOneAndUpdate(
     { email: data.email },
     {
       $set: { name: data.name, passwordHash, emailVerified: data.emailVerified, role: data.role ?? 'user' },
-      $setOnInsert: { language: 'en', theme: 'light' },
+      $setOnInsert: { language: data.language ?? 'en', theme: 'light' },
     },
     { upsert: true, returnDocument: 'after' },
   );
@@ -109,16 +141,25 @@ async function upsertUser(data: { name: string; email: string; password: string;
 
 async function main() {
   await connectDb();
-  const models = [User, RevokedToken, Operator, Bus, Route, Trip, Booking];
+  const models = [User, RevokedToken, Operator, Bus, Route, Trip, Booking, Review];
   for (const m of models) await m.syncIndexes();
 
   console.log('[seed] clearing catalogue and bookings…');
-  await Promise.all([Booking.deleteMany({}), Trip.deleteMany({}), Route.deleteMany({}), Bus.deleteMany({}), Operator.deleteMany({})]);
+  await Promise.all([
+    Review.deleteMany({}),
+    Booking.deleteMany({}),
+    Trip.deleteMany({}),
+    Route.deleteMany({}),
+    Bus.deleteMany({}),
+    Operator.deleteMany({}),
+  ]);
 
   // Users
   const admin = await upsertUser({ name: env.admin.name, email: env.admin.email, password: env.admin.password, emailVerified: true, role: 'admin' });
   const traveler = await upsertUser(DEMO_USERS.traveler);
   await upsertUser(DEMO_USERS.unverified);
+  const reviewers: NonNullable<Awaited<ReturnType<typeof upsertUser>>>[] = [];
+  for (const r of REVIEWERS) reviewers.push((await upsertUser({ ...r, password: DEMO_USERS.traveler.password, emailVerified: true }))!);
 
   // Operators & buses (3 buses per operator)
   const operators = await Operator.insertMany(OPERATORS);
@@ -198,23 +239,25 @@ async function main() {
     ...[0, 1, 2].map((i) => ({ trip: pastTrips[Math.floor((i + 0.5) * (pastTrips.length / 3))], status: 'completed' as const })),
     { trip: futureTrips[Math.floor(futureTrips.length / 5)], status: 'confirmed' as const },
   ];
-  for (const { trip, status } of chosen) {
+  type TripDoc = (typeof tripDocs)[number];
+  async function makeBooking(user: { _id: Types.ObjectId; name: string; email: string }, trip: TripDoc, status: 'completed' | 'confirmed') {
     const bus = busById.get(String(trip.bus))!;
     const route = routeById.get(String(trip.route))!;
     const seat = bus.seats.find((s) => !s.ladiesOnly && !trip.bookedSeats.includes(s.number))!.number;
+    trip.bookedSeats.push(seat);
     await Trip.updateOne({ _id: trip._id }, { $addToSet: { bookedSeats: seat } });
     const boarding = route.stops.find((s) => s.type === 'boarding')!;
     const dropping = route.stops.filter((s) => s.type === 'dropping').at(-1)!;
     const paidAt = new Date(trip.departureTime.getTime() - 3 * 24 * HOUR_MS);
-    await Booking.create({
-      user: traveler!._id,
+    return Booking.create({
+      user: user._id,
       trip: trip._id,
       route: route._id,
       pnr: generatePnr(),
       status,
       seats: [seat],
-      passengers: [{ seat, name: DEMO_USERS.traveler.name, age: 27, gender: 'female' }],
-      contact: { email: DEMO_USERS.traveler.email, phone: '9876543210' },
+      passengers: [{ seat, name: user.name, age: 27, gender: 'female' }],
+      contact: { email: user.email, phone: '9876543210' },
       boardingPoint: { name: boarding.name, offsetMinutes: boarding.offsetMinutes },
       droppingPoint: { name: dropping.name, offsetMinutes: dropping.offsetMinutes },
       journey: {
@@ -234,13 +277,52 @@ async function main() {
       createdAt: paidAt,
     });
   }
+  for (const { trip, status } of chosen) await makeBooking(traveler!, trip, status);
+
+  // Reviews on completed journeys of the demo reviewers, with helpful votes and reports.
+  const othersThan = (author: number) => [...reviewers.filter((_, i) => i !== author), traveler!];
+  const touchedRoutes = new Set<string>();
+  let reviewCount = 0;
+  for (const [i, r] of SEED_REVIEWS.entries()) {
+    const route = routes.find((x) => x.from === r.route[0] && x.to === r.route[1]);
+    if (!route) continue;
+    const trips = pastTrips.filter((t) => String(t.route) === String(route._id));
+    const trip = trips[(i * 3) % trips.length];
+    const author = reviewers[r.by];
+    const booking = await makeBooking(author, trip, 'completed');
+    const createdAt = new Date(Math.min(trip.arrivalTime.getTime() + 3 * HOUR_MS, now - HOUR_MS));
+    const voters = othersThan(r.by).slice(0, r.helpful);
+    const reporters = othersThan(r.by).reverse().slice(0, r.reports ?? 0);
+    const reasons = ['spam', 'offensive', 'fake'] as const;
+    const hidden = (r.reports ?? 0) >= REVIEW_HIDE_THRESHOLD;
+    await Review.create({
+      user: author._id,
+      route: route._id,
+      trip: trip._id,
+      booking: booking._id,
+      rating: r.rating,
+      text: r.text,
+      status: hidden ? 'hidden' : 'visible',
+      moderation: hidden ? { reason: 'reports', auto: true, at: createdAt } : undefined,
+      reports: reporters.map((u, k) => ({ user: u._id, reason: reasons[k % reasons.length], createdAt })),
+      reportCount: reporters.length,
+      helpfulBy: voters.map((u) => u._id),
+      helpfulCount: voters.length,
+      editableUntil: new Date(createdAt.getTime() + REVIEW_EDIT_WINDOW_MS),
+      createdAt,
+    });
+    touchedRoutes.add(String(route._id));
+    reviewCount++;
+  }
+  for (const id of touchedRoutes) await recomputeRouteRating(id);
 
   console.log(
-    `[seed] ${operators.length} operators, ${buses.length} buses, ${routes.length} routes, ${tripDocs.length} trips, ${chosen.length} demo bookings`,
+    `[seed] ${operators.length} operators, ${buses.length} buses, ${routes.length} routes, ${tripDocs.length} trips, ${chosen.length} demo bookings, ${reviewCount} reviews on ${touchedRoutes.size} routes`,
   );
   console.log(`[seed] admin:      ${admin!.email} / ${env.admin.password}`);
   console.log(`[seed] traveler:   ${DEMO_USERS.traveler.email} / ${DEMO_USERS.traveler.password} (verified)`);
   console.log(`[seed] unverified: ${DEMO_USERS.unverified.email} / ${DEMO_USERS.unverified.password}`);
+  console.log(`[seed] reviewers:  ${REVIEWERS.map((r) => r.email).join(', ')} / ${DEMO_USERS.traveler.password}`);
   await disconnectDb();
 }
 

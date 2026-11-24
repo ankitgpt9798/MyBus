@@ -56,13 +56,14 @@ cd backend
 npm run seed
 ```
 
-This resets the catalogue and bookings in the `mybus` database, then creates or updates these accounts:
+This resets the catalogue, bookings and reviews in the `mybus` database, then creates or updates these accounts:
 
 | Account | Email | Password |
 | --- | --- | --- |
 | Admin | `ADMIN_EMAIL` from `.env` (default `admin@mybus.local`) | `ADMIN_PASSWORD` (default `Admin@12345`) |
 | Verified traveller | `traveler@mybus.local` | `Traveler@123` |
 | Unverified traveller | `unverified@mybus.local` | `Traveler@123` |
+| Demo reviewers (sample route reviews) | `priya.reviews@mybus.local`, `rahul.reviews@…`, `sneha.reviews@…`, `ananya.reviews@…`, `kiran.reviews@…`, `vikram.reviews@…`, `meena.reviews@…` | `Traveler@123` |
 
 It also creates:
 
