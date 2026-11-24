@@ -19,7 +19,7 @@
         </h1>
         @if (result(); as r) {
           <p class="muted">
-            {{ 'SEARCH.RESULTS_COUNT' | translate: { count: (r.trips.length | num) } }}
+            {{ 'SEARCH.RESULTS_COUNT' | plural: r.trips.length : { count: (r.trips.length | num) } }}
             @if (r.route) {
               · {{ 'HOME.ROUTE_META' | translate: { km: (r.route.distanceKm | num), duration: (r.route.durationMinutes | duration) } }}
             }
@@ -106,7 +106,7 @@
           }
         }
         <button type="button" class="btn btn-primary btn-block filters-done" (click)="filtersOpen.set(false)">
-          {{ 'FILTERS.SHOW_RESULTS' | translate: { count: ((result()?.trips?.length ?? 0) | num) } }}
+          {{ 'FILTERS.SHOW_RESULTS' | plural: result()?.trips?.length ?? 0 : { count: ((result()?.trips?.length ?? 0) | num) } }}
         </button>
       </aside>
 
@@ -192,7 +192,7 @@
                     <span class="muted small">{{ 'SEARCH.STARTS_FROM' | translate }}</span>
                     <strong class="price">{{ t.fare | inr }}</strong>
                     <span class="small seats-left" [class.text-warning]="t.seatsAvailable < 10" [class.muted]="t.seatsAvailable >= 10">
-                      {{ 'SEARCH.SEATS_LEFT' | translate: { count: (t.seatsAvailable | num) } }}
+                      {{ 'SEARCH.SEATS_LEFT' | plural: t.seatsAvailable : { count: (t.seatsAvailable | num) } }}
                     </span>
                     <a class="btn btn-primary" [routerLink]="['/trip', t.id]" [class.disabled]="!t.seatsAvailable">
                       {{ 'SEARCH.SELECT_SEATS' | translate }}

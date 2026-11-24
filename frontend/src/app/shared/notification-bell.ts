@@ -8,6 +8,7 @@ import { Icon } from './icons';
 import { NotificationText } from './notification-text';
 import { AppDatePipe } from './pipes';
 import { PushToggle } from './push-toggle';
+import { PluralPipe } from './plural.pipe';
 
 /**
  * Header bell: unread badge and a panel with the latest notifications.
@@ -15,11 +16,11 @@ import { PushToggle } from './push-toggle';
  */
 @Component({
   selector: 'app-notification-bell',
-  imports: [RouterLink, TranslatePipe, Icon, AppDatePipe, NotificationText, PushToggle],
+  imports: [RouterLink, TranslatePipe, Icon, AppDatePipe, NotificationText, PushToggle, PluralPipe],
   template: `
     @if (auth.isLoggedIn()) {
       <button type="button" class="icon-btn bell-btn" (click)="toggle()" aria-haspopup="dialog" [attr.aria-expanded]="open()" [attr.data-live]="notifications.live()"
-        [attr.aria-label]="(notifications.unread() ? 'NOTIFY.BELL_UNREAD' : 'NOTIFY.BELL') | translate: { count: notifications.unread() }"
+        [attr.aria-label]="notifications.unread() ? ('NOTIFY.BELL_UNREAD' | plural: notifications.unread()) : ('NOTIFY.BELL' | translate)"
         [title]="'NOTIFY.BELL' | translate">
         <app-icon name="bell" />
         @if (notifications.unread()) {

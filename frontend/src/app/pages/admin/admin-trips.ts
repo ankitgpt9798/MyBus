@@ -9,6 +9,7 @@ import { ToastService } from '../../core/toast.service';
 import { FieldError } from '../../shared/field-error';
 import { AppDatePipe, CityPipe, InrPipe, NumPipe } from '../../shared/pipes';
 import { TranslateOrPipe } from '../../shared/translate-or.pipe';
+import { PluralPipe } from '../../shared/plural.pipe';
 
 type RouteOption = { id: string; from: string; to: string; code: string };
 type BusOption = { id: string; name: string; registrationNumber: string; operatorName: string };
@@ -16,7 +17,7 @@ type BusOption = { id: string; name: string; registrationNumber: string; operato
 /** Trips: filter by date/route/status, reschedule or cancel a trip, and add new trips. */
 @Component({
   selector: 'app-admin-trips',
-  imports: [ReactiveFormsModule, TranslatePipe, FieldError, AppDatePipe, CityPipe, InrPipe, NumPipe, TranslateOrPipe],
+  imports: [ReactiveFormsModule, TranslatePipe, FieldError, AppDatePipe, CityPipe, InrPipe, NumPipe, TranslateOrPipe, PluralPipe],
   templateUrl: './admin-trips.html',
   styleUrl: './admin.scss',
 })
@@ -120,7 +121,8 @@ export class AdminTripsPage implements OnInit {
     this.editError.set(null);
     try {
       const res = await this.api.adminUpdateTrip(trip.id, body);
-      this.toast.success(body.departureTime || body.arrivalTime ? 'ADMIN.TRIP_RESCHEDULED' : 'ADMIN.TRIP_UPDATED', { n: res.affectedBookings });
+      const rescheduled = !!(body.departureTime || body.arrivalTime);
+      this.toast.success(rescheduled ? 'ADMIN.TRIP_RESCHEDULED' : 'ADMIN.TRIP_UPDATED', { n: res.affectedBookings }, rescheduled ? res.affectedBookings : undefined);
       this.editing.set(null);
       await this.load();
     } catch (err) {
@@ -142,7 +144,7 @@ export class AdminTripsPage implements OnInit {
     this.saving.set(true);
     try {
       const res = await this.api.adminUpdateTrip(trip.id, { status: 'cancelled' });
-      this.toast.success('ADMIN.TRIP_CANCELLED', { n: res.affectedBookings });
+      this.toast.success('ADMIN.TRIP_CANCELLED', { n: res.affectedBookings }, res.affectedBookings);
       this.cancelling.set(null);
       await this.load();
     } catch (err) {

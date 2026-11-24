@@ -1,7 +1,7 @@
 import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
-import { TranslatePipe } from '@ngx-translate/core';
+import { Router, RouterLink, TitleStrategy } from '@angular/router';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ApiService } from '../../core/api.service';
 import { errorKey } from '../../core/api-error';
 import { AuthService } from '../../core/auth.service';
@@ -11,7 +11,9 @@ import { Dialog } from '../../shared/dialog';
 import { Icon } from '../../shared/icons';
 import { AppDatePipe, CityPipe, DurationPipe, InrPipe, NumPipe } from '../../shared/pipes';
 import { Stars } from '../../shared/stars';
+import { PluralPipe } from '../../shared/plural.pipe';
 import { TranslateOrPipe } from '../../shared/translate-or.pipe';
+import { TranslatedTitleStrategy } from '../../core/title.strategy';
 import { istDate } from '../../core/time';
 
 const PAGE_SIZE = 5;
@@ -22,7 +24,7 @@ const STARS: StarKey[] = ['5', '4', '3', '2', '1'];
 /** Route details: stops, operators, next departures, the rating summary and genuine travellers' reviews (R6). */
 @Component({
   selector: 'app-route-details',
-  imports: [RouterLink, ReactiveFormsModule, TranslatePipe, Icon, Stars, Dialog, AppDatePipe, CityPipe, DurationPipe, InrPipe, NumPipe, TranslateOrPipe],
+  imports: [RouterLink, ReactiveFormsModule, TranslatePipe, Icon, Stars, Dialog, AppDatePipe, CityPipe, DurationPipe, InrPipe, NumPipe, TranslateOrPipe, PluralPipe],
   templateUrl: './route-details.html',
   styleUrl: './route-details.scss',
 })
@@ -33,6 +35,8 @@ export class RouteDetailsPage {
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
   protected readonly auth = inject(AuthService);
+  private readonly translate = inject(TranslateService);
+  private readonly titles = inject(TitleStrategy) as TranslatedTitleStrategy;
 
   protected readonly sorts = SORTS;
   protected readonly stars = STARS;
@@ -72,9 +76,13 @@ export class RouteDetailsPage {
   private async load(id: string): Promise<void> {
     this.loading.set(true);
     this.error.set(null);
+    this.titles.setDynamicTitle(null); // generic "Route details" while loading or on error
     try {
       const [details] = await Promise.all([this.api.route(id), this.loadReviews(1)]);
       this.details.set(details);
+      // "Delhi to Lucknow | MyBus" in the current language, re-rendered when the language changes.
+      const { from, to } = details.route;
+      this.titles.setDynamicTitle(() => this.translate.instant('ROUTE.TAB_TITLE', { from: this.cityName(from), to: this.cityName(to) }));
     } catch (err) {
       this.error.set(errorKey(err));
     } finally {
@@ -103,6 +111,16 @@ export class RouteDetailsPage {
 
   protected loadMore(): void {
     void this.loadReviews(this.page() + 1).catch((err) => this.toast.error(errorKey(err)));
+  }
+
+  private cityName(name: string): string {
+    const key = `CITY.${name}`;
+    const value = this.translate.instant(key) as string;
+    return value === key ? name : value;
+  }
+
+  protected starNumber(star: StarKey): number {
+    return Number(star);
   }
 
   protected percent(star: StarKey): number {

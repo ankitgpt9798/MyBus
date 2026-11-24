@@ -11,6 +11,7 @@ import { AppDatePipe, CityPipe, DurationPipe, InrPipe, NumPipe } from '../../sha
 import { SearchForm } from '../../shared/search-form';
 import { TranslateOrPipe } from '../../shared/translate-or.pipe';
 import { TripDetailsPanel } from '../../shared/trip-details';
+import { PluralPipe } from '../../shared/plural.pipe';
 
 type SortKey = 'departure' | 'price' | 'duration' | 'seats';
 type ListParam = 'busType' | 'ac' | 'slots' | 'operators';
@@ -24,7 +25,7 @@ const num = (v: string | undefined) => (v !== undefined && v !== '' && Number.is
  */
 @Component({
   selector: 'app-search',
-  imports: [RouterLink, TranslatePipe, SearchForm, Icon, TripDetailsPanel, AppDatePipe, CityPipe, DurationPipe, InrPipe, NumPipe, TranslateOrPipe, RouteRating],
+  imports: [RouterLink, TranslatePipe, SearchForm, Icon, TripDetailsPanel, AppDatePipe, CityPipe, DurationPipe, InrPipe, NumPipe, TranslateOrPipe, RouteRating, PluralPipe],
   templateUrl: './search.html',
   styleUrl: './search.scss',
 })

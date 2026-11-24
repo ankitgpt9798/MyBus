@@ -16,7 +16,7 @@
             @if (s.count) {
               <app-stars [value]="s.avg" [size]="18" />
               <strong>{{ s.avg | num: 1 }}</strong>
-              <span class="muted">{{ 'REVIEWS.COUNT' | translate: { count: (s.count | num) } }}</span>
+              <span class="muted">{{ 'REVIEWS.COUNT' | plural: s.count : { count: (s.count | num) } }}</span>
             } @else {
               <span class="muted">{{ 'REVIEWS.NO_RATINGS_SHORT' | translate }}</span>
             }
@@ -68,12 +68,12 @@
                 <a class="next-trip" [routerLink]="['/trip', t.id]">
                   <span class="nt-time"><strong>{{ t.departureTime | appDate: 'day' }}</strong> {{ t.departureTime | appDate: 'time' }}</span>
                   <span class="nt-op">{{ t.operatorName }} <span class="muted small">· {{ (t.ac ? 'BUS.AC' : 'BUS.NONAC') | translate }} {{ 'BUS.TYPE.' + t.busType | translate }}</span></span>
-                  <span class="nt-price"><strong>{{ t.fare | inr }}</strong> <span class="muted small">{{ 'SEARCH.SEATS_LEFT' | translate: { count: (t.seatsAvailable | num) } }}</span></span>
+                  <span class="nt-price"><strong>{{ t.fare | inr }}</strong> <span class="muted small">{{ 'SEARCH.SEATS_LEFT' | plural: t.seatsAvailable : { count: (t.seatsAvailable | num) } }}</span></span>
                 </a>
               </li>
             }
           </ul>
-          <p class="small muted">{{ 'ROUTE.UPCOMING_COUNT' | translate: { count: (d.upcomingTrips | num) } }}</p>
+          <p class="small muted">{{ 'ROUTE.UPCOMING_COUNT' | plural: d.upcomingTrips : { count: (d.upcomingTrips | num) } }}</p>
         } @else {
           <p class="muted">{{ 'ROUTE.NO_TRIPS' | translate }}</p>
         }
@@ -88,12 +88,12 @@
             <div class="avg-box">
               <span class="avg">{{ s.avg | num: 1 }}</span>
               <app-stars [value]="s.avg" [size]="20" />
-              <span class="muted small">{{ 'REVIEWS.BASED_ON' | translate: { count: (s.count | num) } }}</span>
+              <span class="muted small">{{ 'REVIEWS.BASED_ON' | plural: s.count : { count: (s.count | num) } }}</span>
             </div>
             <ul class="bars" [attr.aria-label]="'REVIEWS.DISTRIBUTION' | translate">
               @for (star of stars; track star) {
                 <li class="bar-row" [attr.data-star]="star">
-                  <span class="bar-label">{{ 'REVIEWS.N_STARS' | translate: { n: star } }}</span>
+                  <span class="bar-label">{{ 'REVIEWS.N_STARS' | plural: starNumber(star) : { n: star } }}</span>
                   <span class="bar" aria-hidden="true"><span class="fill" [style.width.%]="percent(star)"></span></span>
                   <span class="bar-count">{{ s.distribution[star] | num }}</span>
                 </li>
@@ -117,7 +117,7 @@
               <li class="trusted-chip">
                 <app-icon name="shield" [size]="16" />
                 <strong>{{ t.name }}</strong>
-                <span class="muted small">{{ 'REVIEWS.TRUSTED_STATS' | translate: { reviews: (t.reviews | num), helpful: (t.helpful | num) } }}</span>
+                <span class="muted small">{{ 'REVIEWS.COUNT' | plural: t.reviews : { count: (t.reviews | num) } }} · {{ 'REVIEWS.TRUSTED_HELPFUL' | plural: t.helpful : { count: (t.helpful | num) } }}</span>
               </li>
             }
           </ul>
@@ -134,7 +134,7 @@
 
       @if (total() || reviews().length) {
         <div class="list-head">
-          <span class="muted small">{{ 'REVIEWS.SHOWING' | translate: { shown: (reviews().length | num), total: (total() | num) } }}</span>
+          <span class="muted small">{{ 'REVIEWS.SHOWING' | plural: total() : { shown: (reviews().length | num), total: (total() | num) } }}</span>
           <div class="chips" role="group" [attr.aria-label]="'REVIEWS.SORT_LABEL' | translate">
             @for (s of sorts; track s) {
               <button type="button" class="chip" [class.active]="sort() === s" [attr.aria-pressed]="sort() === s" [attr.data-sort]="s" (click)="setSort(s)">
@@ -168,7 +168,7 @@
               </p>
               <div class="review-actions">
                 @if (r.mine) {
-                  <span class="small muted">{{ 'REVIEWS.HELPFUL_COUNT' | translate: { count: (r.helpfulCount | num) } }}</span>
+                  <span class="small muted">{{ 'REVIEWS.HELPFUL_COUNT' | plural: r.helpfulCount : { count: (r.helpfulCount | num) } }}</span>
                   @if (r.editable) {
                     <a class="btn btn-sm btn-ghost edit-own" [routerLink]="['/reviews', r.id, 'edit']"><app-icon name="settings" [size]="14" /> {{ 'REVIEWS.EDIT' | translate }}</a>
                   }

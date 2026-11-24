@@ -66,7 +66,7 @@
             <span id="review-counter" class="small" [class.short]="length() < min" aria-live="polite">
               {{ 'REVIEWS.COUNTER' | translate: { n: (length() | num), max: (max | num) } }}
               @if (length() < min) {
-                · {{ 'REVIEWS.MIN_MORE' | translate: { n: (min - length() | num) } }}
+                · {{ 'REVIEWS.MIN_MORE' | plural: min - length() : { n: (min - length() | num) } }}
               }
             </span>
           </div>

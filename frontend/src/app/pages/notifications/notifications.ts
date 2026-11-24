@@ -10,6 +10,7 @@ import { Icon } from '../../shared/icons';
 import { NotificationText } from '../../shared/notification-text';
 import { AppDatePipe, NumPipe } from '../../shared/pipes';
 import { TranslateOrPipe } from '../../shared/translate-or.pipe';
+import { PluralPipe } from '../../shared/plural.pipe';
 
 const PAGE_SIZE = 15;
 const FILTERS: { type: NotificationType | ''; key: string }[] = [
@@ -25,13 +26,13 @@ const STATUS_BADGE: Record<DeliveryStatus, string> = { sent: 'badge-success', pe
 /** Notification history: everything the user received, rendered in the current UI language from stored params. */
 @Component({
   selector: 'app-notifications-page',
-  imports: [RouterLink, TranslatePipe, Icon, NotificationText, AppDatePipe, NumPipe, TranslateOrPipe],
+  imports: [RouterLink, TranslatePipe, Icon, NotificationText, AppDatePipe, NumPipe, TranslateOrPipe, PluralPipe],
   template: `
     <div class="container section narrow">
       <div class="page-head">
         <div>
           <h1 class="page-title">{{ 'NOTIFY.HISTORY.TITLE' | translate }}</h1>
-          <p class="muted small unread-line">{{ 'NOTIFY.HISTORY.UNREAD_COUNT' | translate: { count: (notifications.unread() | num) } }}</p>
+          <p class="muted small unread-line">{{ 'NOTIFY.HISTORY.UNREAD_COUNT' | plural: notifications.unread() : { count: (notifications.unread() | num) } }}</p>
         </div>
         <button type="button" class="btn btn-outline btn-sm mark-all" [disabled]="!notifications.unread() || busy()" (click)="markAll()">
           {{ 'NOTIFY.MARK_ALL_READ' | translate }}

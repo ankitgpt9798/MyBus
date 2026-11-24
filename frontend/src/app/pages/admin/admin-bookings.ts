@@ -8,13 +8,14 @@ import { Booking, BookingStatus } from '../../core/models';
 import { AppDatePipe, CityPipe, InrPipe, NumPipe } from '../../shared/pipes';
 import { TranslateOrPipe } from '../../shared/translate-or.pipe';
 import { statusBadge } from '../bookings/status-badge';
+import { PluralPipe } from '../../shared/plural.pipe';
 
 const STATUSES: BookingStatus[] = ['pending', 'confirmed', 'completed', 'cancelled', 'expired'];
 
 /** Bookings overview. Search (PNR, user name or email) and status live in the URL. */
 @Component({
   selector: 'app-admin-bookings',
-  imports: [FormsModule, RouterLink, TranslatePipe, AppDatePipe, CityPipe, InrPipe, NumPipe, TranslateOrPipe],
+  imports: [FormsModule, RouterLink, TranslatePipe, AppDatePipe, CityPipe, InrPipe, NumPipe, TranslateOrPipe, PluralPipe],
   template: `
     <form class="card filter-bar" (ngSubmit)="search()">
       <div class="form-field">
@@ -39,7 +40,7 @@ const STATUSES: BookingStatus[] = ['pending', 'confirmed', 'completed', 'cancell
       <div class="alert alert-error">{{ e | translateOr: 'ERRORS.GENERIC' }}</div>
     }
     <div class="card table-card" [class.dim]="loading()">
-      <p class="muted small">{{ 'ADMIN.BOOKINGS_FOUND' | translate: { count: (total() | num) } }}</p>
+      <p class="muted small">{{ 'ADMIN.BOOKINGS_FOUND' | plural: total() : { count: (total() | num) } }}</p>
       @if (bookings().length) {
         <div class="table-wrap">
           <table class="table">

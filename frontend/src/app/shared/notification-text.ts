@@ -3,11 +3,12 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { LanguageService } from '../core/language.service';
 import { AppNotification } from '../core/models';
 import { AppDatePipe, CityPipe, InrPipe } from './pipes';
+import { PluralPipe } from './plural.pipe';
 
 /** Title + one-line summary of a notification, rendered from its stored params in the current UI language. */
 @Component({
   selector: 'app-notification-text',
-  imports: [TranslatePipe, AppDatePipe, CityPipe, InrPipe],
+  imports: [TranslatePipe, AppDatePipe, CityPipe, InrPipe, PluralPipe],
   template: `
     @if (offer(); as o) {
       <strong>{{ o.title }}</strong>
@@ -15,7 +16,8 @@ import { AppDatePipe, CityPipe, InrPipe } from './pipes';
     } @else {
       <strong>{{ 'NOTIFY.TYPES.' + n().type | translate }}</strong>
       <span class="body">
-        {{ bodyKey() | translate: {
+        @if (n().type === 'journey_reminder') {
+          {{ bodyKey() | plural: (n().params.seats?.length ?? 0) : {
           route: (n().params.from | city) + ' → ' + (n().params.to | city),
           date: (n().params.departureTime | appDate: 'datetime'),
           oldDate: (n().params.oldDepartureTime | appDate: 'datetime'),
@@ -25,6 +27,18 @@ import { AppDatePipe, CityPipe, InrPipe } from './pipes';
           pnr: n().pnr,
           refund: (n().params.refundAmount | inr)
         } }}
+        } @else {
+          {{ bodyKey() | translate: {
+          route: (n().params.from | city) + ' → ' + (n().params.to | city),
+          date: (n().params.departureTime | appDate: 'datetime'),
+          oldDate: (n().params.oldDepartureTime | appDate: 'datetime'),
+          boarding: n().params.boardingPoint ?? '',
+          boardingTime: (n().params.boardingTime | appDate: 'time'),
+          seats: (n().params.seats ?? []).join(', '),
+          pnr: n().pnr,
+          refund: (n().params.refundAmount | inr)
+        } }}
+        }
       </span>
     }
   `,

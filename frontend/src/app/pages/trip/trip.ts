@@ -14,13 +14,14 @@ import { AppDatePipe, CityPipe, DurationPipe, InrPipe, NumPipe } from '../../sha
 import { SeatMap } from '../../shared/seat-map';
 import { TranslateOrPipe } from '../../shared/translate-or.pipe';
 import { TripDetailsPanel } from '../../shared/trip-details';
+import { PluralPipe } from '../../shared/plural.pipe';
 
 const PENDING_KEY = 'mybus.pendingSelection';
 
 /** Step 1 of booking: pick seats and boarding/dropping points, then hold the seats. */
 @Component({
   selector: 'app-trip',
-  imports: [ReactiveFormsModule, RouterLink, TranslatePipe, SeatMap, FieldError, Icon, TripDetailsPanel, AppDatePipe, CityPipe, DurationPipe, InrPipe, NumPipe, TranslateOrPipe, RouteRating],
+  imports: [ReactiveFormsModule, RouterLink, TranslatePipe, SeatMap, FieldError, Icon, TripDetailsPanel, AppDatePipe, CityPipe, DurationPipe, InrPipe, NumPipe, TranslateOrPipe, RouteRating, PluralPipe],
   templateUrl: './trip.html',
   styleUrl: './trip.scss',
 })
@@ -88,7 +89,7 @@ export class TripPage {
     if (current.includes(seat)) {
       this.selected.set(current.filter((s) => s !== seat));
     } else if (current.length >= this.maxSeats()) {
-      this.toast.error('SEATS.MAX_REACHED', { n: this.maxSeats() });
+      this.toast.error('SEATS.MAX_REACHED', { n: this.maxSeats() }, this.maxSeats());
     } else {
       this.selected.set([...current, seat]);
     }

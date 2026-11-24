@@ -9,13 +9,14 @@ import { AppDatePipe, CityPipe, InrPipe, NumPipe } from '../../shared/pipes';
 import { Stars } from '../../shared/stars';
 import { TranslateOrPipe } from '../../shared/translate-or.pipe';
 import { statusBadge } from './status-badge';
+import { PluralPipe } from '../../shared/plural.pipe';
 
 type Tab = 'upcoming' | 'completed' | 'cancelled';
 const TABS: Tab[] = ['upcoming', 'completed', 'cancelled'];
 
 @Component({
   selector: 'app-my-bookings',
-  imports: [RouterLink, TranslatePipe, Icon, AppDatePipe, CityPipe, InrPipe, NumPipe, TranslateOrPipe, Stars],
+  imports: [RouterLink, TranslatePipe, Icon, AppDatePipe, CityPipe, InrPipe, NumPipe, TranslateOrPipe, Stars, PluralPipe],
   template: `
     <div class="container section narrow">
       <h1 class="page-title">{{ 'NAV.MY_BOOKINGS' | translate }}</h1>
@@ -75,7 +76,7 @@ const TABS: Tab[] = ['upcoming', 'completed', 'cancelled'];
                     <span class="badge badge-warning">{{ 'REVIEWS.STATUS.' + r.status | translate }}</span>
                   }
                   @if (r.editable) {
-                    <a class="btn btn-sm btn-outline edit-review" [routerLink]="['/reviews', r.id, 'edit']">{{ 'REVIEWS.EDIT_LEFT' | translate: { h: (hoursLeft(r) | num) } }}</a>
+                    <a class="btn btn-sm btn-outline edit-review" [routerLink]="['/reviews', r.id, 'edit']">{{ 'REVIEWS.EDIT_LEFT' | plural: hoursLeft(r) : { h: (hoursLeft(r) | num) } }}</a>
                   } @else {
                     <span class="badge locked">{{ 'REVIEWS.LOCKED' | translate }}</span>
                   }

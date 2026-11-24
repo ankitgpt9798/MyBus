@@ -12,6 +12,7 @@ import { applyServerErrors } from '../../shared/form-errors';
 import { AppDatePipe, CityPipe, NumPipe } from '../../shared/pipes';
 import { TranslateOrPipe } from '../../shared/translate-or.pipe';
 import { notBlank } from '../../shared/validators';
+import { PluralPipe } from '../../shared/plural.pipe';
 
 const OTHER_LANGS: Lang[] = ['hi', 'mr', 'bn', 'te'];
 
@@ -24,7 +25,7 @@ const requiredWithSibling =
 /** Admin: compose an offer (English required, other languages optional), choose who gets it, preview, send. */
 @Component({
   selector: 'app-admin-offers',
-  imports: [ReactiveFormsModule, TranslatePipe, FieldError, AppDatePipe, CityPipe, NumPipe, TranslateOrPipe],
+  imports: [ReactiveFormsModule, TranslatePipe, FieldError, AppDatePipe, CityPipe, NumPipe, TranslateOrPipe, PluralPipe],
   template: `
     <form class="card offer-form" [formGroup]="form" (ngSubmit)="send()" novalidate>
       <h2 class="sub-title">{{ 'ADMIN.OFFER.NEW' | translate }}</h2>
@@ -121,12 +122,21 @@ const requiredWithSibling =
         </button>
         @if (preview(); as p) {
           <p class="alert preview-result" [class.alert-info]="p.recipients" [class.alert-warning]="!p.recipients" role="status">
-            {{ (p.recipients ? 'ADMIN.OFFER.PREVIEW_RESULT' : 'ADMIN.OFFER.PREVIEW_NONE') | translate: { count: (p.recipients | num), matched: (p.matched | num) } }}
+            @if (p.recipients) {
+              {{ 'ADMIN.OFFER.PREVIEW_RESULT' | plural: p.recipients : { count: (p.recipients | num) } }}
+            } @else {
+              {{ 'ADMIN.OFFER.PREVIEW_NONE' | translate }}
+            }
+            {{ 'ADMIN.OFFER.PREVIEW_MATCHED' | plural: p.matched : { matched: (p.matched | num) } }}
           </p>
         }
       </div>
       <button type="submit" class="btn btn-primary send-btn" [disabled]="!canSend()">
-        {{ (sending() ? 'COMMON.PLEASE_WAIT' : 'ADMIN.OFFER.SEND') | translate: { count: (preview()?.recipients ?? 0 | num) } }}
+        @if (sending()) {
+          {{ 'COMMON.PLEASE_WAIT' | translate }}
+        } @else {
+          {{ 'ADMIN.OFFER.SEND' | plural: preview()?.recipients ?? 0 : { count: (preview()?.recipients ?? 0 | num) } }}
+        }
       </button>
     </form>
 
@@ -283,7 +293,7 @@ export class AdminOffersPage implements OnInit {
     this.error.set(null);
     try {
       const { promotion } = await this.api.adminSendPromotion({ title: v.title.trim(), body: v.body.trim(), translations, target });
-      this.toast.success('ADMIN.OFFER.SENT', { count: promotion.recipients });
+      this.toast.success('ADMIN.OFFER.SENT', { count: promotion.recipients }, promotion.recipients);
       this.form.reset({ title: '', body: '', target: { kind: 'all', from: '', to: '', city: '' } });
       this.submitted.set(false);
       this.previewTried.set(false);

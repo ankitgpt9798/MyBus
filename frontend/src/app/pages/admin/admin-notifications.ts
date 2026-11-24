@@ -7,6 +7,7 @@ import { AdminNotification, DeliveryLog, DeliveryStatus, NotificationChannel, No
 import { ToastService } from '../../core/toast.service';
 import { AppDatePipe, NumPipe } from '../../shared/pipes';
 import { TranslateOrPipe } from '../../shared/translate-or.pipe';
+import { PluralPipe } from '../../shared/plural.pipe';
 
 const STATUS_BADGE: Record<DeliveryStatus, string> = {
   sent: 'badge-success',
@@ -18,7 +19,7 @@ const STATUS_BADGE: Record<DeliveryStatus, string> = {
 /** Delivery log: every notification with its per-channel status, attempts and last error. */
 @Component({
   selector: 'app-admin-notifications',
-  imports: [ReactiveFormsModule, TranslatePipe, AppDatePipe, NumPipe, TranslateOrPipe],
+  imports: [ReactiveFormsModule, TranslatePipe, AppDatePipe, NumPipe, TranslateOrPipe, PluralPipe],
   template: `
     <form class="card filter-bar" [formGroup]="filters" (ngSubmit)="load(1)">
       <div class="form-field">
@@ -57,7 +58,7 @@ const STATUS_BADGE: Record<DeliveryStatus, string> = {
       <div class="alert alert-error">{{ e | translateOr: 'ERRORS.GENERIC' }}</div>
     }
     <div class="card table-card" [class.dim]="loading()">
-      <p class="muted small">{{ 'ADMIN.NOTIFICATIONS_FOUND' | translate: { count: (total() | num) } }}</p>
+      <p class="muted small">{{ 'ADMIN.NOTIFICATIONS_FOUND' | plural: total() : { count: (total() | num) } }}</p>
       @if (items().length) {
         <div class="table-wrap">
           <table class="table notif-table">
@@ -88,7 +89,7 @@ const STATUS_BADGE: Record<DeliveryStatus, string> = {
                       @if (delivery(n, c); as d) {
                         <span [class]="'badge ' + badge(d.status)">{{ 'NOTIFY.STATUS.' + d.status | translate }}</span>
                         @if (d.attempts) {
-                          <div class="muted small">{{ 'NOTIFY.ATTEMPTS' | translate: { n: d.attempts } }}</div>
+                          <div class="muted small">{{ 'NOTIFY.ATTEMPTS' | plural: d.attempts : { n: d.attempts } }}</div>
                         }
                         @if (d.skipReason) {
                           <div class="muted small">{{ 'NOTIFY.SKIP.' + d.skipReason | translate }}</div>

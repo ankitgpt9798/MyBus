@@ -93,7 +93,10 @@
     "SUBMIT": "Search buses",
     "START": "Where would you like to go?",
     "START_HINT": "Choose your cities and travel date above to see available buses.",
-    "RESULTS_COUNT": "{{count}} buses found",
+    "RESULTS_COUNT": {
+      "one": "{{count}} bus found",
+      "other": "{{count}} buses found"
+    },
     "PREV_DAY": "Previous day",
     "NEXT_DAY": "Next day",
     "NO_ROUTE": "We don't run buses on this route yet",
@@ -103,7 +106,10 @@
     "NO_BUSES_FILTERED": "No buses match your filters. Try removing some of them.",
     "TRY_NEXT_DAY": "Check the next day",
     "STARTS_FROM": "Starts from",
-    "SEATS_LEFT": "{{count}} seats left",
+    "SEATS_LEFT": {
+      "one": "{{count}} seat left",
+      "other": "{{count}} seats left"
+    },
     "SELECT_SEATS": "Select seats",
     "TRIP_DETAILS": "Trip details",
     "HIDE_DETAILS": "Hide details"
@@ -129,7 +135,10 @@
     "MIN_PRICE": "Minimum price",
     "MAX_PRICE": "Maximum price",
     "OPERATORS": "Bus operators",
-    "SHOW_RESULTS": "Show {{count}} buses"
+    "SHOW_RESULTS": {
+      "one": "Show {{count}} bus",
+      "other": "Show {{count}} buses"
+    }
   },
   "SORT": {
     "LABEL": "Sort by",
@@ -189,9 +198,18 @@
     "KM": "{{km}} km",
     "AMENITIES": "Amenities",
     "NO_AMENITIES": "No amenities listed",
-    "POLICY_MORE_THAN": "More than {{h}} hours before departure",
-    "POLICY_BETWEEN": "{{h}} to {{max}} hours before departure",
-    "POLICY_LESS_THAN": "Less than {{h}} hours before departure",
+    "POLICY_MORE_THAN": {
+      "one": "More than {{h}} hour before departure",
+      "other": "More than {{h}} hours before departure"
+    },
+    "POLICY_BETWEEN": {
+      "one": "{{h}} to {{max}} hour before departure",
+      "other": "{{h}} to {{max}} hours before departure"
+    },
+    "POLICY_LESS_THAN": {
+      "one": "Less than {{h}} hour before departure",
+      "other": "Less than {{h}} hours before departure"
+    },
     "POLICY_REFUND": "{{p}}% refund",
     "POLICY_NO_REFUND": "No refund",
     "POLICY_NOTE": "Tickets cannot be cancelled after the bus has departed.",
@@ -200,8 +218,14 @@
     "CANCELLED": "This trip has been cancelled by the operator.",
     "DEPARTED": "This bus has already departed. Please choose another trip.",
     "SELECT_SEATS": "Select your seats",
-    "SEATS_AVAILABLE": "{{count}} seats available",
-    "MAX_SEATS_HINT": "You can book up to {{n}} seats in one booking.",
+    "SEATS_AVAILABLE": {
+      "one": "{{count}} seat available",
+      "other": "{{count}} seats available"
+    },
+    "MAX_SEATS_HINT": {
+      "one": "You can book up to {{n}} seat in one booking.",
+      "other": "You can book up to {{n}} seats in one booking."
+    },
     "POINTS": "Boarding and dropping points",
     "BOARDING_POINT": "Boarding point",
     "DROPPING_POINT": "Dropping point",
@@ -210,7 +234,10 @@
     "TOTAL": "Total",
     "CONTINUE": "Continue",
     "LOGIN_TO_CONTINUE": "Log in to continue",
-    "HOLD_HINT": "Your seats are held for {{n}} minutes while you complete the booking."
+    "HOLD_HINT": {
+      "one": "Your seats are held for {{n}} minute while you complete the booking.",
+      "other": "Your seats are held for {{n}} minutes while you complete the booking."
+    }
   },
   "SEATS": {
     "AVAILABLE": "Available",
@@ -221,7 +248,10 @@
     "UPPER_DECK": "Upper deck",
     "DRIVER": "Driver",
     "SEAT": "Seat {{n}}",
-    "MAX_REACHED": "You can select up to {{n}} seats.",
+    "MAX_REACHED": {
+      "one": "You can select up to {{n}} seat.",
+      "other": "You can select up to {{n}} seats."
+    },
     "SELECT_AT_LEAST_ONE": "Select at least one seat to continue.",
     "LADIES": "Reserved for women",
     "BOOKED_FEMALE": "Booked by a woman",
@@ -370,19 +400,37 @@
     "TRIP_CREATED": "Trip added.",
     "EDIT": "Edit",
     "EDIT_TRIP": "Edit trip",
-    "RESCHEDULE_HINT": "Moving the departure also moves the arrival unless you change it. {{n}} booked seats will see the new times, and passengers will be notified.",
-    "TRIP_RESCHEDULED": "Trip rescheduled. {{n}} bookings updated.",
+    "RESCHEDULE_HINT": {
+      "one": "Moving the departure also moves the arrival unless you change it. {{n}} booked seat will see the new times, and its passenger will be notified.",
+      "other": "Moving the departure also moves the arrival unless you change it. {{n}} booked seats will see the new times, and passengers will be notified."
+    },
+    "TRIP_RESCHEDULED": {
+      "one": "Trip rescheduled. {{n}} booking updated.",
+      "other": "Trip rescheduled. {{n}} bookings updated."
+    },
     "TRIP_UPDATED": "Trip updated.",
     "CANCEL_TRIP": "Cancel trip",
     "CANCEL_TRIP_TITLE": "Cancel {{route}} on {{time}}?",
-    "CANCEL_TRIP_TEXT": "All {{n}} booked seats will be cancelled with a full refund.",
+    "CANCEL_TRIP_TEXT": {
+      "one": "The {{n}} booked seat will be cancelled with a full refund.",
+      "other": "All {{n}} booked seats will be cancelled with a full refund."
+    },
     "CONFIRM_CANCEL_TRIP": "Yes, cancel trip",
-    "TRIP_CANCELLED": "Trip cancelled. {{n}} bookings refunded.",
-    "TRIPS_FOUND": "{{count}} trips",
+    "TRIP_CANCELLED": {
+      "one": "Trip cancelled. {{n}} booking refunded.",
+      "other": "Trip cancelled. {{n}} bookings refunded."
+    },
+    "TRIPS_FOUND": {
+      "one": "{{count}} trip",
+      "other": "{{count}} trips"
+    },
     "NO_TRIPS": "No trips match these filters.",
     "SEARCH_BOOKINGS": "Search",
     "SEARCH_PLACEHOLDER": "PNR, name or email",
-    "BOOKINGS_FOUND": "{{count}} bookings",
+    "BOOKINGS_FOUND": {
+      "one": "{{count}} booking",
+      "other": "{{count}} bookings"
+    },
     "NO_BOOKINGS": "No bookings match these filters.",
     "PREV": "Previous",
     "NEXT": "Next",
@@ -393,7 +441,10 @@
     "TIME": "Time",
     "ALL_TYPES": "All types",
     "ALL_CHANNELS": "All channels",
-    "NOTIFICATIONS_FOUND": "{{count}} notifications",
+    "NOTIFICATIONS_FOUND": {
+      "one": "{{count}} notification",
+      "other": "{{count}} notifications"
+    },
     "NO_NOTIFICATIONS": "No notifications match these filters.",
     "RETRY_NOW": "Retry now",
     "RETRY_SENT": "Delivered on retry",
@@ -414,10 +465,19 @@
       "CITY": "City",
       "OPT_IN_NOTE": "Users who haven't opted in never receive offers and are not recorded.",
       "PREVIEW": "Preview recipients",
-      "PREVIEW_RESULT": "This offer will go to {{count}} users who opted in ({{matched}} users match in total).",
-      "PREVIEW_NONE": "No users who opted in match this audience ({{matched}} match in total).",
-      "SEND": "Send to {{count}} users",
-      "SENT": "The offer is being sent to {{count}} users",
+      "PREVIEW_RESULT": {
+        "one": "This offer will go to {{count}} user who opted in",
+        "other": "This offer will go to {{count}} users who opted in"
+      },
+      "PREVIEW_NONE": "No users who opted in match this audience",
+      "SEND": {
+        "one": "Send to {{count}} user",
+        "other": "Send to {{count}} users"
+      },
+      "SENT": {
+        "one": "The offer is being sent to {{count}} user",
+        "other": "The offer is being sent to {{count}} users"
+      },
       "RECENT": "Recent offers",
       "LANGUAGES": "Languages",
       "STATUS_SENDING": "Sending",
@@ -426,7 +486,11 @@
       "NONE_YET": "No offers sent yet.",
       "AUDIENCE_ALL": "Everyone who opted in",
       "AUDIENCE_ROUTE": "{{from}} → {{to}} travellers",
-      "AUDIENCE_CITY": "{{city}} travellers"
+      "AUDIENCE_CITY": "{{city}} travellers",
+      "PREVIEW_MATCHED": {
+        "one": "({{matched}} user matches in total).",
+        "other": "({{matched}} users match in total)."
+      }
     },
     "REVIEWS_TAB": "Reviews",
     "REVIEWS": {
@@ -437,8 +501,14 @@
         "removed": "Removed",
         "all": "All"
       },
-      "FOUND": "{{count}} reviews",
-      "REPORTS": "{{count}} reports",
+      "FOUND": {
+        "one": "{{count}} review",
+        "other": "{{count}} reviews"
+      },
+      "REPORTS": {
+        "one": "{{count}} report",
+        "other": "{{count}} reports"
+      },
       "REPORT_LIST": "Reports",
       "AUTO_HIDDEN": "Hidden automatically after reports on {{date}}",
       "REMOVED_BY": "Removed by {{name}} on {{date}}",
@@ -456,9 +526,18 @@
       "CLEAR_REPORTS_HINT": "Recommended: the reports were unfounded, so a single new report will not hide it again.",
       "NOTE": "Note for the record (optional)",
       "AVERAGE_NOTE": "The route's average rating is recalculated right away.",
-      "DONE_HIDE": "Review hidden. Route average now {{avg}} ({{count}} reviews).",
-      "DONE_REMOVE": "Review removed. Route average now {{avg}} ({{count}} reviews).",
-      "DONE_RESTORE": "Review restored. Route average now {{avg}} ({{count}} reviews)."
+      "DONE_HIDE": {
+        "one": "Review hidden. Route average now {{avg}} ({{count}} review).",
+        "other": "Review hidden. Route average now {{avg}} ({{count}} reviews)."
+      },
+      "DONE_REMOVE": {
+        "one": "Review removed. Route average now {{avg}} ({{count}} review).",
+        "other": "Review removed. Route average now {{avg}} ({{count}} reviews)."
+      },
+      "DONE_RESTORE": {
+        "one": "Review restored. Route average now {{avg}} ({{count}} review).",
+        "other": "Review restored. Route average now {{avg}} ({{count}} reviews)."
+      }
     }
   },
   "AUTH": {
@@ -520,8 +599,14 @@
   "VALIDATION": {
     "REQUIRED": "This field is required.",
     "EMAIL": "Enter a valid email address.",
-    "MINLENGTH": "Must be at least {{n}} characters.",
-    "MAXLENGTH": "Must be at most {{n}} characters.",
+    "MINLENGTH": {
+      "one": "Must be at least {{n}} character.",
+      "other": "Must be at least {{n}} characters."
+    },
+    "MAXLENGTH": {
+      "one": "Must be at most {{n}} character.",
+      "other": "Must be at most {{n}} characters."
+    },
     "MIN": "Must be at least {{n}}.",
     "MAX": "Must be at most {{n}}.",
     "PATTERN": "The format is not valid.",
@@ -620,7 +705,10 @@
   },
   "NOTIFY": {
     "BELL": "Notifications",
-    "BELL_UNREAD": "Notifications, {{count}} unread",
+    "BELL_UNREAD": {
+      "one": "{{count}} unread notification",
+      "other": "{{count}} unread notifications"
+    },
     "PANEL_TITLE": "Notifications",
     "MARK_ALL_READ": "Mark all as read",
     "EMPTY": "You have no notifications yet.",
@@ -638,7 +726,10 @@
       "booking_cancelled": "{{route}} · PNR {{pnr}} · refund {{refund}}",
       "booking_cancelled_plain": "{{route}} · PNR {{pnr}}",
       "schedule_changed": "{{route}} now departs {{date}} (was {{oldDate}})",
-      "journey_reminder": "{{route}} departs {{date}} · PNR {{pnr}} · Seats {{seats}} · Board at {{boarding}}, {{boardingTime}}",
+      "journey_reminder": {
+        "one": "{{route}} departs {{date}} · PNR {{pnr}} · Seat {{seats}} · Board at {{boarding}}, {{boardingTime}}",
+        "other": "{{route}} departs {{date}} · PNR {{pnr}} · Seats {{seats}} · Board at {{boarding}}, {{boardingTime}}"
+      },
       "schedule_changed_plain": "{{route}} now departs {{date}}"
     },
     "CHANNEL": {
@@ -659,7 +750,10 @@
       "no_subscription": "No device subscribed to push",
       "undeliverable_address": "Address cannot receive email"
     },
-    "ATTEMPTS": "Attempts: {{n}}",
+    "ATTEMPTS": {
+      "one": "{{n}} attempt",
+      "other": "{{n}} attempts"
+    },
     "NEW": "New notification",
     "PUSH": {
       "TITLE": "Push notifications",
@@ -690,7 +784,10 @@
     },
     "HISTORY": {
       "TITLE": "Notifications",
-      "UNREAD_COUNT": "{{count}} unread",
+      "UNREAD_COUNT": {
+        "one": "{{count}} unread notification",
+        "other": "{{count}} unread notifications"
+      },
       "FILTER": "Filter notifications",
       "ALL": "All",
       "BOOKINGS": "Bookings",
@@ -717,28 +814,43 @@
     "OPERATORS": "Operators on this route",
     "NO_OPERATORS": "No operators are scheduled right now.",
     "NEXT_TRIPS": "Next departures",
-    "UPCOMING_COUNT": "{{count}} upcoming departures in total",
+    "UPCOMING_COUNT": {
+      "one": "{{count}} upcoming departure in total",
+      "other": "{{count}} upcoming departures in total"
+    },
     "NO_TRIPS": "No upcoming departures on this route.",
-    "BACK_HOME": "Back to home"
+    "BACK_HOME": "Back to home",
+    "TAB_TITLE": "{{from}} to {{to}}"
   },
   "REVIEWS": {
     "STARS_LABEL": "{{value}} out of 5 stars",
-    "COUNT": "{{count}} reviews",
+    "COUNT": {
+      "one": "{{count}} review",
+      "other": "{{count}} reviews"
+    },
     "NO_RATINGS_SHORT": "No reviews yet",
     "SEE_ROUTE": "Route & reviews",
     "ROUTE_RATING": "Route rating",
     "TITLE": "Ratings & reviews",
-    "BASED_ON": "Based on {{count}} reviews",
+    "BASED_ON": {
+      "one": "Based on {{count}} review",
+      "other": "Based on {{count}} reviews"
+    },
     "DISTRIBUTION": "Rating distribution",
-    "N_STARS": "{{n}} star",
+    "N_STARS": {
+      "one": "{{n}} star",
+      "other": "{{n}} stars"
+    },
     "EMPTY_TITLE": "No reviews yet",
     "EMPTY_TEXT": "Reviews come only from travellers who completed a journey on this route. Travelled with us? Rate your trip from My bookings.",
     "TRUSTED_TITLE": "Trusted reviewers",
-    "TRUSTED_STATS": "{{reviews}} reviews · {{helpful}} helpful votes",
     "TRUSTED_HINT": "Travellers whose reviews others often find helpful.",
     "VERIFY_TO_ACT": "Please verify your email to vote on or report reviews.",
     "VERIFY_NOW": "Verify now",
-    "SHOWING": "Showing {{shown}} of {{total}} reviews",
+    "SHOWING": {
+      "one": "Showing {{shown}} of {{total}} review",
+      "other": "Showing {{shown}} of {{total}} reviews"
+    },
     "SORT_LABEL": "Sort reviews",
     "SORT": {
       "recent": "Most recent",
@@ -751,7 +863,10 @@
     "TRAVELLED": "Travelled {{date}}",
     "REVIEWED": "Reviewed {{date}}",
     "EDITED": "Edited",
-    "HELPFUL_COUNT": "{{count}} found this helpful",
+    "HELPFUL_COUNT": {
+      "one": "{{count}} person found this helpful",
+      "other": "{{count}} people found this helpful"
+    },
     "EDIT": "Edit",
     "HELPFUL": "Helpful",
     "REPORTED": "Reported",
@@ -802,7 +917,10 @@
     },
     "YOUR_REVIEW_TEXT": "Your review",
     "COUNTER": "{{n}} / {{max}} characters",
-    "MIN_MORE": "{{n}} more needed",
+    "MIN_MORE": {
+      "one": "{{n}} more character needed",
+      "other": "{{n}} more characters needed"
+    },
     "GUIDELINES_TITLE": "Review guidelines",
     "GUIDELINE_GENUINE": "Describe your own journey: punctuality, comfort, cleanliness and staff.",
     "GUIDELINE_NO_CONTACT": "No links, email addresses or phone numbers.",
@@ -813,9 +931,16 @@
     "UPDATED": "Your review was updated",
     "POSTED": "Thanks! Your review is live.",
     "NOT_ELIGIBLE": "This journey can't be reviewed. You can review completed journeys from My bookings.",
-    "EDIT_LEFT": "Edit ({{h}}h left)",
+    "EDIT_LEFT": {
+      "one": "Edit ({{h}} hour left)",
+      "other": "Edit ({{h}} hours left)"
+    },
     "LOCKED": "Locked",
     "RATE_PROMPT": "How was your journey?",
-    "RATE": "Rate & review"
+    "RATE": "Rate & review",
+    "TRUSTED_HELPFUL": {
+      "one": "{{count}} helpful vote",
+      "other": "{{count}} helpful votes"
+    }
   }
 }

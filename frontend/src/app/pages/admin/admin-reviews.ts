@@ -10,6 +10,7 @@ import { Dialog } from '../../shared/dialog';
 import { AppDatePipe, CityPipe, NumPipe } from '../../shared/pipes';
 import { Stars } from '../../shared/stars';
 import { TranslateOrPipe } from '../../shared/translate-or.pipe';
+import { PluralPipe } from '../../shared/plural.pipe';
 
 type Filter = 'reported' | 'hidden' | 'removed' | 'all';
 type Action = 'hide' | 'remove' | 'restore';
@@ -23,7 +24,7 @@ const ACTION_KEYS: Record<Action, { title: string; button: string; done: string 
 /** Review moderation: reported / hidden / removed reviews with hide, remove (reason) and restore actions. */
 @Component({
   selector: 'app-admin-reviews',
-  imports: [ReactiveFormsModule, RouterLink, TranslatePipe, Dialog, Stars, AppDatePipe, CityPipe, NumPipe, TranslateOrPipe],
+  imports: [ReactiveFormsModule, RouterLink, TranslatePipe, Dialog, Stars, AppDatePipe, CityPipe, NumPipe, TranslateOrPipe, PluralPipe],
   template: `
     <div class="card filter-bar">
       <div class="chips" role="group" [attr.aria-label]="'ADMIN.REVIEWS.FILTER' | translate">
@@ -47,7 +48,7 @@ const ACTION_KEYS: Record<Action, { title: string; button: string; done: string 
     @if (error(); as e) {
       <div class="alert alert-error">{{ e | translateOr: 'ERRORS.GENERIC' }}</div>
     }
-    <p class="muted small found">{{ 'ADMIN.REVIEWS.FOUND' | translate: { count: (total() | num) } }}</p>
+    <p class="muted small found">{{ 'ADMIN.REVIEWS.FOUND' | plural: total() : { count: (total() | num) } }}</p>
     <div class="review-cards" [class.dim]="loading()">
       @for (r of items(); track r.id) {
         <article class="card review-card" [attr.data-review]="r.id" [attr.data-status]="r.status">
@@ -55,9 +56,9 @@ const ACTION_KEYS: Record<Action, { title: string; button: string; done: string 
             <app-stars [value]="r.rating" />
             <span [class]="'badge ' + statusBadge(r.status)">{{ 'REVIEWS.STATUS.' + r.status | translate }}</span>
             @if (r.reportCount) {
-              <span class="badge badge-danger report-count">{{ 'ADMIN.REVIEWS.REPORTS' | translate: { count: (r.reportCount | num) } }}</span>
+              <span class="badge badge-danger report-count">{{ 'ADMIN.REVIEWS.REPORTS' | plural: r.reportCount : { count: (r.reportCount | num) } }}</span>
             }
-            <span class="muted small">{{ 'REVIEWS.HELPFUL_COUNT' | translate: { count: (r.helpfulCount | num) } }}</span>
+            <span class="muted small">{{ 'REVIEWS.HELPFUL_COUNT' | plural: r.helpfulCount : { count: (r.helpfulCount | num) } }}</span>
           </div>
           <p class="rc-text">{{ r.text }}</p>
           <p class="rc-meta small muted">
@@ -284,7 +285,7 @@ export class AdminReviewsPage implements OnInit {
             ? await this.api.adminRemoveReview(a.review.id, reason as RemoveReason, note.trim() || undefined)
             : await this.api.adminRestoreReview(a.review.id, clearReports);
       this.acting.set(null);
-      this.toast.success(ACTION_KEYS[a.action].done, { avg: res.summary.avg.toFixed(1), count: res.summary.count });
+      this.toast.success(ACTION_KEYS[a.action].done, { avg: res.summary.avg.toFixed(1), count: res.summary.count }, res.summary.count);
       await this.load(this.page());
     } catch (err) {
       this.actionError.set(errorKey(err));

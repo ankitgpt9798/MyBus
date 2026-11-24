@@ -6,13 +6,14 @@ import { Stop, TripDetails } from '../core/models';
 import { AppDatePipe, CityPipe, NumPipe } from './pipes';
 import { RouteRating } from './route-rating';
 import { TranslateOrPipe } from './translate-or.pipe';
+import { PluralPipe } from './plural.pipe';
 
 type Tab = 'points' | 'bus' | 'policy';
 
 /** Read-only trip information shown inside a search result card. */
 @Component({
   selector: 'app-trip-details',
-  imports: [TranslatePipe, AppDatePipe, CityPipe, NumPipe, TranslateOrPipe, RouteRating],
+  imports: [TranslatePipe, AppDatePipe, CityPipe, NumPipe, TranslateOrPipe, RouteRating, PluralPipe],
   template: `
     <div class="tabs" role="tablist">
       @for (t of tabs; track t) {
@@ -84,7 +85,7 @@ type Tab = 'points' | 'bus' | 'policy';
           <ul class="policy">
             @for (row of policyRows(); track $index) {
               <li>
-                <span>{{ row.key | translate: row.params }}</span>
+                <span>{{ row.key | plural: row.count : row.params }}</span>
                 <strong>{{ (row.percent ? 'TRIP.POLICY_REFUND' : 'TRIP.POLICY_NO_REFUND') | translate: { p: row.percent } }}</strong>
               </li>
             }
@@ -133,9 +134,9 @@ export class TripDetailsPanel {
     const tiers = this.data()?.policy.refund ?? [];
     return tiers.map((p, i) => {
       const prev = tiers[i - 1]?.minHours;
-      if (i === 0) return { key: 'TRIP.POLICY_MORE_THAN', params: { h: p.minHours }, percent: p.percent };
-      if (p.minHours > 0) return { key: 'TRIP.POLICY_BETWEEN', params: { h: p.minHours, max: prev }, percent: p.percent };
-      return { key: 'TRIP.POLICY_LESS_THAN', params: { h: prev }, percent: p.percent };
+      if (i === 0) return { key: 'TRIP.POLICY_MORE_THAN', params: { h: p.minHours }, count: p.minHours, percent: p.percent };
+      if (p.minHours > 0) return { key: 'TRIP.POLICY_BETWEEN', params: { h: p.minHours, max: prev }, count: prev ?? 0, percent: p.percent };
+      return { key: 'TRIP.POLICY_LESS_THAN', params: { h: prev }, count: prev ?? 0, percent: p.percent };
     });
   });
 

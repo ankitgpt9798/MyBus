@@ -14,6 +14,7 @@ import { applyServerErrors } from '../../shared/form-errors';
 import { AppDatePipe, CityPipe, NumPipe } from '../../shared/pipes';
 import { Stars } from '../../shared/stars';
 import { TranslateOrPipe } from '../../shared/translate-or.pipe';
+import { PluralPipe } from '../../shared/plural.pipe';
 
 export const REVIEW_MIN = 30;
 export const REVIEW_MAX = 1000;
@@ -29,7 +30,7 @@ const trimmedLength =
 /** Write (/reviews/new?booking=…) or edit (/reviews/:id/edit, within 24 h) a route review. */
 @Component({
   selector: 'app-review-form',
-  imports: [ReactiveFormsModule, RouterLink, TranslatePipe, FieldError, Stars, AppDatePipe, CityPipe, NumPipe, TranslateOrPipe],
+  imports: [ReactiveFormsModule, RouterLink, TranslatePipe, FieldError, Stars, AppDatePipe, CityPipe, NumPipe, TranslateOrPipe, PluralPipe],
   templateUrl: './review-form.html',
   styleUrl: './review-form.scss',
 })
