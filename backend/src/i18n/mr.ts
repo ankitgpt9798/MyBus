@@ -29,7 +29,7 @@ export default {
       pnr: 'PNR',
       route: 'मार्ग',
       departure: 'सुटण्याची वेळ',
-      seats: 'सीट',
+      seats: { one: 'सीट', other: 'सीट' },
       boarding: 'चढण्याचे ठिकाण',
       amount: 'भरलेली रक्कम',
       refund: 'परतावा',
@@ -68,7 +68,10 @@ export default {
       title: 'आगामी प्रवास',
       intro: 'आठवण: {{from}} ते {{to}} तुमची बस {{date}} ला सुटेल. कृपया चढण्याच्या ठिकाणी 15 मिनिटे आधी पोहोचा.',
       intro_soon: '{{from}} ते {{to}} तुमची बस लवकरच, {{date}} ला सुटेल. कृपया {{boardingTime}} पर्यंत {{boarding}} येथे पोहोचा.',
-      body: '{{from}} → {{to}}, {{date}} · PNR {{pnr}} · सीट {{seats}} · चढण्याचे ठिकाण {{boarding}}, {{boardingTime}}',
+      body: {
+        one: '{{from}} → {{to}}, {{date}} · PNR {{pnr}} · सीट {{seats}} · चढण्याचे ठिकाण {{boarding}}, {{boardingTime}}',
+        other: '{{from}} → {{to}}, {{date}} · PNR {{pnr}} · सीट {{seats}} · चढण्याचे ठिकाण {{boarding}}, {{boardingTime}}',
+      },
     },
     promotion: {
       subject: '{{title}}',

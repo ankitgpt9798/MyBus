@@ -29,7 +29,7 @@ export default {
       pnr: 'PNR',
       route: 'रूट',
       departure: 'प्रस्थान',
-      seats: 'सीटें',
+      seats: { one: 'सीट', other: 'सीटें' },
       boarding: 'बोर्डिंग पॉइंट',
       amount: 'भुगतान की गई राशि',
       refund: 'रिफ़ंड',
@@ -68,7 +68,10 @@ export default {
       title: 'आने वाली यात्रा',
       intro: 'याद दिलाना: {{from}} से {{to}} तक आपकी बस {{date}} को रवाना होगी। कृपया बोर्डिंग पॉइंट पर 15 मिनट पहले पहुँचें।',
       intro_soon: '{{from}} से {{to}} तक आपकी बस जल्द ही, {{date}} को रवाना होगी। कृपया {{boardingTime}} तक {{boarding}} पहुँचें।',
-      body: '{{from}} → {{to}}, {{date}} · PNR {{pnr}} · सीटें {{seats}} · बोर्डिंग {{boarding}}, {{boardingTime}}',
+      body: {
+        one: '{{from}} → {{to}}, {{date}} · PNR {{pnr}} · सीट {{seats}} · बोर्डिंग {{boarding}}, {{boardingTime}}',
+        other: '{{from}} → {{to}}, {{date}} · PNR {{pnr}} · सीटें {{seats}} · बोर्डिंग {{boarding}}, {{boardingTime}}',
+      },
     },
     promotion: {
       subject: '{{title}}',

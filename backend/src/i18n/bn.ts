@@ -29,7 +29,7 @@ export default {
       pnr: 'PNR',
       route: 'রুট',
       departure: 'ছাড়ার সময়',
-      seats: 'সিট',
+      seats: { one: 'সিট', other: 'সিট' },
       boarding: 'ওঠার জায়গা',
       amount: 'পরিশোধিত টাকা',
       refund: 'টাকা ফেরত',
@@ -68,7 +68,10 @@ export default {
       title: 'আসন্ন যাত্রা',
       intro: 'মনে করিয়ে দিচ্ছি: {{from}} থেকে {{to}} পর্যন্ত আপনার বাস {{date}}-এ ছাড়বে। অনুগ্রহ করে ওঠার জায়গায় 15 মিনিট আগে পৌঁছান।',
       intro_soon: '{{from}} থেকে {{to}} পর্যন্ত আপনার বাস শীঘ্রই, {{date}}-এ ছাড়বে। অনুগ্রহ করে {{boardingTime}}-এর মধ্যে {{boarding}}-এ পৌঁছান।',
-      body: '{{from}} → {{to}}, {{date}} · PNR {{pnr}} · সিট {{seats}} · ওঠার জায়গা {{boarding}}, {{boardingTime}}',
+      body: {
+        one: '{{from}} → {{to}}, {{date}} · PNR {{pnr}} · সিট {{seats}} · ওঠার জায়গা {{boarding}}, {{boardingTime}}',
+        other: '{{from}} → {{to}}, {{date}} · PNR {{pnr}} · সিট {{seats}} · ওঠার জায়গা {{boarding}}, {{boardingTime}}',
+      },
     },
     promotion: {
       subject: '{{title}}',

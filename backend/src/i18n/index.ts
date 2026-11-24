@@ -22,11 +22,31 @@ function lookup(dict: Dict, key: string): string | undefined {
   return typeof node === 'string' ? node : undefined;
 }
 
+const interpolate = (template: string, params: Record<string, string | number>) =>
+  template.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, name: string) => String(params[name] ?? ''));
+
+const pluralRules = new Map<Lang, Intl.PluralRules>();
+
+/**
+ * Singular/plural variant of a key stored as { one, other } (Intl.PluralRules categories, as in the web app);
+ * a category a language doesn't define falls back to "other".
+ */
+export function tp(lang: string | undefined, key: string, count: number, params: Record<string, string | number> = {}): string {
+  const language = isLang(lang) ? lang : DEFAULT_LANGUAGE;
+  let rules = pluralRules.get(language);
+  if (!rules) pluralRules.set(language, (rules = new Intl.PluralRules(localeOf(language))));
+  for (const variant of [`${key}.${rules.select(count)}`, `${key}.other`]) {
+    const template = lookup(dictionaries[language], variant) ?? lookup(dictionaries[DEFAULT_LANGUAGE], variant);
+    if (template !== undefined) return interpolate(template, params);
+  }
+  return t(lang, key, params);
+}
+
 /** Server-side translation (emails, notifications) with fallback to English, then to the key. */
 export function t(lang: string | undefined, key: string, params: Record<string, string | number> = {}): string {
   const language = isLang(lang) ? lang : DEFAULT_LANGUAGE;
   const template = lookup(dictionaries[language], key) ?? lookup(dictionaries[DEFAULT_LANGUAGE], key) ?? key;
-  return template.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, name: string) => String(params[name] ?? ''));
+  return interpolate(template, params);
 }
 
 // Same locale rules as the web app: IST, 24-hour times, Latin digits for mr/bn/te.

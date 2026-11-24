@@ -1,5 +1,5 @@
 import { env } from '../config/env';
-import { cityName, formatDateTime, formatMoney, formatTime, t } from '../i18n';
+import { cityName, formatDateTime, formatMoney, formatTime, t, tp } from '../i18n';
 import type { NotificationType } from '../models/Notification';
 import { renderEmail } from './mail.service';
 
@@ -45,6 +45,7 @@ export interface RenderedNotification {
 export function renderNotification(type: NotificationType, lang: string, params: NotificationParams, userName: string): RenderedNotification {
   const k = (key: string, extra: Record<string, string | number> = {}) => t(lang, `notify.${type}.${key}`, { ...vars, ...extra });
   const label = (key: string) => t(lang, `notify.labels.${key}`);
+  const seatCount = params.seats?.length ?? 0;
   const promo = type === 'promotion' ? promotionText(params, lang) : { title: '', body: '' };
   const vars: Record<string, string | number> = {
     pnr: params.pnr ?? '',
@@ -61,7 +62,8 @@ export function renderNotification(type: NotificationType, lang: string, params:
 
   const details: { label: string; value: string }[] = [];
   const add = (key: string, value: string | undefined) => {
-    if (value) details.push({ label: label(key), value });
+    // "Seat" / "Seats" follows the number of seats on the booking.
+    if (value) details.push({ label: key === 'seats' ? tp(lang, 'notify.labels.seats', seatCount) : label(key), value });
   };
   const seats = (params.seats ?? [])
     .map((s) => (params.ladiesSeats?.includes(s) ? `${s} (${label('womens_seat')})` : s))
@@ -125,5 +127,6 @@ export function renderNotification(type: NotificationType, lang: string, params:
     action: params.bookingId ? { label: label('view_booking'), url: `${env.frontendUrl}/bookings/${params.bookingId}` } : undefined,
     note: t(lang, 'notify.prefs_note'),
   });
-  return { title: k('title'), body: k('body'), email: { subject: k('subject'), html, text } };
+  const body = type === 'journey_reminder' ? tp(lang, `notify.${type}.body`, seatCount, vars) : k('body');
+  return { title: k('title'), body, email: { subject: k('subject'), html, text } };
 }

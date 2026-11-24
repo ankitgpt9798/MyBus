@@ -29,7 +29,7 @@ export default {
       pnr: 'PNR',
       route: 'మార్గం',
       departure: 'బయలుదేరే సమయం',
-      seats: 'సీట్లు',
+      seats: { one: 'సీటు', other: 'సీట్లు' },
       boarding: 'ఎక్కే స్థలం',
       amount: 'చెల్లించిన మొత్తం',
       refund: 'రీఫండ్',
@@ -68,7 +68,10 @@ export default {
       title: 'రాబోయే ప్రయాణం',
       intro: 'గుర్తు: {{from}} నుండి {{to}} కి మీ బస్సు {{date}} కి బయలుదేరుతుంది. దయచేసి ఎక్కే స్థలానికి 15 నిమిషాల ముందే చేరుకోండి.',
       intro_soon: '{{from}} నుండి {{to}} కి మీ బస్సు త్వరలో, {{date}} కి బయలుదేరుతుంది. దయచేసి {{boardingTime}} లోపు {{boarding}} చేరుకోండి.',
-      body: '{{from}} → {{to}}, {{date}} · PNR {{pnr}} · సీట్లు {{seats}} · ఎక్కే స్థలం {{boarding}}, {{boardingTime}}',
+      body: {
+        one: '{{from}} → {{to}}, {{date}} · PNR {{pnr}} · సీటు {{seats}} · ఎక్కే స్థలం {{boarding}}, {{boardingTime}}',
+        other: '{{from}} → {{to}}, {{date}} · PNR {{pnr}} · సీట్లు {{seats}} · ఎక్కే స్థలం {{boarding}}, {{boardingTime}}',
+      },
     },
     promotion: {
       subject: '{{title}}',

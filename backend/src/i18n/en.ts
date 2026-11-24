@@ -29,7 +29,7 @@ export default {
       pnr: 'PNR',
       route: 'Route',
       departure: 'Departure',
-      seats: 'Seats',
+      seats: { one: 'Seat', other: 'Seats' },
       boarding: 'Boarding point',
       amount: 'Amount paid',
       refund: 'Refund',
@@ -68,7 +68,10 @@ export default {
       title: 'Upcoming journey',
       intro: 'Reminder: your bus from {{from}} to {{to}} departs on {{date}}. Please reach the boarding point 15 minutes early.',
       intro_soon: 'Your bus from {{from}} to {{to}} leaves soon, at {{date}}. Please be at {{boarding}} by {{boardingTime}}.',
-      body: '{{from}} → {{to}}, {{date}} · PNR {{pnr}} · Seats {{seats}} · Board at {{boarding}}, {{boardingTime}}',
+      body: {
+        one: '{{from}} → {{to}}, {{date}} · PNR {{pnr}} · Seat {{seats}} · Board at {{boarding}}, {{boardingTime}}',
+        other: '{{from}} → {{to}}, {{date}} · PNR {{pnr}} · Seats {{seats}} · Board at {{boarding}}, {{boardingTime}}',
+      },
     },
     promotion: {
       subject: '{{title}}',
