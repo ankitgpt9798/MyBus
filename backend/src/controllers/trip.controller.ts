@@ -10,6 +10,7 @@ import { REFUND_POLICY, expireStaleHolds } from '../services/booking.service';
 import { badRequest, notFound } from '../utils/AppError';
 import { DATE_RE, DepartureSlot, MINUTE_MS, departureSlot, istDayRange } from '../utils/time';
 import { isObjectId } from '../utils/validate';
+import { routeSummary, trustedReviewersOfRoute } from '../services/review.service';
 
 const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const exactCi = (s: string) => new RegExp(`^${escapeRegex(s.trim())}$`, 'i');
@@ -46,8 +47,11 @@ export async function getRoute(req: Request, res: Response) {
   if (!isObjectId(req.params.id)) throw notFound('ROUTE_NOT_FOUND');
   const route = await Route.findById(req.params.id).lean<RouteDoc>();
   if (!route) throw notFound('ROUTE_NOT_FOUND', 'Route not found');
-  const upcomingTrips = await Trip.countDocuments({ route: route._id, status: 'scheduled', departureTime: { $gt: new Date() } });
-  res.json({ route: { ...publicRoute(route), stops: route.stops }, upcomingTrips });
+  const [upcomingTrips, trustedReviewers] = await Promise.all([
+    Trip.countDocuments({ route: route._id, status: 'scheduled', departureTime: { $gt: new Date() } }),
+    trustedReviewersOfRoute(route._id),
+  ]);
+  res.json({ route: { ...publicRoute(route), stops: route.stops }, upcomingTrips, ratingSummary: routeSummary(route), trustedReviewers });
 }
 
 export const MAX_SEATS_PER_BOOKING = 6;

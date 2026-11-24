@@ -5,9 +5,10 @@ import * as auth from '../controllers/auth.controller';
 import * as bookings from '../controllers/booking.controller';
 import * as notifications from '../controllers/notification.controller';
 import * as promotions from '../controllers/promotion.controller';
+import * as reviews from '../controllers/review.controller';
 import * as trips from '../controllers/trip.controller';
 import * as users from '../controllers/user.controller';
-import { requireAdmin, requireAuth } from '../middleware/auth';
+import { optionalAuth, requireAdmin, requireAuth, requireVerified } from '../middleware/auth';
 
 export const api = Router();
 
@@ -32,6 +33,14 @@ api.post('/users/me/password', requireAuth, users.changePassword);
 api.get('/cities', trips.listCities);
 api.get('/routes/popular', trips.popularRoutes);
 api.get('/routes/:id', trips.getRoute);
+api.get('/routes/:id/reviews', optionalAuth, reviews.listForRoute);
+
+// Reviews (R6): only verified users who completed the journey can post; edits within 24 h
+api.get('/reviews/eligible', requireAuth, reviews.eligible);
+api.post('/reviews', requireAuth, requireVerified, reviews.create);
+api.patch('/reviews/:id', requireAuth, requireVerified, reviews.update);
+api.post('/reviews/:id/report', requireAuth, requireVerified, reviews.report);
+api.post('/reviews/:id/helpful', requireAuth, requireVerified, reviews.toggleHelpful);
 api.get('/trips/search', trips.searchTrips);
 api.get('/trips/:id', trips.getTrip);
 
@@ -66,6 +75,10 @@ adminRouter.patch('/trips/:id', admin.updateTrip);
 adminRouter.get('/bookings', admin.listBookings);
 adminRouter.get('/notifications', notifications.adminList);
 adminRouter.post('/notifications/:id/retry', notifications.adminRetry);
+adminRouter.get('/reviews', reviews.adminList);
+adminRouter.post('/reviews/:id/hide', reviews.adminHide);
+adminRouter.post('/reviews/:id/remove', reviews.adminRemove);
+adminRouter.post('/reviews/:id/restore', reviews.adminRestore);
 adminRouter.get('/promotions', promotions.list);
 adminRouter.post('/promotions/preview', promotions.preview);
 adminRouter.post('/promotions', promotions.send);
