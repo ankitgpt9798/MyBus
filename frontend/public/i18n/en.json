@@ -536,7 +536,18 @@
     "NOTIFICATION_NOT_FOUND": "This notification could not be found.",
     "NOTIFICATION_NOTHING_TO_RETRY": "There are no failed deliveries to retry.",
     "STREAM_TOKEN_INVALID": "Live updates couldn't connect. Please sign in again.",
-    "PROMOTION_NO_RECIPIENTS": "No users who opted in match this audience."
+    "PROMOTION_NO_RECIPIENTS": "No users who opted in match this audience.",
+    "REVIEW_NOT_FOUND": "This review could not be found.",
+    "REVIEW_BOOKING_NOT_FOUND": "We couldn't find this journey in your bookings.",
+    "REVIEW_NOT_COMPLETED": "You can review a route only after completing the journey.",
+    "REVIEW_ALREADY_EXISTS": "You have already reviewed this journey.",
+    "REVIEW_GUIDELINES": "Please remove links, email addresses, phone numbers and abusive words from your review.",
+    "REVIEW_NOT_AUTHOR": "Only the author can edit this review.",
+    "REVIEW_EDIT_WINDOW_CLOSED": "Reviews can be edited only within 24 hours of posting. Your rating is now final.",
+    "REVIEW_REMOVED": "This review was removed by a moderator.",
+    "REVIEW_REPORT_OWN": "You can't report your own review.",
+    "REVIEW_ALREADY_REPORTED": "You have already reported this review.",
+    "REVIEW_HELPFUL_OWN": "You can't vote on your own review."
   },
   "FORBIDDEN": {
     "TITLE": "Access denied",
