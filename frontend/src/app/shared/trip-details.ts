@@ -4,6 +4,7 @@ import { ApiService } from '../core/api.service';
 import { errorKey } from '../core/api-error';
 import { Stop, TripDetails } from '../core/models';
 import { AppDatePipe, CityPipe, NumPipe } from './pipes';
+import { RouteRating } from './route-rating';
 import { TranslateOrPipe } from './translate-or.pipe';
 
 type Tab = 'points' | 'bus' | 'policy';
@@ -11,7 +12,7 @@ type Tab = 'points' | 'bus' | 'policy';
 /** Read-only trip information shown inside a search result card. */
 @Component({
   selector: 'app-trip-details',
-  imports: [TranslatePipe, AppDatePipe, CityPipe, NumPipe, TranslateOrPipe],
+  imports: [TranslatePipe, AppDatePipe, CityPipe, NumPipe, TranslateOrPipe, RouteRating],
   template: `
     <div class="tabs" role="tablist">
       @for (t of tabs; track t) {
@@ -67,6 +68,8 @@ type Tab = 'points' | 'bus' | 'policy';
             <dd>{{ 'TRIP.SEATS_OF' | translate: { free: (d.trip.seatsAvailable | num), total: (d.bus.totalSeats | num) } }}</dd>
             <dt>{{ 'TRIP.DISTANCE' | translate }}</dt>
             <dd>{{ 'TRIP.KM' | translate: { km: (d.route.distanceKm | num) } }}</dd>
+            <dt>{{ 'REVIEWS.ROUTE_RATING' | translate }}</dt>
+            <dd><app-route-rating [routeId]="d.route.id" [avg]="d.route.ratingAvg" [count]="d.route.ratingCount" /></dd>
           </dl>
           <h3>{{ 'TRIP.AMENITIES' | translate }}</h3>
           <div class="tag-list">

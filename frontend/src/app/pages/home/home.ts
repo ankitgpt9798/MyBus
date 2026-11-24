@@ -5,12 +5,13 @@ import { ApiService } from '../../core/api.service';
 import { RouteSummary } from '../../core/models';
 import { istDate } from '../../core/time';
 import { Icon } from '../../shared/icons';
+import { RouteRating } from '../../shared/route-rating';
 import { CityPipe, DurationPipe, NumPipe } from '../../shared/pipes';
 import { SearchForm } from '../../shared/search-form';
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, TranslatePipe, SearchForm, Icon, CityPipe, DurationPipe, NumPipe],
+  imports: [RouterLink, TranslatePipe, SearchForm, Icon, CityPipe, DurationPipe, NumPipe, RouteRating],
   template: `
     <section class="hero">
       <div class="container">
@@ -39,16 +40,19 @@ import { SearchForm } from '../../shared/search-form';
       @if (routes().length) {
         <div class="route-grid">
           @for (r of routes(); track r.id) {
-            <a class="route-card card" [routerLink]="['/search']" [queryParams]="{ from: r.from, to: r.to, date: tomorrow }">
-              <div class="route-cities">
-                <strong>{{ r.from | city }}</strong>
-                <app-icon name="chevron-right" [size]="16" />
-                <strong>{{ r.to | city }}</strong>
-              </div>
-              <div class="muted small">
-                {{ 'HOME.ROUTE_META' | translate: { km: (r.distanceKm | num), duration: (r.durationMinutes | duration) } }}
-              </div>
-            </a>
+            <div class="route-card card">
+              <a class="route-link" [routerLink]="['/search']" [queryParams]="{ from: r.from, to: r.to, date: tomorrow }">
+                <div class="route-cities">
+                  <strong>{{ r.from | city }}</strong>
+                  <app-icon name="chevron-right" [size]="16" />
+                  <strong>{{ r.to | city }}</strong>
+                </div>
+                <div class="muted small">
+                  {{ 'HOME.ROUTE_META' | translate: { km: (r.distanceKm | num), duration: (r.durationMinutes | duration) } }}
+                </div>
+              </a>
+              <app-route-rating class="card-rating" [routeId]="r.id" [avg]="r.ratingAvg" [count]="r.ratingCount" />
+            </div>
           }
         </div>
       } @else if (loadingRoutes()) {

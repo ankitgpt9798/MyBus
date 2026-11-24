@@ -24,6 +24,9 @@
               · {{ 'HOME.ROUTE_META' | translate: { km: (r.route.distanceKm | num), duration: (r.route.durationMinutes | duration) } }}
             }
           </p>
+          @if (r.route; as route) {
+            <app-route-rating class="head-rating" [routeId]="route.id" [avg]="route.ratingAvg" [count]="route.ratingCount" />
+          }
         }
       </div>
       <div class="day-switch">
@@ -164,6 +167,9 @@
                       <span class="badge">{{ (t.bus.ac ? 'BUS.AC' : 'BUS.NONAC') | translate }}</span>
                       <span class="badge">{{ 'BUS.TYPE.' + t.bus.type | translate }}</span>
                     </div>
+                    @if (r.route; as route) {
+                      <app-route-rating class="card-rating" [routeId]="route.id" [avg]="route.ratingAvg" [count]="route.ratingCount" />
+                    }
                   </div>
                   <div class="trip-times">
                     <div>

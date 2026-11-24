@@ -9,6 +9,7 @@ import { TripDetails } from '../../core/models';
 import { ToastService } from '../../core/toast.service';
 import { FieldError } from '../../shared/field-error';
 import { Icon } from '../../shared/icons';
+import { RouteRating } from '../../shared/route-rating';
 import { AppDatePipe, CityPipe, DurationPipe, InrPipe, NumPipe } from '../../shared/pipes';
 import { SeatMap } from '../../shared/seat-map';
 import { TranslateOrPipe } from '../../shared/translate-or.pipe';
@@ -19,7 +20,7 @@ const PENDING_KEY = 'mybus.pendingSelection';
 /** Step 1 of booking: pick seats and boarding/dropping points, then hold the seats. */
 @Component({
   selector: 'app-trip',
-  imports: [ReactiveFormsModule, RouterLink, TranslatePipe, SeatMap, FieldError, Icon, TripDetailsPanel, AppDatePipe, CityPipe, DurationPipe, InrPipe, NumPipe, TranslateOrPipe],
+  imports: [ReactiveFormsModule, RouterLink, TranslatePipe, SeatMap, FieldError, Icon, TripDetailsPanel, AppDatePipe, CityPipe, DurationPipe, InrPipe, NumPipe, TranslateOrPipe, RouteRating],
   templateUrl: './trip.html',
   styleUrl: './trip.scss',
 })

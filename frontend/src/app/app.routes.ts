@@ -69,7 +69,21 @@ export const routes: Routes = [
         title: 'TITLES.ADMIN_NOTIFICATIONS',
       },
       { path: 'offers', loadComponent: () => import('./pages/admin/admin-offers').then((m) => m.AdminOffersPage), title: 'TITLES.ADMIN_OFFERS' },
+      { path: 'reviews', loadComponent: () => import('./pages/admin/admin-reviews').then((m) => m.AdminReviewsPage), title: 'TITLES.ADMIN_REVIEWS' },
     ],
+  },
+  { path: 'routes/:id', loadComponent: () => import('./pages/route/route-details').then((m) => m.RouteDetailsPage), title: 'TITLES.ROUTE' },
+  {
+    path: 'reviews/new',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/reviews/review-form').then((m) => m.ReviewFormPage),
+    title: 'TITLES.REVIEW_NEW',
+  },
+  {
+    path: 'reviews/:id/edit',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/reviews/review-form').then((m) => m.ReviewFormPage),
+    title: 'TITLES.REVIEW_EDIT',
   },
   {
     path: 'notifications',

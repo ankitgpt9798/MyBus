@@ -6,6 +6,7 @@ import { errorKey } from '../../core/api-error';
 import { BusType, DepartureSlot, SearchResponse } from '../../core/models';
 import { istDate, isIsoDate, shiftDate } from '../../core/time';
 import { Icon } from '../../shared/icons';
+import { RouteRating } from '../../shared/route-rating';
 import { AppDatePipe, CityPipe, DurationPipe, InrPipe, NumPipe } from '../../shared/pipes';
 import { SearchForm } from '../../shared/search-form';
 import { TranslateOrPipe } from '../../shared/translate-or.pipe';
@@ -23,7 +24,7 @@ const num = (v: string | undefined) => (v !== undefined && v !== '' && Number.is
  */
 @Component({
   selector: 'app-search',
-  imports: [RouterLink, TranslatePipe, SearchForm, Icon, TripDetailsPanel, AppDatePipe, CityPipe, DurationPipe, InrPipe, NumPipe, TranslateOrPipe],
+  imports: [RouterLink, TranslatePipe, SearchForm, Icon, TripDetailsPanel, AppDatePipe, CityPipe, DurationPipe, InrPipe, NumPipe, TranslateOrPipe, RouteRating],
   templateUrl: './search.html',
   styleUrl: './search.scss',
 })

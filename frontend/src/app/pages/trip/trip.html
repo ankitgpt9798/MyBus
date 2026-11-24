@@ -13,6 +13,7 @@
           {{ d.operator.name }} · {{ d.bus.name }} ·
           {{ (d.bus.ac ? 'BUS.AC' : 'BUS.NONAC') | translate }} {{ 'BUS.TYPE.' + d.bus.type | translate }}
         </p>
+        <app-route-rating [routeId]="d.route.id" [avg]="d.route.ratingAvg" [count]="d.route.ratingCount" />
       </div>
       <div class="summary-times">
         <div>
