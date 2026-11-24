@@ -3,14 +3,15 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { AbstractControl } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { of, startWith, switchMap } from 'rxjs';
+import { PluralPipe } from './plural.pipe';
 
 /** Shows the first validation error of a control as a translated message (VALIDATION.*). */
 @Component({
   selector: 'app-field-error',
-  imports: [TranslatePipe],
+  imports: [TranslatePipe, PluralPipe],
   template: `
     @if (message(); as m) {
-      <p class="field-error" role="alert">{{ m.key | translate: m.params }}</p>
+      <p class="field-error" role="alert">{{ m.count !== undefined ? (m.key | plural: m.count : m.params) : (m.key | translate: m.params) }}</p>
     }
   `,
 })
@@ -24,7 +25,7 @@ export class FieldError {
     { initialValue: null },
   );
 
-  protected readonly message = computed<{ key: string; params: Record<string, unknown> } | null>(() => {
+  protected readonly message = computed<{ key: string; params: Record<string, unknown>; count?: number } | null>(() => {
     this.controlEvent();
     const c = this.control();
     if (!c || !c.errors || !(c.touched || this.submitted())) return null;
@@ -32,7 +33,7 @@ export class FieldError {
     switch (name) {
       case 'minlength':
       case 'maxlength':
-        return { key: `VALIDATION.${name.toUpperCase()}`, params: { n: detail.requiredLength } };
+        return { key: `VALIDATION.${name.toUpperCase()}`, params: { n: detail.requiredLength }, count: Number(detail.requiredLength) };
       case 'min':
         return { key: 'VALIDATION.MIN', params: { n: detail.min } };
       case 'max':

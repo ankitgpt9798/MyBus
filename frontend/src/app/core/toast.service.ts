@@ -8,6 +8,8 @@ export interface Toast {
   kind: 'success' | 'error' | 'info';
   /** A live notification, rendered in the current UI language instead of `key`. */
   notification?: AppNotification;
+  /** Picks the singular/plural variant of `key` (see PluralPipe). */
+  count?: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -21,12 +23,12 @@ export class ToastService {
     setTimeout(() => this.dismiss(toast.id), ms);
   }
 
-  success(key: string, params?: Record<string, unknown>) {
-    this.show(key, 'success', params);
+  success(key: string, params?: Record<string, unknown>, count?: number) {
+    this.show(key, 'success', params, { count });
   }
 
-  error(key: string, params?: Record<string, unknown>) {
-    this.show(key, 'error', params);
+  error(key: string, params?: Record<string, unknown>, count?: number) {
+    this.show(key, 'error', params, { count });
   }
 
   /** A notification that just arrived on the live stream. */

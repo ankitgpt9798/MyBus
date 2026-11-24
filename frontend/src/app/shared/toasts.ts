@@ -4,10 +4,11 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { ToastService } from '../core/toast.service';
 import { Icon } from './icons';
 import { NotificationText } from './notification-text';
+import { PluralPipe } from './plural.pipe';
 
 @Component({
   selector: 'app-toasts',
-  imports: [TranslatePipe, Icon, RouterLink, NotificationText],
+  imports: [TranslatePipe, Icon, RouterLink, NotificationText, PluralPipe],
   template: `
     <div class="toasts" aria-live="polite">
       @for (t of toast.toasts(); track t.id) {
@@ -20,6 +21,8 @@ import { NotificationText } from './notification-text';
             } @else {
               <span><app-notification-text [n]="n" /></span>
             }
+          } @else if (t.count !== undefined) {
+            <span>{{ t.key | plural: t.count : t.params ?? {} }}</span>
           } @else {
             <span>{{ t.key | translate: t.params }}</span>
           }
