@@ -1,0 +1,234 @@
+<div class="container section">
+  @if (error(); as e) {
+    <div class="empty-state card">
+      <app-icon name="alert" [size]="40" />
+      <h1 class="page-title">{{ e | translateOr: 'ERRORS.GENERIC' }}</h1>
+      <a routerLink="/" class="btn btn-primary">{{ 'ROUTE.BACK_HOME' | translate }}</a>
+    </div>
+  } @else if (details(); as d) {
+    <header class="route-head card">
+      <div class="head-main">
+        <p class="eyebrow">{{ 'ROUTE.EYEBROW' | translate }}</p>
+        <h1 class="page-title">{{ d.route.from | city }} <app-icon name="chevron-right" [size]="22" /> {{ d.route.to | city }}</h1>
+        <p class="muted">{{ 'HOME.ROUTE_META' | translate: { km: (d.route.distanceKm | num), duration: (d.route.durationMinutes | duration) } }}</p>
+        @if (summary(); as s) {
+          <a class="head-rating" href="#reviews">
+            @if (s.count) {
+              <app-stars [value]="s.avg" [size]="18" />
+              <strong>{{ s.avg | num: 1 }}</strong>
+              <span class="muted">{{ 'REVIEWS.COUNT' | translate: { count: (s.count | num) } }}</span>
+            } @else {
+              <span class="muted">{{ 'REVIEWS.NO_RATINGS_SHORT' | translate }}</span>
+            }
+          </a>
+        }
+      </div>
+      <a class="btn btn-primary find-buses" [routerLink]="['/search']" [queryParams]="{ from: d.route.from, to: d.route.to, date: today }">
+        <app-icon name="bus" [size]="18" /> {{ 'ROUTE.FIND_BUSES' | translate }}
+      </a>
+    </header>
+
+    <div class="route-grid">
+      <section class="card" aria-labelledby="stops-title">
+        <h2 class="sub-title" id="stops-title">{{ 'ROUTE.STOPS_TITLE' | translate }}</h2>
+        <div class="stops">
+          <div>
+            <h3>{{ 'TRIP.BOARDING_POINTS' | translate }}</h3>
+            <ul class="stop-list">
+              @for (s of boarding(); track s.name) {
+                <li>{{ s.name }}</li>
+              }
+            </ul>
+          </div>
+          <div>
+            <h3>{{ 'TRIP.DROPPING_POINTS' | translate }}</h3>
+            <ul class="stop-list">
+              @for (s of dropping(); track s.name) {
+                <li>{{ s.name }}</li>
+              }
+            </ul>
+          </div>
+        </div>
+        <h3>{{ 'ROUTE.OPERATORS' | translate }}</h3>
+        <div class="tag-list">
+          @for (o of d.operators; track o) {
+            <span class="badge">{{ o }}</span>
+          } @empty {
+            <span class="muted small">{{ 'ROUTE.NO_OPERATORS' | translate }}</span>
+          }
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="next-title">
+        <h2 class="sub-title" id="next-title">{{ 'ROUTE.NEXT_TRIPS' | translate }}</h2>
+        @if (d.nextTrips.length) {
+          <ul class="next-trips">
+            @for (t of d.nextTrips; track t.id) {
+              <li>
+                <a class="next-trip" [routerLink]="['/trip', t.id]">
+                  <span class="nt-time"><strong>{{ t.departureTime | appDate: 'day' }}</strong> {{ t.departureTime | appDate: 'time' }}</span>
+                  <span class="nt-op">{{ t.operatorName }} <span class="muted small">· {{ (t.ac ? 'BUS.AC' : 'BUS.NONAC') | translate }} {{ 'BUS.TYPE.' + t.busType | translate }}</span></span>
+                  <span class="nt-price"><strong>{{ t.fare | inr }}</strong> <span class="muted small">{{ 'SEARCH.SEATS_LEFT' | translate: { count: (t.seatsAvailable | num) } }}</span></span>
+                </a>
+              </li>
+            }
+          </ul>
+          <p class="small muted">{{ 'ROUTE.UPCOMING_COUNT' | translate: { count: (d.upcomingTrips | num) } }}</p>
+        } @else {
+          <p class="muted">{{ 'ROUTE.NO_TRIPS' | translate }}</p>
+        }
+      </section>
+    </div>
+
+    <section class="card reviews-card" id="reviews" aria-labelledby="reviews-title">
+      <h2 class="sub-title" id="reviews-title">{{ 'REVIEWS.TITLE' | translate }}</h2>
+      @if (summary(); as s) {
+        @if (s.count) {
+          <div class="summary">
+            <div class="avg-box">
+              <span class="avg">{{ s.avg | num: 1 }}</span>
+              <app-stars [value]="s.avg" [size]="20" />
+              <span class="muted small">{{ 'REVIEWS.BASED_ON' | translate: { count: (s.count | num) } }}</span>
+            </div>
+            <ul class="bars" [attr.aria-label]="'REVIEWS.DISTRIBUTION' | translate">
+              @for (star of stars; track star) {
+                <li class="bar-row" [attr.data-star]="star">
+                  <span class="bar-label">{{ 'REVIEWS.N_STARS' | translate: { n: star } }}</span>
+                  <span class="bar" aria-hidden="true"><span class="fill" [style.width.%]="percent(star)"></span></span>
+                  <span class="bar-count">{{ s.distribution[star] | num }}</span>
+                </li>
+              }
+            </ul>
+          </div>
+        } @else {
+          <div class="empty-reviews">
+            <app-icon name="star" [size]="32" />
+            <p><strong>{{ 'REVIEWS.EMPTY_TITLE' | translate }}</strong></p>
+            <p class="muted small">{{ 'REVIEWS.EMPTY_TEXT' | translate }}</p>
+          </div>
+        }
+      }
+
+      @if (d.trustedReviewers.length) {
+        <div class="trusted-strip">
+          <h3>{{ 'REVIEWS.TRUSTED_TITLE' | translate }}</h3>
+          <ul>
+            @for (t of d.trustedReviewers; track t.name) {
+              <li class="trusted-chip">
+                <app-icon name="shield" [size]="16" />
+                <strong>{{ t.name }}</strong>
+                <span class="muted small">{{ 'REVIEWS.TRUSTED_STATS' | translate: { reviews: (t.reviews | num), helpful: (t.helpful | num) } }}</span>
+              </li>
+            }
+          </ul>
+          <p class="muted small">{{ 'REVIEWS.TRUSTED_HINT' | translate }}</p>
+        </div>
+      }
+
+      @if (verifyPrompt()) {
+        <div class="alert alert-warning verify-prompt" role="alert">
+          {{ 'REVIEWS.VERIFY_TO_ACT' | translate }}
+          <a [routerLink]="['/profile']" [queryParams]="{ verify: 1 }">{{ 'REVIEWS.VERIFY_NOW' | translate }}</a>
+        </div>
+      }
+
+      @if (total() || reviews().length) {
+        <div class="list-head">
+          <span class="muted small">{{ 'REVIEWS.SHOWING' | translate: { shown: (reviews().length | num), total: (total() | num) } }}</span>
+          <div class="chips" role="group" [attr.aria-label]="'REVIEWS.SORT_LABEL' | translate">
+            @for (s of sorts; track s) {
+              <button type="button" class="chip" [class.active]="sort() === s" [attr.aria-pressed]="sort() === s" [attr.data-sort]="s" (click)="setSort(s)">
+                {{ 'REVIEWS.SORT.' + s | translate }}
+              </button>
+            }
+          </div>
+        </div>
+        <ul class="review-list" [class.dim]="loadingReviews()">
+          @for (r of reviews(); track r.id) {
+            <li class="review" [attr.data-id]="r.id">
+              <div class="review-head">
+                <app-stars [value]="r.rating" />
+                <strong class="author">{{ r.author.name }}</strong>
+                @if (r.author.isTrustedReviewer) {
+                  <span class="badge badge-success trusted"><app-icon name="shield" [size]="12" /> {{ 'REVIEWS.TRUSTED_BADGE' | translate }}</span>
+                }
+                @if (r.mine) {
+                  <span class="badge badge-info">{{ 'REVIEWS.YOUR_REVIEW' | translate }}</span>
+                }
+              </div>
+              <p class="review-text">{{ r.text }}</p>
+              <p class="review-meta small muted">
+                @if (r.travelledAt) {
+                  {{ 'REVIEWS.TRAVELLED' | translate: { date: (r.travelledAt | appDate: 'date') } }} ·
+                }
+                {{ 'REVIEWS.REVIEWED' | translate: { date: (r.createdAt | appDate: 'date') } }}
+                @if (r.editedAt) {
+                  · <span class="edited">{{ 'REVIEWS.EDITED' | translate }}</span>
+                }
+              </p>
+              <div class="review-actions">
+                @if (r.mine) {
+                  <span class="small muted">{{ 'REVIEWS.HELPFUL_COUNT' | translate: { count: (r.helpfulCount | num) } }}</span>
+                  @if (r.editable) {
+                    <a class="btn btn-sm btn-ghost edit-own" [routerLink]="['/reviews', r.id, 'edit']"><app-icon name="settings" [size]="14" /> {{ 'REVIEWS.EDIT' | translate }}</a>
+                  }
+                } @else {
+                  <button type="button" class="btn btn-sm btn-outline helpful-btn" [class.active]="r.helpfulByMe" [attr.aria-pressed]="r.helpfulByMe"
+                    [disabled]="busy() === r.id" (click)="toggleHelpful(r)">
+                    <app-icon name="check" [size]="14" /> {{ 'REVIEWS.HELPFUL' | translate }} ({{ r.helpfulCount | num }})
+                  </button>
+                  @if (r.reportedByMe) {
+                    <span class="badge reported">{{ 'REVIEWS.REPORTED' | translate }}</span>
+                  } @else {
+                    <button type="button" class="btn btn-sm btn-ghost report-btn" (click)="openReport(r)">
+                      <app-icon name="alert" [size]="14" /> {{ 'REVIEWS.REPORT' | translate }}
+                    </button>
+                  }
+                }
+              </div>
+            </li>
+          }
+        </ul>
+        @if (reviews().length < total()) {
+          <div class="more">
+            <button type="button" class="btn btn-outline load-more" [disabled]="loadingReviews()" (click)="loadMore()">
+              {{ (loadingReviews() ? 'COMMON.PLEASE_WAIT' : 'REVIEWS.LOAD_MORE') | translate }}
+            </button>
+          </div>
+        }
+      }
+      <p class="small muted how-to">{{ 'REVIEWS.HOW_TO' | translate }}</p>
+    </section>
+  } @else if (loading()) {
+    <div class="card skeleton head-skeleton"></div>
+    <div class="card skeleton body-skeleton"></div>
+  }
+</div>
+
+@if (reporting(); as r) {
+  <app-dialog [title]="'REVIEWS.REPORT_TITLE' | translate" (closed)="reporting.set(null)">
+    <form [formGroup]="reportForm" (ngSubmit)="submitReport()" class="report-form" novalidate>
+      <p class="muted small">{{ 'REVIEWS.REPORT_HINT' | translate }}</p>
+      @if (reportError(); as e) {
+        <div class="alert alert-error" role="alert">{{ e | translateOr: 'ERRORS.GENERIC' }}</div>
+      }
+      <fieldset class="reasons">
+        <legend>{{ 'REVIEWS.REPORT_REASON' | translate }}</legend>
+        @for (reason of reasons; track reason) {
+          <label class="check"><input type="radio" formControlName="reason" [value]="reason" [attr.data-reason]="reason" /> {{ 'REVIEWS.REASONS.' + reason | translate }}</label>
+        }
+        @if (reportForm.controls.reason.invalid && reportForm.controls.reason.touched) {
+          <p class="field-error" role="alert">{{ 'REVIEWS.REPORT_PICK_REASON' | translate }}</p>
+        }
+      </fieldset>
+      <div class="form-field">
+        <label for="report-note">{{ 'REVIEWS.REPORT_NOTE' | translate }}</label>
+        <textarea id="report-note" formControlName="note" rows="3" maxlength="300"></textarea>
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-ghost" (click)="reporting.set(null)">{{ 'COMMON.CANCEL' | translate }}</button>
+        <button type="submit" class="btn btn-danger submit-report" [disabled]="busy() === r.id">{{ 'REVIEWS.REPORT_SUBMIT' | translate }}</button>
+      </div>
+    </form>
+  </app-dialog>
+}
