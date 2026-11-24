@@ -13,6 +13,7 @@ import { TranslatePipe } from '@ngx-translate/core';
         <a class="tab" routerLink="/admin/trips" routerLinkActive="active">{{ 'ADMIN.TRIPS' | translate }}</a>
         <a class="tab" routerLink="/admin/bookings" routerLinkActive="active">{{ 'ADMIN.BOOKINGS' | translate }}</a>
         <a class="tab" routerLink="/admin/notifications" routerLinkActive="active">{{ 'ADMIN.NOTIFICATIONS' | translate }}</a>
+        <a class="tab" routerLink="/admin/reviews" routerLinkActive="active">{{ 'ADMIN.REVIEWS_TAB' | translate }}</a>
         <a class="tab" routerLink="/admin/offers" routerLinkActive="active">{{ 'ADMIN.OFFERS' | translate }}</a>
       </nav>
       <router-outlet />
