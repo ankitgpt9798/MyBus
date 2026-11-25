@@ -1,0 +1,160 @@
+<div class="container section narrow">
+  @if (error(); as e) {
+    <div class="empty-state card">
+      <app-icon name="user" [size]="40" />
+      <h1 class="page-title">{{ e | translateOr: 'ERRORS.GENERIC' }}</h1>
+      <a routerLink="/community" class="btn btn-primary">{{ 'COMMUNITY.BACK' | translate }}</a>
+    </div>
+  } @else if (profile(); as p) {
+    <header class="card profile-head">
+      <span class="avatar" aria-hidden="true">{{ p.user.name.charAt(0) }}</span>
+      <div class="who">
+        <h1 class="page-title">{{ p.user.name }}</h1>
+        <div class="badges">
+          @if (p.user.verified) {
+            <span class="badge badge-success verified-badge"><app-icon name="check" [size]="12" /> {{ 'USER.VERIFIED' | translate }}</span>
+          }
+          @if (p.user.trustedReviewer) {
+            <span class="badge badge-info trusted-badge"><app-icon name="shield" [size]="12" /> {{ 'REVIEWS.TRUSTED_BADGE' | translate }}</span>
+          }
+        </div>
+        <p class="small muted since">{{ 'USER.MEMBER_SINCE' | translate: { date: (p.user.memberSince | appDate: 'date') } }}</p>
+      </div>
+      @if (p.own) {
+        <p class="own-note small">
+          {{ 'USER.OWN_NOTE' | translate }}
+          <a routerLink="/profile">{{ 'USER.EDIT_ACCOUNT' | translate }}</a>
+        </p>
+      }
+    </header>
+
+    <dl class="stats">
+      <div class="stat" data-stat="posts"><dt>{{ 'USER.STATS.POSTS' | plural: p.stats.posts }}</dt><dd>{{ p.stats.posts | num }}</dd></div>
+      <div class="stat" data-stat="comments"><dt>{{ 'USER.STATS.COMMENTS' | plural: p.stats.comments }}</dt><dd>{{ p.stats.comments | num }}</dd></div>
+      <div class="stat" data-stat="likes"><dt>{{ 'USER.STATS.LIKES' | plural: p.stats.likesReceived }}</dt><dd>{{ p.stats.likesReceived | num }}</dd></div>
+      <div class="stat" data-stat="reviews"><dt>{{ 'USER.STATS.REVIEWS' | plural: p.stats.reviews }}</dt><dd>{{ p.stats.reviews | num }}</dd></div>
+      <div class="stat" data-stat="helpful"><dt>{{ 'USER.STATS.HELPFUL' | plural: p.stats.helpfulReceived }}</dt><dd>{{ p.stats.helpfulReceived | num }}</dd></div>
+    </dl>
+
+    <div class="tabs" role="tablist" [attr.aria-label]="'USER.TABS_LABEL' | translate">
+      @for (t of tabs; track t; let i = $index) {
+        <button type="button" role="tab" class="tab" [id]="'tab-' + t" [attr.data-tab]="t" [class.active]="activeTab() === t" [attr.aria-selected]="activeTab() === t"
+          [attr.aria-controls]="'panel-' + t" [tabindex]="activeTab() === t ? 0 : -1" (click)="setTab(t)" (keydown)="tabKey($event, i)">
+          {{ 'USER.TABS.' + t | translate }}
+        </button>
+      }
+    </div>
+
+    <section class="panel" role="tabpanel" [id]="'panel-' + activeTab()" [attr.aria-labelledby]="'tab-' + activeTab()" [class.dim]="listLoading()">
+      @if (listError(); as e) {
+        <div class="alert alert-error" role="alert">{{ e | translateOr: 'ERRORS.GENERIC' }}</div>
+      }
+      @switch (activeTab()) {
+        @case ('activity') {
+          <ol class="timeline">
+            @for (a of activity(); track a.key) {
+              <li class="act card" [attr.data-type]="a.type">
+                <span class="act-icon" aria-hidden="true"><app-icon [name]="icons[a.type]" [size]="16" /></span>
+                <div class="act-main">
+                  <p class="act-line">
+                    <span>{{ 'USER.ACTIVITY.' + a.type | translate }}</span>
+                    @if (a.post; as post) {
+                      <a [routerLink]="['/community/posts', post.id]">{{ post.title }}</a>
+                    }
+                    @if (a.route; as route) {
+                      <a [routerLink]="['/routes', route.id]">{{ route.from | city }} → {{ route.to | city }}</a>
+                    }
+                    @if (a.rating) {
+                      <app-stars [value]="a.rating" [size]="13" />
+                    }
+                    @if (a.status) {
+                      <span class="badge badge-danger">{{ 'COMMUNITY.STATUS.' + a.status | translate }}</span>
+                    }
+                  </p>
+                  @if (a.text) {
+                    <p class="act-text small">“{{ a.text }}”</p>
+                  }
+                  <time class="small muted" [attr.datetime]="a.at">{{ a.at | appDate: 'datetime' }}</time>
+                </div>
+              </li>
+            } @empty {
+              @if (!listLoading()) {
+                <li class="card empty-row muted">{{ 'USER.EMPTY.activity' | translate }}</li>
+              }
+            }
+          </ol>
+        }
+        @case ('posts') {
+          <div class="list">
+            @for (post of posts(); track post.id) {
+              <app-post-card [post]="post" [linkAuthor]="false" />
+            } @empty {
+              @if (!listLoading()) {
+                <p class="card empty-row muted">{{ 'USER.EMPTY.posts' | translate }}</p>
+              }
+            }
+          </div>
+        }
+        @case ('comments') {
+          <ul class="list plain">
+            @for (c of comments(); track c.id) {
+              <li class="card item" [attr.data-comment]="c.id">
+                <p class="item-head small">
+                  @if (c.post; as post) {
+                    {{ (c.reply ? 'USER.REPLIED_ON' : 'USER.COMMENTED_ON') | translate }}
+                    <a [routerLink]="['/community/posts', post.id]" fragment="comments">{{ post.title }}</a>
+                  }
+                  @if (c.status !== 'visible') {
+                    <span class="badge badge-danger">{{ 'COMMUNITY.STATUS.' + c.status | translate }}</span>
+                  }
+                </p>
+                <p class="item-text">{{ c.body }}</p>
+                <p class="small muted item-meta">
+                  {{ c.createdAt | appDate: 'datetime' }} · {{ 'COMMUNITY.LIKES' | plural: c.likeCount : { count: (c.likeCount | num) } }}
+                </p>
+              </li>
+            } @empty {
+              @if (!listLoading()) {
+                <li class="card empty-row muted">{{ 'USER.EMPTY.comments' | translate }}</li>
+              }
+            }
+          </ul>
+        }
+        @case ('reviews') {
+          <ul class="list plain">
+            @for (r of reviews(); track r.id) {
+              <li class="card item" [attr.data-review]="r.id">
+                <p class="item-head small">
+                  <app-stars [value]="r.rating" [size]="14" />
+                  @if (r.route; as route) {
+                    <a [routerLink]="['/routes', route.id]" fragment="reviews">{{ route.from | city }} → {{ route.to | city }}</a>
+                  }
+                  @if (r.status !== 'visible') {
+                    <span class="badge badge-danger">{{ 'COMMUNITY.STATUS.' + r.status | translate }}</span>
+                  }
+                </p>
+                <p class="item-text">{{ r.text }}</p>
+                <p class="small muted item-meta">
+                  {{ r.createdAt | appDate: 'date' }} · {{ 'REVIEWS.HELPFUL_COUNT' | plural: r.helpfulCount : { count: (r.helpfulCount | num) } }}
+                </p>
+              </li>
+            } @empty {
+              @if (!listLoading()) {
+                <li class="card empty-row muted">{{ 'USER.EMPTY.reviews' | translate }}</li>
+              }
+            }
+          </ul>
+        }
+      }
+      @if (hasMore()) {
+        <div class="more">
+          <button type="button" class="btn btn-outline load-more" [disabled]="listLoading()" (click)="more()">
+            {{ (listLoading() ? 'COMMON.PLEASE_WAIT' : 'USER.LOAD_MORE') | translate }}
+          </button>
+        </div>
+      }
+    </section>
+  } @else {
+    <div class="card skeleton head-skeleton"></div>
+  }
+</div>

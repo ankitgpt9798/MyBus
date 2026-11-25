@@ -48,6 +48,7 @@ import { PreferenceControls } from './preference-controls';
                     <small>{{ user.email }}</small>
                   </div>
                   <a routerLink="/profile" role="menuitem"><app-icon name="settings" [size]="16" /> {{ 'NAV.PROFILE' | translate }}</a>
+                  <a [routerLink]="['/users', user.id]" role="menuitem" class="public-profile"><app-icon name="user" [size]="16" /> {{ 'NAV.PUBLIC_PROFILE' | translate }}</a>
                   <a routerLink="/bookings" role="menuitem"><app-icon name="ticket" [size]="16" /> {{ 'NAV.MY_BOOKINGS' | translate }}</a>
                   @if (auth.isAdmin()) {
                     <a routerLink="/admin" role="menuitem"><app-icon name="shield" [size]="16" /> {{ 'NAV.ADMIN' | translate }}</a>

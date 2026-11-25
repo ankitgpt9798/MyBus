@@ -80,6 +80,7 @@ export const routes: Routes = [
     title: 'TITLES.COMMUNITY_NEW',
   },
   { path: 'community/posts/:id', loadComponent: () => import('./pages/community/post-detail').then((m) => m.PostDetailPage), title: 'TITLES.COMMUNITY_POST' },
+  { path: 'users/:id', loadComponent: () => import('./pages/users/user-profile').then((m) => m.UserProfilePage), title: 'TITLES.USER_PROFILE' },
   {
     path: 'community/posts/:id/edit',
     canActivate: [authGuard],
