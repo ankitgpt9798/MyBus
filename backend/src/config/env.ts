@@ -25,6 +25,8 @@ export const env = {
     .map((s) => s.trim())
     .filter(Boolean),
   jwtSecret: required('JWT_SECRET'),
+  // Uploaded files (community photos go into <dir>/community). Default: backend/uploads (git-ignored).
+  uploadsDir: path.resolve(str('UPLOADS_DIR', path.resolve(__dirname, '../../uploads'))),
   jwtExpiresIn: str('JWT_EXPIRES_IN', '7d'),
   admin: {
     email: str('ADMIN_EMAIL', 'admin@mybus.local').toLowerCase(),
