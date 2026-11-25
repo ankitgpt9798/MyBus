@@ -80,4 +80,11 @@ export default {
       body: '{{body}}',
     },
   },
+  share: {
+    community: 'MyBus కమ్యూనిటీ',
+    readPost: 'MyBusలో పూర్తి పోస్ట్ చదవండి',
+    notFoundTitle: 'పోస్ట్ కనబడలేదు',
+    notFoundText: 'ఈ పోస్ట్ ఇప్పుడు అందుబాటులో లేదు.',
+    backToCommunity: 'MyBus కమ్యూనిటీకి వెళ్ళండి',
+  },
 };

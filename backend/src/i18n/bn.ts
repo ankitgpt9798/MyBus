@@ -80,4 +80,11 @@ export default {
       body: '{{body}}',
     },
   },
+  share: {
+    community: 'MyBus কমিউনিটি',
+    readPost: 'MyBus-এ পুরো পোস্টটি পড়ুন',
+    notFoundTitle: 'পোস্টটি পাওয়া যায়নি',
+    notFoundText: 'এই পোস্টটি আর পাওয়া যাচ্ছে না।',
+    backToCommunity: 'MyBus কমিউনিটিতে যান',
+  },
 };

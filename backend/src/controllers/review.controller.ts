@@ -4,6 +4,7 @@ import { Booking } from '../models/Booking';
 import { REMOVE_REASONS, REPORT_REASONS, Review } from '../models/Review';
 import { Route } from '../models/Route';
 import { completeArrivedBookings } from '../services/booking.service';
+import { recordReaction } from '../services/community.service';
 import {
   REVIEW_EDIT_WINDOW_MS,
   REVIEW_HIDE_THRESHOLD,
@@ -148,6 +149,7 @@ export async function toggleHelpful(req: Request, res: Response) {
     updated = await Review.findOneAndUpdate({ _id: review._id, helpfulBy: userId }, { $pull: { helpfulBy: userId }, $inc: { helpfulCount: -1 } }, { new: true });
     helpful = false;
   }
+  await recordReaction(userId, 'review_helpful', review._id, helpful);
   res.json({ helpful, helpfulCount: updated?.helpfulCount ?? review.helpfulCount });
 }
 

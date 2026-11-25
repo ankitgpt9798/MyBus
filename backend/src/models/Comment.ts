@@ -21,6 +21,7 @@ const commentSchema = new Schema(
 commentSchema.index({ post: 1, status: 1, createdAt: 1 });
 commentSchema.index({ parent: 1 });
 commentSchema.index({ author: 1, createdAt: -1 });
+commentSchema.index({ status: 1, reportCount: -1 });
 
 export type CommentAttrs = InferSchemaType<typeof commentSchema>;
 export type CommentDoc = HydratedDocument<CommentAttrs>;

@@ -4,30 +4,58 @@ import { isLang } from '../i18n';
 import { Comment } from '../models/Comment';
 import { BOARDS, Post, PostDoc } from '../models/Post';
 import { Route } from '../models/Route';
+import { User } from '../models/User';
+import {
+  COMMUNITY_HIDE_THRESHOLD,
+  COMMUNITY_REMOVE_REASONS,
+  COMMUNITY_REPORT_REASONS,
+  CONTRIBUTOR_WEIGHTS,
+  CONTRIBUTOR_WINDOW_DAYS,
+  SHARE_BURST_PER_MINUTE,
+  SHARE_DEDUPE_MS,
+  SHARE_NETWORKS,
+  TRENDING_WINDOW_DAYS,
+  trendingScoreExpr,
+} from '../services/community.rules';
+import {
+  AuthorRef,
+  PostLean,
+  authorView,
+  excerpt,
+  forgetReactions,
+  hiddenIds,
+  recordReaction,
+  syncCommentCount,
+  viewPost,
+  visibleCommentFilter,
+} from '../services/community.service';
 import { guidelineViolation } from '../services/review.rules';
 import { displayName } from '../services/review.service';
-import { MAX_PHOTOS, checkPhotos, deletePhotos, photoUrl, savePhotos } from '../services/upload.service';
+import { MAX_PHOTOS, checkPhotos, deletePhotos, savePhotos } from '../services/upload.service';
 import { AppError, badRequest, conflict, forbidden, notFound } from '../utils/AppError';
+import { allow } from '../utils/rate-limit';
 import { isObjectId, validate } from '../utils/validate';
 
 export const POST_TITLE = { min: 5, max: 120 };
 export const POST_BODY = { min: 20, max: 5000 };
 export const COMMENT_BODY = { min: 2, max: 1000 };
 const ALT_MAX = 150;
-const EXCERPT = 280;
-const SORTS = { latest: { createdAt: -1 }, top: { likeCount: -1, createdAt: -1 }, discussed: { commentCount: -1, createdAt: -1 } } as const;
+const DAY_MS = 24 * 60 * 60 * 1000;
+const TOP_CONTRIBUTORS = 5;
+const SORTS = { latest: { createdAt: -1 }, top: { likeCount: -1, createdAt: -1 }, discussed: { commentCount: -1, createdAt: -1 }, trending: null } as const;
 
 type Id = Types.ObjectId;
-type Author = { _id: Id; name: string } | null;
-type RouteRef = { _id: Id; from: string; to: string } | null;
 
 const viewerOf = (req: Request) => (req.user ? String(req.user._id) : null);
-const paging = (req: Request) => {
+const paging = (req: Request, max = 30) => {
   const page = Math.max(1, Number(req.query.page) || 1);
-  const limit = Math.min(30, Math.max(1, Number(req.query.limit) || 10));
+  const limit = Math.min(max, Math.max(1, Number(req.query.limit) || 10));
   return { page, limit, skip: (page - 1) * limit };
 };
-const author = (a: Author) => (a ? { id: String(a._id), name: displayName(a.name) } : { id: null, name: displayName('') });
+const withRefs = [
+  { path: 'author', select: 'name' },
+  { path: 'route', select: 'from to' },
+];
 
 /** Links are not allowed in community content either (spam and phishing); same rules as reviews. */
 function checkGuidelines(fields: Record<string, string | undefined>) {
@@ -89,45 +117,6 @@ function readAlts(raw: unknown, count: number): string[] {
   return Array.from({ length: count }, (_, i) => alts[i] ?? '');
 }
 
-type PostLean = {
-  _id: Id;
-  author: Author;
-  board: string;
-  title: string;
-  body: string;
-  photos: { file: string; alt?: string | null }[];
-  route?: RouteRef;
-  city?: string | null;
-  language?: string | null;
-  likedBy: Id[];
-  likeCount: number;
-  commentCount: number;
-  createdAt: Date;
-  editedAt?: Date | null;
-};
-
-function viewPost(p: PostLean, viewer: string | null, full: boolean) {
-  const truncated = !full && p.body.length > EXCERPT;
-  return {
-    id: String(p._id),
-    board: p.board,
-    title: p.title,
-    body: truncated ? `${p.body.slice(0, EXCERPT).trimEnd()}…` : p.body,
-    truncated,
-    photos: p.photos.map((ph) => ({ url: photoUrl(ph.file), alt: ph.alt ?? '' })),
-    route: p.route ? { id: String(p.route._id), from: p.route.from, to: p.route.to } : null,
-    city: p.city ?? null,
-    language: p.language ?? 'en',
-    author: author(p.author),
-    likeCount: p.likeCount,
-    likedByMe: viewer ? p.likedBy.some((u) => String(u) === viewer) : false,
-    commentCount: p.commentCount,
-    mine: !!viewer && String(p.author?._id) === viewer,
-    createdAt: p.createdAt,
-    editedAt: p.editedAt ?? null,
-  };
-}
-
 async function loadVisiblePost(id: unknown) {
   if (!isObjectId(id)) throw notFound('COMMUNITY_POST_NOT_FOUND', 'Post not found');
   const post = await Post.findById(id);
@@ -135,19 +124,22 @@ async function loadVisiblePost(id: unknown) {
   return post;
 }
 
+/** A visible comment on a visible post. */
+async function loadVisibleComment(id: unknown) {
+  if (!isObjectId(id)) throw notFound('COMMUNITY_COMMENT_NOT_FOUND', 'Comment not found');
+  const comment = await Comment.findById(id);
+  if (!comment || comment.status !== 'visible' || !(await Post.exists({ _id: comment.post, status: 'visible' }))) {
+    throw notFound('COMMUNITY_COMMENT_NOT_FOUND', 'Comment not found');
+  }
+  return comment;
+}
+
 async function postView(id: Id, viewer: string | null) {
-  const p = await Post.findById(id).populate('author', 'name').populate('route', 'from to').lean();
+  const p = await Post.findById(id).populate(withRefs).lean();
   return viewPost(p as unknown as PostLean, viewer, true);
 }
 
-/** Visible comment count, recomputed so it stays exact after creates and deletes. */
-async function syncCommentCount(postId: Id) {
-  const commentCount = await Comment.countDocuments({ post: postId, status: 'visible' });
-  await Post.updateOne({ _id: postId }, { $set: { commentCount } });
-  return commentCount;
-}
-
-// ---------- Boards and feed (public)
+// ---------- Boards, feed and highlights (public)
 
 /** GET /community/boards: the fixed boards with their number of posts and latest activity. */
 export async function boards(_req: Request, res: Response) {
@@ -158,7 +150,7 @@ export async function boards(_req: Request, res: Response) {
   res.json({ boards: BOARDS.map((id) => ({ id, posts: rows.find((r) => r._id === id)?.posts ?? 0, latestAt: rows.find((r) => r._id === id)?.latest ?? null })) });
 }
 
-/** GET /community/posts?board&routeId&city&sort=latest|top|discussed&page */
+/** GET /community/posts?board&routeId&city&sort=latest|top|discussed|trending&page */
 export async function listPosts(req: Request, res: Response) {
   const { page, limit, skip } = paging(req);
   const filter: Record<string, unknown> = { status: 'visible' };
@@ -167,18 +159,84 @@ export async function listPosts(req: Request, res: Response) {
   if (isObjectId(req.query.routeId)) filter.route = new Types.ObjectId(String(req.query.routeId));
   if (typeof req.query.city === 'string' && req.query.city) filter.city = req.query.city;
   const sortKey = (Object.keys(SORTS) as (keyof typeof SORTS)[]).find((s) => s === req.query.sort) ?? 'latest';
+  const spec = SORTS[sortKey];
   const [items, total] = await Promise.all([
-    Post.find(filter).sort(SORTS[sortKey]).skip(skip).limit(limit).populate('author', 'name').populate('route', 'from to').lean(),
+    spec
+      ? Post.find(filter).sort(spec).skip(skip).limit(limit).populate(withRefs).lean()
+      : Post.aggregate([
+          { $match: filter },
+          { $addFields: { score: trendingScoreExpr(new Date()) } },
+          { $sort: { score: -1, createdAt: -1, _id: -1 } },
+          { $skip: skip },
+          { $limit: limit },
+        ]).then((rows) => Post.populate(rows, withRefs)),
     Post.countDocuments(filter),
   ]);
   const viewer = viewerOf(req);
   res.json({ posts: items.map((p) => viewPost(p as unknown as PostLean, viewer, false)), total, page, limit, sort: sortKey });
 }
 
-/** GET /community/posts/:id: the post with its comments (replies nested one level). */
-export async function getPost(req: Request, res: Response) {
-  const post = await loadVisiblePost(req.params.id);
+/** GET /community/trending?limit=4: posts from the last 7 days with the highest trending score. */
+export async function trending(req: Request, res: Response) {
+  const limit = Math.min(10, Math.max(1, Number(req.query.limit) || 4));
+  const now = new Date();
+  const rows = await Post.aggregate([
+    { $match: { status: 'visible', createdAt: { $gte: new Date(now.getTime() - TRENDING_WINDOW_DAYS * DAY_MS) } } },
+    { $addFields: { score: trendingScoreExpr(now) } },
+    { $match: { score: { $gt: 0 } } },
+    { $sort: { score: -1, createdAt: -1, _id: -1 } },
+    { $limit: limit },
+  ]);
+  const posts = await Post.populate(rows, withRefs);
   const viewer = viewerOf(req);
+  res.json({ posts: posts.map((p) => viewPost(p as unknown as PostLean, viewer, false)) });
+}
+
+/** GET /community/contributors: most engaged members of the last 30 days (posts, comments, likes received). */
+export async function contributors(_req: Request, res: Response) {
+  const since = new Date(Date.now() - CONTRIBUTOR_WINDOW_DAYS * DAY_MS);
+  const hidden = await hiddenIds();
+  type Row = { _id: Id; n: number; likes: number };
+  const [posts, comments]: [Row[], Row[]] = await Promise.all([
+    Post.aggregate([{ $match: { status: 'visible', createdAt: { $gte: since } } }, { $group: { _id: '$author', n: { $sum: 1 }, likes: { $sum: '$likeCount' } } }]),
+    Comment.aggregate([{ $match: { ...visibleCommentFilter(hidden), createdAt: { $gte: since } } }, { $group: { _id: '$author', n: { $sum: 1 }, likes: { $sum: '$likeCount' } } }]),
+  ]);
+  const totals = new Map<string, { posts: number; comments: number; likesReceived: number }>();
+  const entry = (id: Id) => {
+    if (!totals.has(String(id))) totals.set(String(id), { posts: 0, comments: 0, likesReceived: 0 });
+    return totals.get(String(id))!;
+  };
+  for (const r of posts) {
+    entry(r._id).posts = r.n;
+    entry(r._id).likesReceived += r.likes;
+  }
+  for (const r of comments) {
+    entry(r._id).comments = r.n;
+    entry(r._id).likesReceived += r.likes;
+  }
+  const ranked = [...totals.entries()]
+    .map(([id, t]) => ({ id, ...t, points: CONTRIBUTOR_WEIGHTS.post * t.posts + CONTRIBUTOR_WEIGHTS.comment * t.comments + CONTRIBUTOR_WEIGHTS.likeReceived * t.likesReceived }))
+    .sort((a, b) => b.points - a.points || b.posts - a.posts)
+    .slice(0, TOP_CONTRIBUTORS);
+  const users = await User.find({ _id: { $in: ranked.map((r) => r.id) } }).select('name').lean();
+  res.json({
+    contributors: ranked
+      .map((r) => ({ ...r, name: displayName(users.find((u) => String(u._id) === r.id)?.name) }))
+      .filter((r) => users.some((u) => String(u._id) === r.id)),
+    days: CONTRIBUTOR_WINDOW_DAYS,
+  });
+}
+
+/**
+ * GET /community/posts/:id: the post with its comments (replies nested one level).
+ * A hidden or removed post is shown only to its author (with the moderation notice) and to admins.
+ */
+export async function getPost(req: Request, res: Response) {
+  if (!isObjectId(req.params.id)) throw notFound('COMMUNITY_POST_NOT_FOUND', 'Post not found');
+  const post = await Post.findById(req.params.id).select('author status').lean();
+  const viewer = viewerOf(req);
+  const privileged = !!post && (String(post.author) === viewer || req.user?.role === 'admin');
+  if (!post || (post.status !== 'visible' && !privileged)) throw notFound('COMMUNITY_POST_NOT_FOUND', 'Post not found');
   const [view, comments] = await Promise.all([
     postView(post._id, viewer),
     Comment.find({ post: post._id, status: 'visible' }).sort({ createdAt: 1 }).limit(1000).populate('author', 'name').lean(),
@@ -187,10 +245,11 @@ export async function getPost(req: Request, res: Response) {
     id: String(c._id),
     parentId: c.parent ? String(c.parent) : null,
     body: c.body,
-    author: author(c.author as unknown as Author),
+    author: authorView(c.author as unknown as AuthorRef),
     likeCount: c.likeCount,
     likedByMe: viewer ? c.likedBy.some((u) => String(u) === viewer) : false,
-    mine: !!viewer && String((c.author as unknown as Author)?._id) === viewer,
+    reportedByMe: viewer ? c.reports.some((r) => String(r.user) === viewer) : false,
+    mine: !!viewer && String((c.author as unknown as AuthorRef)?._id) === viewer,
     createdAt: c.createdAt,
   });
   const top = comments.filter((c) => !c.parent).map((c) => ({ ...toView(c), replies: [] as ReturnType<typeof toView>[] }));
@@ -298,8 +357,10 @@ export async function deletePost(req: Request, res: Response) {
   const post = await Post.findById(req.params.id);
   if (!post) throw notFound('COMMUNITY_POST_NOT_FOUND', 'Post not found');
   if (String(post.author) !== String(req.user!._id)) throw forbidden('COMMUNITY_NOT_AUTHOR', 'Only the author can delete this post');
+  const commentIds = (await Comment.distinct('_id', { post: post._id })) as Id[];
   await Comment.deleteMany({ post: post._id });
   await Post.deleteOne({ _id: post._id });
+  await forgetReactions([post._id, ...commentIds]);
   await deletePhotos(post.photos.map((p) => p.file));
   res.json({ deleted: true });
 }
@@ -316,7 +377,9 @@ async function toggleLike(model: typeof Post | typeof Comment, id: Id, userId: I
 /** POST /community/posts/:id/like */
 export async function likePost(req: Request, res: Response) {
   const post = await loadVisiblePost(req.params.id);
-  res.json(await toggleLike(Post, post._id, req.user!._id));
+  const result = await toggleLike(Post, post._id, req.user!._id);
+  await recordReaction(req.user!._id, 'post_like', post._id, result.liked);
+  res.json(result);
 }
 
 // ---------- Comments (verified users)
@@ -341,9 +404,10 @@ export async function addComment(req: Request, res: Response) {
       id: String(comment._id),
       parentId: parent ? String(parent) : null,
       body: comment.body,
-      author: author({ _id: req.user!._id, name: req.user!.name }),
+      author: authorView({ _id: req.user!._id, name: req.user!.name }),
       likeCount: 0,
       likedByMe: false,
+      reportedByMe: false,
       mine: true,
       createdAt: comment.createdAt,
       replies: [],
@@ -358,14 +422,204 @@ export async function deleteComment(req: Request, res: Response) {
   const comment = await Comment.findById(req.params.id);
   if (!comment) throw notFound('COMMUNITY_COMMENT_NOT_FOUND', 'Comment not found');
   if (String(comment.author) !== String(req.user!._id)) throw forbidden('COMMUNITY_NOT_AUTHOR', 'Only the author can delete this comment');
-  await Comment.deleteMany({ $or: [{ _id: comment._id }, { parent: comment._id }] });
+  const ids = (await Comment.distinct('_id', { $or: [{ _id: comment._id }, { parent: comment._id }] })) as Id[];
+  await Comment.deleteMany({ _id: { $in: ids } });
+  await forgetReactions(ids);
   res.json({ deleted: true, commentCount: await syncCommentCount(comment.post) });
 }
 
 /** POST /community/comments/:id/like */
 export async function likeComment(req: Request, res: Response) {
-  if (!isObjectId(req.params.id)) throw notFound('COMMUNITY_COMMENT_NOT_FOUND', 'Comment not found');
-  const comment = await Comment.findById(req.params.id).lean();
-  if (!comment || comment.status !== 'visible') throw notFound('COMMUNITY_COMMENT_NOT_FOUND', 'Comment not found');
-  res.json(await toggleLike(Comment, comment._id, req.user!._id));
+  const comment = await loadVisibleComment(req.params.id);
+  const result = await toggleLike(Comment, comment._id, req.user!._id);
+  await recordReaction(req.user!._id, 'comment_like', comment._id, result.liked, comment.post);
+  res.json(result);
+}
+
+// ---------- Reports (verified users) and sharing (anyone)
+
+function readReport(body: unknown) {
+  validate(body ?? {}, { reason: { type: 'string', required: true, enum: COMMUNITY_REPORT_REASONS }, note: { type: 'string', max: 300 } });
+  const b = body as { reason: string; note?: string };
+  return { reason: b.reason, note: b.note?.trim() || undefined };
+}
+
+/**
+ * Adds the user's report once (not on their own content) and hides the item automatically when it reaches
+ * COMMUNITY_HIDE_THRESHOLD distinct reports. Returns whether this report hid it.
+ */
+async function addReport(model: typeof Post | typeof Comment, id: Id, authorId: Id, req: Request): Promise<boolean> {
+  const M = model as typeof Post;
+  const userId = req.user!._id;
+  const report = readReport(req.body);
+  if (String(authorId) === String(userId)) throw forbidden('COMMUNITY_REPORT_OWN', 'You cannot report your own content');
+  const added = await M.updateOne({ _id: id, 'reports.user': { $ne: userId } }, { $push: { reports: { user: userId, ...report } }, $inc: { reportCount: 1 } });
+  if (!added.modifiedCount) throw conflict('COMMUNITY_ALREADY_REPORTED', 'You already reported this');
+  const hidden = await M.updateOne(
+    { _id: id, status: 'visible', reportCount: { $gte: COMMUNITY_HIDE_THRESHOLD } },
+    { $set: { status: 'hidden', moderation: { reason: 'reports', auto: true, at: new Date() } } },
+  );
+  return hidden.modifiedCount > 0;
+}
+
+/** POST /community/posts/:id/report { reason, note? } */
+export async function reportPost(req: Request, res: Response) {
+  const post = await loadVisiblePost(req.params.id);
+  res.json({ reported: true, hidden: await addReport(Post, post._id, post.author, req) });
+}
+
+/** POST /community/comments/:id/report { reason, note? }: hiding a comment updates the post's comment count. */
+export async function reportComment(req: Request, res: Response) {
+  const comment = await loadVisibleComment(req.params.id);
+  const hidden = await addReport(Comment, comment._id, comment.author, req);
+  res.json({ reported: true, hidden, commentCount: await syncCommentCount(comment.post) });
+}
+
+/** Light rate limit per IP, and the same visitor + post + network is counted once per SHARE_DEDUPE_MS. */
+function counts(req: Request, kind: 'share' | 'visit', postId: Id, network: string): boolean {
+  const ip = req.ip ?? 'unknown';
+  if (!allow(`burst:${ip}`, SHARE_BURST_PER_MINUTE, 60_000)) throw new AppError(429, 'RATE_LIMITED', 'Too many requests, please try again in a minute');
+  return allow(`${kind}:${ip}:${postId}:${network}`, 1, SHARE_DEDUPE_MS);
+}
+
+/** POST /community/posts/:id/share { network }: counts a share (no account needed). */
+export async function sharePost(req: Request, res: Response) {
+  validate(req.body ?? {}, { network: { type: 'string', required: true, enum: SHARE_NETWORKS } });
+  const post = await loadVisiblePost(req.params.id);
+  const counted = counts(req, 'share', post._id, req.body.network);
+  const updated = counted ? await Post.findByIdAndUpdate(post._id, { $inc: { [`shares.${req.body.network}`]: 1, shareCount: 1 } }, { new: true }) : post;
+  res.json({ counted, shareCount: updated?.shareCount ?? 0 });
+}
+
+/** POST /community/posts/:id/visit { source }: someone arrived through a shared link (utm_source). */
+export async function visitPost(req: Request, res: Response) {
+  validate(req.body ?? {}, { source: { type: 'string', required: true, enum: SHARE_NETWORKS } });
+  const post = await loadVisiblePost(req.params.id);
+  const counted = counts(req, 'visit', post._id, req.body.source);
+  const updated = counted ? await Post.findByIdAndUpdate(post._id, { $inc: { [`visits.${req.body.source}`]: 1, visitCount: 1 } }, { new: true }) : post;
+  res.json({ counted, visitCount: updated?.visitCount ?? 0 });
+}
+
+// ---------- Admin moderation
+
+const ADMIN_FILTERS = ['reported', 'hidden', 'removed', 'all'] as const;
+const CONTENT_TYPES = ['post', 'comment'] as const;
+type Named = { _id: Id; name: string; email?: string } | null;
+
+function reportsView(reports: { user: unknown; reason: string; note?: string | null; createdAt?: Date | null }[]) {
+  return reports.map((r) => ({ user: (r.user as Named)?.name ?? null, reason: r.reason, note: r.note ?? null, createdAt: r.createdAt ?? null }));
+}
+
+function moderationView(m: { reason?: string | null; note?: string | null; auto?: boolean | null; by?: unknown; at?: Date | null } | null | undefined) {
+  return m?.at ? { reason: m.reason ?? null, note: m.note ?? null, auto: !!m.auto, by: (m.by as Named)?.name ?? null, at: m.at } : null;
+}
+
+const adminAuthor = (a: Named) => (a ? { id: String(a._id), name: a.name, email: a.email ?? null } : null);
+
+/** GET /admin/community?type=post|comment&filter=reported|hidden|removed|all&page= */
+export async function adminList(req: Request, res: Response) {
+  const { page, limit, skip } = paging(req, 50);
+  const kind = ADMIN_FILTERS.find((f) => f === req.query.filter) ?? 'reported';
+  const type = CONTENT_TYPES.find((t) => t === req.query.type) ?? 'post';
+  const filter: Record<string, unknown> = {};
+  if (kind === 'reported') filter.reportCount = { $gt: 0 };
+  if (kind === 'hidden' || kind === 'removed') filter.status = kind;
+  const sort: Record<string, 1 | -1> = kind === 'reported' ? { reportCount: -1, createdAt: -1 } : { createdAt: -1 };
+  const people = [
+    { path: 'author', select: 'name email' },
+    { path: 'reports.user', select: 'name' },
+    { path: 'moderation.by', select: 'name' },
+  ];
+  let items;
+  let total;
+  if (type === 'post') {
+    const [rows, n] = await Promise.all([
+      Post.find(filter).sort(sort).skip(skip).limit(limit).populate([...people, { path: 'route', select: 'from to' }]).lean(),
+      Post.countDocuments(filter),
+    ]);
+    total = n;
+    items = rows.map((p) => {
+      const route = p.route as unknown as { _id: Id; from: string; to: string } | null;
+      return {
+        type: 'post' as const,
+        id: String(p._id),
+        status: p.status,
+        createdAt: p.createdAt,
+        title: p.title,
+        text: excerpt(p.body, 400),
+        board: p.board,
+        post: { id: String(p._id), title: p.title },
+        route: route ? { id: String(route._id), from: route.from, to: route.to } : null,
+        city: p.city ?? null,
+        photos: p.photos.length,
+        author: adminAuthor(p.author as unknown as Named),
+        likeCount: p.likeCount,
+        commentCount: p.commentCount,
+        shareCount: p.shareCount ?? 0,
+        reportCount: p.reportCount,
+        reports: reportsView(p.reports),
+        moderation: moderationView(p.moderation),
+      };
+    });
+  } else {
+    const [rows, n] = await Promise.all([
+      Comment.find(filter).sort(sort).skip(skip).limit(limit).populate([...people, { path: 'post', select: 'title board status' }]).lean(),
+      Comment.countDocuments(filter),
+    ]);
+    total = n;
+    items = rows.map((c) => {
+      const post = c.post as unknown as { _id: Id; title: string; board: string; status: string } | null;
+      return {
+        type: 'comment' as const,
+        id: String(c._id),
+        status: c.status,
+        createdAt: c.createdAt,
+        title: null,
+        text: c.body,
+        board: post?.board ?? null,
+        post: post ? { id: String(post._id), title: post.title, status: post.status } : null,
+        reply: !!c.parent,
+        author: adminAuthor(c.author as unknown as Named),
+        likeCount: c.likeCount,
+        reportCount: c.reportCount,
+        reports: reportsView(c.reports),
+        moderation: moderationView(c.moderation),
+      };
+    });
+  }
+  res.json({ items, total, page, limit, filter: kind, type });
+}
+
+async function moderate(req: Request, set: Record<string, unknown>, unset: Record<string, 1> = {}) {
+  const type = CONTENT_TYPES.find((t) => t === req.params.type);
+  const missing = () => (type === 'comment' ? notFound('COMMUNITY_COMMENT_NOT_FOUND', 'Comment not found') : notFound('COMMUNITY_POST_NOT_FOUND', 'Post not found'));
+  if (!type || !isObjectId(req.params.id)) throw missing();
+  const update = { $set: set, ...(Object.keys(unset).length && { $unset: unset }) };
+  const doc =
+    type === 'post'
+      ? await Post.findByIdAndUpdate(req.params.id, update, { new: true })
+      : await Comment.findByIdAndUpdate(req.params.id, update, { new: true });
+  if (!doc) throw missing();
+  const postId = type === 'post' ? doc._id : (doc as unknown as { post: Id }).post;
+  const commentCount = await syncCommentCount(postId);
+  return { item: { type, id: String(doc._id), status: doc.status, reportCount: doc.reportCount }, commentCount };
+}
+
+/** POST /admin/community/:type/:id/hide { note? } */
+export async function adminHide(req: Request, res: Response) {
+  validate(req.body ?? {}, { note: { type: 'string', max: 300 } });
+  res.json(await moderate(req, { status: 'hidden', moderation: { reason: 'moderator', note: req.body?.note?.trim() || undefined, by: req.user!._id, auto: false, at: new Date() } }));
+}
+
+/** POST /admin/community/:type/:id/remove { reason, note? }: reason required. */
+export async function adminRemove(req: Request, res: Response) {
+  validate(req.body ?? {}, { reason: { type: 'string', required: true, enum: COMMUNITY_REMOVE_REASONS }, note: { type: 'string', max: 300 } });
+  res.json(await moderate(req, { status: 'removed', moderation: { reason: req.body.reason, note: req.body.note?.trim() || undefined, by: req.user!._id, auto: false, at: new Date() } }));
+}
+
+/** POST /admin/community/:type/:id/restore { clearReports? = true }: restoring clears the reports unless told otherwise. */
+export async function adminRestore(req: Request, res: Response) {
+  validate(req.body ?? {}, { clearReports: { type: 'boolean' } });
+  const clear = req.body?.clearReports !== false;
+  res.json(await moderate(req, { status: 'visible', ...(clear && { reports: [], reportCount: 0 }) }, { moderation: 1 }));
 }

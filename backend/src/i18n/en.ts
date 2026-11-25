@@ -80,4 +80,11 @@ export default {
       body: '{{body}}',
     },
   },
+  share: {
+    community: 'MyBus Community',
+    readPost: 'Read the post on MyBus',
+    notFoundTitle: 'Post not found',
+    notFoundText: 'This post is no longer available.',
+    backToCommunity: 'Go to the MyBus community',
+  },
 };

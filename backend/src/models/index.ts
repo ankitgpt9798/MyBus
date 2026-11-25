@@ -6,6 +6,7 @@ export * from './Notification';
 export * from './Operator';
 export * from './Post';
 export * from './PushSubscription';
+export * from './Reaction';
 export * from './Review';
 export * from './Promotion';
 export * from './RevokedToken';

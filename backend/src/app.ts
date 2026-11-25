@@ -1,6 +1,7 @@
 import cors from 'cors';
 import express from 'express';
 import { env } from './config/env';
+import { sharePage } from './controllers/share.controller';
 import { errorHandler, notFoundHandler } from './middleware/error';
 import './models';
 import { api } from './routes';
@@ -28,6 +29,8 @@ export function createApp() {
       },
     }),
   );
+  // Link previews for shared community posts (Open Graph), then on to the post in the web app.
+  app.get('/share/posts/:id', sharePage);
   app.use(notFoundHandler);
   app.use(errorHandler);
   return app;

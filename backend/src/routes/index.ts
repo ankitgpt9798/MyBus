@@ -5,6 +5,7 @@ import * as auth from '../controllers/auth.controller';
 import * as bookings from '../controllers/booking.controller';
 import * as community from '../controllers/community.controller';
 import * as notifications from '../controllers/notification.controller';
+import * as profiles from '../controllers/profile.controller';
 import * as promotions from '../controllers/promotion.controller';
 import * as reviews from '../controllers/review.controller';
 import * as trips from '../controllers/trip.controller';
@@ -31,6 +32,13 @@ api.get('/users/me', requireAuth, users.getMe);
 api.patch('/users/me', requireAuth, users.updateMe);
 api.post('/users/me/password', requireAuth, users.changePassword);
 
+// Public profiles (R1): visible activity only; never an email
+api.get('/users/:id/profile', optionalAuth, profiles.profile);
+api.get('/users/:id/posts', optionalAuth, profiles.posts);
+api.get('/users/:id/comments', optionalAuth, profiles.comments);
+api.get('/users/:id/reviews', optionalAuth, profiles.reviews);
+api.get('/users/:id/activity', optionalAuth, profiles.activity);
+
 // Catalogue & search
 api.get('/cities', trips.listCities);
 api.get('/routes', trips.listAllRoutes);
@@ -38,17 +46,23 @@ api.get('/routes/popular', trips.popularRoutes);
 api.get('/routes/:id', trips.getRoute);
 api.get('/routes/:id/reviews', optionalAuth, reviews.listForRoute);
 
-// Community (R1): reading is public; posting, commenting and liking need a verified account
+// Community (R1): reading and sharing are public; posting, commenting, liking and reporting need a verified account
 api.get('/community/boards', community.boards);
+api.get('/community/trending', optionalAuth, community.trending);
+api.get('/community/contributors', community.contributors);
 api.get('/community/posts', optionalAuth, community.listPosts);
 api.get('/community/posts/:id', optionalAuth, community.getPost);
 api.post('/community/posts', requireAuth, requireVerified, photoUpload, community.createPost);
 api.patch('/community/posts/:id', requireAuth, requireVerified, photoUpload, community.updatePost);
 api.delete('/community/posts/:id', requireAuth, community.deletePost);
 api.post('/community/posts/:id/like', requireAuth, requireVerified, community.likePost);
+api.post('/community/posts/:id/report', requireAuth, requireVerified, community.reportPost);
+api.post('/community/posts/:id/share', community.sharePost);
+api.post('/community/posts/:id/visit', community.visitPost);
 api.post('/community/posts/:id/comments', requireAuth, requireVerified, community.addComment);
 api.delete('/community/comments/:id', requireAuth, community.deleteComment);
 api.post('/community/comments/:id/like', requireAuth, requireVerified, community.likeComment);
+api.post('/community/comments/:id/report', requireAuth, requireVerified, community.reportComment);
 
 // Reviews (R6): only verified users who completed the journey can post; edits within 24 h
 api.get('/reviews/eligible', requireAuth, reviews.eligible);
@@ -94,6 +108,10 @@ adminRouter.get('/reviews', reviews.adminList);
 adminRouter.post('/reviews/:id/hide', reviews.adminHide);
 adminRouter.post('/reviews/:id/remove', reviews.adminRemove);
 adminRouter.post('/reviews/:id/restore', reviews.adminRestore);
+adminRouter.get('/community', community.adminList);
+adminRouter.post('/community/:type/:id/hide', community.adminHide);
+adminRouter.post('/community/:type/:id/remove', community.adminRemove);
+adminRouter.post('/community/:type/:id/restore', community.adminRestore);
 adminRouter.get('/promotions', promotions.list);
 adminRouter.post('/promotions/preview', promotions.preview);
 adminRouter.post('/promotions', promotions.send);
