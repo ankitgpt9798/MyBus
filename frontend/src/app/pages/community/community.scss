@@ -1,0 +1,25 @@
+.community-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+.community-head .page-title { margin-bottom: 0.2rem; }
+.intro { margin: 0; max-width: 60ch; }
+.boards { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 0.75rem; margin-bottom: 1.25rem; }
+.board-card {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 0.3rem; padding: 0.9rem 1rem;
+  color: var(--color-text); font: inherit; text-align: left; cursor: pointer;
+  &:hover { border-color: var(--color-primary); }
+  &.active { border-color: var(--color-primary); background: var(--color-primary-soft); }
+  &:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 2px; }
+}
+.board-icon { display: inline-grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--color-primary-soft); color: var(--color-primary); }
+.desc { line-height: 1.35; }
+.count { margin-top: auto; font-weight: 600; }
+.feed-filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0.75rem 1rem; margin-bottom: 1rem; padding: 0.9rem 1rem; }
+.feed-filters .form-field { margin: 0; flex: 1 1 200px; }
+.sorts { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.feed-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.4rem 0.9rem; margin-bottom: 0.75rem; }
+.feed-head .sub-title { margin: 0; }
+.post-list { display: grid; gap: 0.75rem; &.dim { opacity: 0.6; } }
+.more { display: flex; justify-content: center; margin-top: 1rem; }
+.feed-skeleton { height: 220px; }
+@media (max-width: 560px) {
+  .new-post { width: 100%; }
+}

@@ -1,0 +1,143 @@
+<div class="container section narrow">
+  @if (error(); as e) {
+    <div class="empty-state card">
+      <app-icon name="alert" [size]="40" />
+      <h1 class="page-title">{{ e | translateOr: 'ERRORS.GENERIC' }}</h1>
+      <a routerLink="/community" class="btn btn-primary">{{ 'COMMUNITY.BACK' | translate }}</a>
+    </div>
+  } @else if (post(); as p) {
+    <nav class="crumbs small" [attr.aria-label]="'COMMUNITY.BREADCRUMB' | translate">
+      <a routerLink="/community">{{ 'COMMUNITY.TITLE' | translate }}</a>
+      <app-icon name="chevron-right" [size]="14" />
+      <a routerLink="/community" [queryParams]="{ board: p.board }">{{ 'COMMUNITY.BOARDS.' + p.board + '.NAME' | translate }}</a>
+    </nav>
+
+    <article class="card post" [attr.lang]="p.language">
+      <h1 class="post-title">{{ p.title }}</h1>
+      <p class="meta small muted">
+        {{ p.author.name }} · <time [attr.datetime]="p.createdAt">{{ p.createdAt | appDate: 'datetime' }}</time>
+        @if (p.editedAt) {
+          · <span class="edited">{{ 'COMMUNITY.EDITED' | translate }}</span>
+        }
+      </p>
+      <div class="chips">
+        <a class="badge chip-link" routerLink="/community" [queryParams]="{ board: p.board }"><app-icon [name]="icons[p.board]" [size]="12" /> {{ 'COMMUNITY.BOARDS.' + p.board + '.NAME' | translate }}</a>
+        @if (p.route; as r) {
+          <a class="badge chip-link route-chip" [routerLink]="['/routes', r.id]">{{ r.from | city }} → {{ r.to | city }}</a>
+        }
+        @if (p.city) {
+          <a class="badge chip-link city-chip" routerLink="/community" [queryParams]="{ city: p.city }"><app-icon name="pin" [size]="12" /> {{ p.city | city }}</a>
+        }
+      </div>
+      @if (p.photos.length) {
+        <app-photo-gallery [photos]="p.photos" />
+      }
+      <div class="post-body">{{ p.body }}</div>
+      <div class="post-actions">
+        <button type="button" class="btn btn-sm btn-outline like-btn" [class.active]="p.likedByMe" [attr.aria-pressed]="p.likedByMe" [disabled]="busy() === 'post'" (click)="likePost()">
+          <app-icon name="star" [size]="14" /> {{ (p.likedByMe ? 'COMMUNITY.LIKED' : 'COMMUNITY.LIKE') | translate }}
+          <span class="like-count">({{ p.likeCount | num }})</span>
+        </button>
+        <a class="btn btn-sm btn-ghost" href="#comments">{{ 'COMMUNITY.COMMENTS_COUNT' | plural: p.commentCount : { count: (p.commentCount | num) } }}</a>
+        @if (p.mine) {
+          <span class="spacer"></span>
+          <a class="btn btn-sm btn-ghost edit-post" [routerLink]="['/community/posts', p.id, 'edit']"><app-icon name="settings" [size]="14" /> {{ 'COMMUNITY.EDIT' | translate }}</a>
+          <button type="button" class="btn btn-sm btn-danger-outline delete-post" (click)="confirmDelete.set({ kind: 'post' })">{{ 'COMMUNITY.DELETE' | translate }}</button>
+        }
+      </div>
+    </article>
+
+    <section class="card comments" id="comments" aria-labelledby="comments-title">
+      <h2 class="sub-title" id="comments-title">{{ 'COMMUNITY.COMMENTS_COUNT' | plural: p.commentCount : { count: (p.commentCount | num) } }}</h2>
+      @if (verifyPrompt()) {
+        <div class="alert alert-warning verify-prompt" role="alert">
+          {{ 'COMMUNITY.VERIFY_TO_ACT' | translate }}
+          <a [routerLink]="['/profile']" [queryParams]="{ verify: 1 }">{{ 'REVIEWS.VERIFY_NOW' | translate }}</a>
+        </div>
+      }
+      @if (canWrite()) {
+        <form class="composer" [formGroup]="commentForm" (ngSubmit)="submit()" novalidate>
+          <label for="comment-body" class="sr-only">{{ 'COMMUNITY.ADD_COMMENT' | translate }}</label>
+          <textarea id="comment-body" formControlName="body" rows="3" [attr.maxlength]="max" [placeholder]="'COMMUNITY.ADD_COMMENT' | translate"></textarea>
+          <app-field-error [control]="commentForm.controls.body" [submitted]="commentSubmitted()" />
+          <div class="composer-foot">
+            <span class="small muted">{{ length(commentForm) | num }} / {{ max | num }}</span>
+            <button type="submit" class="btn btn-primary btn-sm post-comment" [disabled]="busy() === 'comment'">{{ 'COMMUNITY.POST_COMMENT' | translate }}</button>
+          </div>
+        </form>
+      } @else if (!auth.isLoggedIn()) {
+        <p class="sign-in small">
+          <a routerLink="/login" [queryParams]="{ returnUrl: '/community/posts/' + p.id }">{{ 'COMMUNITY.SIGN_IN_TO_COMMENT' | translate }}</a>
+        </p>
+      } @else if (!verifyPrompt()) {
+        <div class="alert alert-warning" role="status">
+          {{ 'COMMUNITY.VERIFY_TO_ACT' | translate }}
+          <a [routerLink]="['/profile']" [queryParams]="{ verify: 1 }">{{ 'REVIEWS.VERIFY_NOW' | translate }}</a>
+        </div>
+      }
+
+      <ul class="comment-list">
+        @for (c of comments(); track c.id) {
+          <li class="comment" [attr.data-comment]="c.id">
+            <ng-container *ngTemplateOutlet="commentTpl; context: { $implicit: c, reply: false }" />
+            @if (c.replies.length || replyingTo() === c.id) {
+              <ul class="replies">
+                @for (r of c.replies; track r.id) {
+                  <li class="comment reply" [attr.data-comment]="r.id">
+                    <ng-container *ngTemplateOutlet="commentTpl; context: { $implicit: r, reply: true }" />
+                  </li>
+                }
+                @if (replyingTo() === c.id) {
+                  <li>
+                    <form class="composer reply-composer" [formGroup]="replyForm" (ngSubmit)="submit(c.id)" novalidate>
+                      <label [for]="'reply-' + c.id" class="sr-only">{{ 'COMMUNITY.REPLY_TO' | translate: { name: c.author.name } }}</label>
+                      <textarea [id]="'reply-' + c.id" formControlName="body" rows="2" [attr.maxlength]="max" [placeholder]="'COMMUNITY.REPLY_TO' | translate: { name: c.author.name }"></textarea>
+                      <app-field-error [control]="replyForm.controls.body" [submitted]="replySubmitted()" />
+                      <div class="composer-foot">
+                        <button type="button" class="btn btn-ghost btn-sm" (click)="replyingTo.set(null)">{{ 'COMMON.CANCEL' | translate }}</button>
+                        <button type="submit" class="btn btn-primary btn-sm post-reply" [disabled]="busy() === c.id">{{ 'COMMUNITY.POST_REPLY' | translate }}</button>
+                      </div>
+                    </form>
+                  </li>
+                }
+              </ul>
+            }
+          </li>
+        } @empty {
+          <li class="no-comments muted small">{{ 'COMMUNITY.NO_COMMENTS' | translate }}</li>
+        }
+      </ul>
+    </section>
+  } @else if (loading()) {
+    <div class="card skeleton post-skeleton"></div>
+  }
+</div>
+
+<ng-template #commentTpl let-c let-reply="reply">
+  <div class="c-head small">
+    <strong>{{ c.author.name }}</strong>
+    <span class="muted">· {{ c.createdAt | appDate: 'datetime' }}</span>
+  </div>
+  <p class="c-body">{{ c.body }}</p>
+  <div class="c-actions">
+    <button type="button" class="link c-like" [class.active]="c.likedByMe" [attr.aria-pressed]="c.likedByMe" [disabled]="busy() === c.id" (click)="likeComment(c)">
+      {{ (c.likedByMe ? 'COMMUNITY.LIKED' : 'COMMUNITY.LIKE') | translate }} ({{ c.likeCount | num }})
+    </button>
+    @if (!reply) {
+      <button type="button" class="link c-reply" (click)="startReply(c)">{{ 'COMMUNITY.REPLY' | translate }}</button>
+    }
+    @if (c.mine) {
+      <button type="button" class="link c-delete" (click)="confirmDelete.set({ kind: 'comment', id: c.id })">{{ 'COMMUNITY.DELETE' | translate }}</button>
+    }
+  </div>
+</ng-template>
+
+@if (confirmDelete(); as d) {
+  <app-dialog [title]="(d.kind === 'post' ? 'COMMUNITY.DELETE_POST_TITLE' : 'COMMUNITY.DELETE_COMMENT_TITLE') | translate" (closed)="confirmDelete.set(null)">
+    <p>{{ (d.kind === 'post' ? 'COMMUNITY.DELETE_POST_TEXT' : 'COMMUNITY.DELETE_COMMENT_TEXT') | translate }}</p>
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-ghost" (click)="confirmDelete.set(null)">{{ 'COMMON.CANCEL' | translate }}</button>
+      <button type="button" class="btn btn-danger confirm-delete" [disabled]="busy() === 'delete'" (click)="confirmDeletion()">{{ 'COMMUNITY.DELETE' | translate }}</button>
+    </div>
+  </app-dialog>
+}

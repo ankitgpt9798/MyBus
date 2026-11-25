@@ -1,0 +1,90 @@
+<div class="container section">
+  <header class="community-head">
+    <div>
+      <h1 class="page-title">{{ 'COMMUNITY.TITLE' | translate }}</h1>
+      <p class="muted intro">{{ 'COMMUNITY.INTRO' | translate }}</p>
+    </div>
+    <a class="btn btn-primary new-post" routerLink="/community/new" [queryParams]="activeBoard() ? { board: activeBoard() } : {}">
+      {{ 'COMMUNITY.NEW_POST' | translate }}
+    </a>
+  </header>
+
+  <section class="boards" [attr.aria-label]="'COMMUNITY.BOARDS_TITLE' | translate">
+    @for (b of boards; track b) {
+      <button type="button" class="board-card card" [class.active]="activeBoard() === b" [attr.aria-pressed]="activeBoard() === b" [attr.data-board]="b"
+        (click)="setFilter({ board: activeBoard() === b ? null : b })">
+        <span class="board-icon" aria-hidden="true"><app-icon [name]="icons[b]" [size]="20" /></span>
+        <strong>{{ 'COMMUNITY.BOARDS.' + b + '.NAME' | translate }}</strong>
+        <span class="small muted desc">{{ 'COMMUNITY.BOARDS.' + b + '.DESC' | translate }}</span>
+        <span class="small count">{{ 'COMMUNITY.POSTS_COUNT' | plural: postsOn(b) : { count: (postsOn(b) | num) } }}</span>
+      </button>
+    }
+  </section>
+
+  <section class="feed" [attr.aria-label]="'COMMUNITY.FEED' | translate">
+    <div class="card feed-filters">
+      <div class="form-field">
+        <label for="f-route">{{ 'COMMUNITY.FILTER_ROUTE' | translate }}</label>
+        <select id="f-route" [value]="routeId() ?? ''" (change)="setFilter({ routeId: $any($event.target).value || null })">
+          <option value="">{{ 'COMMUNITY.ANY_ROUTE' | translate }}</option>
+          @for (r of routes(); track r.id) {
+            <option [value]="r.id" [selected]="r.id === routeId()">{{ r.from | city }} → {{ r.to | city }}</option>
+          }
+        </select>
+      </div>
+      <div class="form-field">
+        <label for="f-city">{{ 'COMMUNITY.FILTER_CITY' | translate }}</label>
+        <select id="f-city" [value]="city() ?? ''" (change)="setFilter({ city: $any($event.target).value || null })">
+          <option value="">{{ 'COMMUNITY.ANY_CITY' | translate }}</option>
+          @for (c of cities(); track c) {
+            <option [value]="c" [selected]="c === city()">{{ c | city }}</option>
+          }
+        </select>
+      </div>
+      <div class="sorts" role="group" [attr.aria-label]="'COMMUNITY.SORT_LABEL' | translate">
+        @for (s of sorts; track s) {
+          <button type="button" class="chip" [class.active]="activeSort() === s" [attr.aria-pressed]="activeSort() === s" [attr.data-sort]="s" (click)="setFilter({ sort: s })">
+            {{ 'COMMUNITY.SORT.' + s | translate }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="feed-head">
+      <h2 class="sub-title">
+        {{ (activeBoard() ? 'COMMUNITY.BOARDS.' + activeBoard() + '.NAME' : 'COMMUNITY.ALL_POSTS') | translate }}
+      </h2>
+      <span class="small muted">{{ 'COMMUNITY.POSTS_COUNT' | plural: total() : { count: (total() | num) } }}</span>
+      @if (filtered()) {
+        <button type="button" class="link clear-filters" (click)="clearFilters()">{{ 'COMMUNITY.CLEAR_FILTERS' | translate }}</button>
+      }
+    </div>
+
+    @if (error(); as e) {
+      <div class="alert alert-error" role="alert">{{ e | translateOr: 'ERRORS.GENERIC' }}</div>
+    }
+    @if (posts().length) {
+      <div class="post-list" [class.dim]="loading()">
+        @for (p of posts(); track p.id) {
+          <app-post-card [post]="p" />
+        }
+      </div>
+      @if (posts().length < total()) {
+        <div class="more">
+          <button type="button" class="btn btn-outline load-more" [disabled]="loading()" (click)="loadMore()">
+            {{ (loading() ? 'COMMON.PLEASE_WAIT' : 'COMMUNITY.LOAD_MORE') | translate }}
+          </button>
+        </div>
+      }
+    } @else if (!loading()) {
+      <div class="card empty-state">
+        <app-icon name="users" [size]="40" />
+        <h2>{{ (filtered() ? 'COMMUNITY.NONE_MATCH' : 'COMMUNITY.EMPTY_TITLE') | translate }}</h2>
+        <p>{{ 'COMMUNITY.EMPTY_TEXT' | translate }}</p>
+        <a class="btn btn-primary" routerLink="/community/new">{{ 'COMMUNITY.NEW_POST' | translate }}</a>
+      </div>
+    } @else {
+      <div class="card skeleton feed-skeleton"></div>
+    }
+  </section>
+</div>

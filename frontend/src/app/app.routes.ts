@@ -72,6 +72,20 @@ export const routes: Routes = [
       { path: 'reviews', loadComponent: () => import('./pages/admin/admin-reviews').then((m) => m.AdminReviewsPage), title: 'TITLES.ADMIN_REVIEWS' },
     ],
   },
+  { path: 'community', loadComponent: () => import('./pages/community/community').then((m) => m.CommunityPage), title: 'TITLES.COMMUNITY' },
+  {
+    path: 'community/new',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/community/post-editor').then((m) => m.PostEditorPage),
+    title: 'TITLES.COMMUNITY_NEW',
+  },
+  { path: 'community/posts/:id', loadComponent: () => import('./pages/community/post-detail').then((m) => m.PostDetailPage), title: 'TITLES.COMMUNITY_POST' },
+  {
+    path: 'community/posts/:id/edit',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/community/post-editor').then((m) => m.PostEditorPage),
+    title: 'TITLES.COMMUNITY_EDIT',
+  },
   { path: 'routes/:id', loadComponent: () => import('./pages/route/route-details').then((m) => m.RouteDetailsPage), title: 'TITLES.ROUTE' },
   {
     path: 'reviews/new',
@@ -94,7 +108,6 @@ export const routes: Routes = [
   { path: 'forbidden', loadComponent: () => import('./pages/forbidden/forbidden').then((m) => m.ForbiddenPage), title: 'TITLES.FORBIDDEN' },
 
   // Placeholders: each section is replaced by its real page as it is built.
-  { path: 'community', loadComponent: comingSoon, data: { feature: 'COMMUNITY' }, title: 'TITLES.COMMUNITY' },
   { path: 'route-planner', loadComponent: comingSoon, data: { feature: 'ROUTE_PLANNER' }, title: 'TITLES.ROUTE_PLANNER' },
   { path: '**', loadComponent: () => import('./pages/not-found/not-found').then((m) => m.NotFoundPage), title: 'TITLES.NOT_FOUND' },
 ];

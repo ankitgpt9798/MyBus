@@ -392,3 +392,56 @@ export interface AdminReview {
   reports: { user: string | null; reason: ReportReason; note: string | null; createdAt: string }[];
   moderation: { reason: string; note: string | null; auto: boolean; by: string | null; at: string } | null;
 }
+
+// Community (R1)
+
+export type Board = 'stories' | 'tips' | 'routes' | 'destinations' | 'advice';
+export type PostSort = 'latest' | 'top' | 'discussed';
+
+export interface BoardInfo {
+  id: Board;
+  posts: number;
+  latestAt: string | null;
+}
+
+export interface PostPhoto {
+  url: string;
+  alt: string;
+}
+
+export interface CommunityAuthor {
+  id: string | null;
+  name: string;
+}
+
+export interface CommunityPost {
+  id: string;
+  board: Board;
+  title: string;
+  /** Full text on the post page, an excerpt in the feed (truncated = true). */
+  body: string;
+  truncated: boolean;
+  photos: PostPhoto[];
+  route: { id: string; from: string; to: string } | null;
+  city: string | null;
+  language: Lang;
+  author: CommunityAuthor;
+  likeCount: number;
+  likedByMe: boolean;
+  commentCount: number;
+  mine: boolean;
+  createdAt: string;
+  editedAt: string | null;
+}
+
+export interface CommunityComment {
+  id: string;
+  parentId: string | null;
+  body: string;
+  author: CommunityAuthor;
+  likeCount: number;
+  likedByMe: boolean;
+  mine: boolean;
+  createdAt: string;
+  replies: CommunityComment[];
+}

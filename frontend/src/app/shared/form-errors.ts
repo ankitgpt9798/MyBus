@@ -9,7 +9,7 @@ interface ServerFieldError {
 
 function toControlError(e: ServerFieldError, code: string): ValidationErrors {
   // Review content guidelines: link / email / phone / banned → VALIDATION.GUIDELINE_*
-  if (code === 'REVIEW_GUIDELINES') return { [`guideline_${e.rule}`]: true };
+  if (code === 'REVIEW_GUIDELINES' || code === 'CONTENT_GUIDELINES') return { [`guideline_${e.rule}`]: true };
   switch (e.rule) {
     case 'integer':
       return { integer: true };
@@ -34,7 +34,7 @@ function toControlError(e: ServerFieldError, code: string): ValidationErrors {
   }
 }
 
-const FIELD_ERROR_CODES = ['VALIDATION_ERROR', 'SEAT_LADIES_ONLY', 'REVIEW_GUIDELINES'];
+const FIELD_ERROR_CODES = ['VALIDATION_ERROR', 'SEAT_LADIES_ONLY', 'REVIEW_GUIDELINES', 'CONTENT_GUIDELINES'];
 
 /**
  * Copies backend field errors (VALIDATION_ERROR / SEAT_LADIES_ONLY with details: [{ field, rule }]) onto the matching form controls,

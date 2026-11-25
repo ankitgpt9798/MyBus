@@ -1,0 +1,116 @@
+<div class="container section narrow">
+  <h1 class="page-title">{{ (editing() ? 'COMMUNITY.EDIT_TITLE' : 'COMMUNITY.NEW_TITLE') | translate }}</h1>
+
+  @if (blocked(); as b) {
+    <div class="card blocked">
+      <div class="alert alert-warning" role="alert">{{ b | translateOr: 'ERRORS.GENERIC' }}</div>
+      <a class="btn btn-outline" routerLink="/community">{{ 'COMMUNITY.BACK' | translate }}</a>
+    </div>
+  } @else if (!auth.isVerified()) {
+    <div class="card verify-card" data-state="verify">
+      <div class="alert alert-warning" role="alert">{{ 'COMMUNITY.VERIFY_TO_POST' | translate }}</div>
+      <button type="button" class="btn btn-primary" [disabled]="resent()" (click)="resend()">
+        {{ (resent() ? 'VERIFY.RESENT_SHORT' : 'VERIFY.RESEND') | translate }}
+      </button>
+    </div>
+  } @else if (loading()) {
+    <div class="card skeleton editor-skeleton"></div>
+  } @else {
+    <form class="card post-form" [formGroup]="form" (ngSubmit)="save()" novalidate>
+      @if (error(); as e) {
+        <div class="alert alert-error" role="alert">{{ e | translateOr: 'ERRORS.GENERIC' }}</div>
+      }
+      <div class="form-field">
+        <label for="p-board">{{ 'COMMUNITY.BOARD' | translate }}</label>
+        <select id="p-board" formControlName="board">
+          <option value="">{{ 'COMMUNITY.PICK_BOARD' | translate }}</option>
+          @for (b of boards; track b) {
+            <option [value]="b">{{ 'COMMUNITY.BOARDS.' + b + '.NAME' | translate }}</option>
+          }
+        </select>
+        @if (boardValue(); as b) {
+          <small class="muted">{{ 'COMMUNITY.BOARDS.' + b + '.DESC' | translate }}</small>
+        }
+        <app-field-error [control]="form.controls.board" [submitted]="submitted()" />
+      </div>
+      <div class="form-grid two">
+        <div class="form-field">
+          <label for="p-route">{{ 'COMMUNITY.TAG_ROUTE' | translate }} @if (boardValue() !== 'routes') { <span class="muted">({{ 'COMMUNITY.OPTIONAL' | translate }})</span> }</label>
+          <select id="p-route" formControlName="routeId">
+            <option value="">{{ 'COMMUNITY.NO_ROUTE' | translate }}</option>
+            @for (r of routes(); track r.id) {
+              <option [value]="r.id">{{ r.from | city }} → {{ r.to | city }}</option>
+            }
+          </select>
+          <app-field-error [control]="form.controls.routeId" [submitted]="submitted()" />
+        </div>
+        <div class="form-field">
+          <label for="p-city">{{ 'COMMUNITY.TAG_CITY' | translate }} @if (boardValue() !== 'destinations') { <span class="muted">({{ 'COMMUNITY.OPTIONAL' | translate }})</span> }</label>
+          <select id="p-city" formControlName="city">
+            <option value="">{{ 'COMMUNITY.NO_CITY' | translate }}</option>
+            @for (c of cities(); track c) {
+              <option [value]="c">{{ c | city }}</option>
+            }
+          </select>
+          <app-field-error [control]="form.controls.city" [submitted]="submitted()" />
+        </div>
+      </div>
+      <div class="form-field">
+        <label for="p-title">{{ 'COMMUNITY.POST_TITLE' | translate }}</label>
+        <input id="p-title" formControlName="title" [attr.maxlength]="title.max" />
+        <span class="small muted counter" [class.short]="titleLength() < title.min">{{ titleLength() | num }} / {{ title.max | num }}</span>
+        <app-field-error [control]="form.controls.title" [submitted]="submitted()" />
+      </div>
+      <div class="form-field">
+        <label for="p-body">{{ 'COMMUNITY.POST_BODY' | translate }}</label>
+        <textarea id="p-body" formControlName="body" rows="9" [attr.maxlength]="bodyLimits.max"></textarea>
+        <span class="small muted counter" [class.short]="bodyLength() < bodyLimits.min">{{ bodyLength() | num }} / {{ bodyLimits.max | num }}</span>
+        <app-field-error [control]="form.controls.body" [submitted]="submitted()" />
+      </div>
+
+      <fieldset class="photos">
+        <legend>{{ 'COMMUNITY.PHOTOS' | translate }} <span class="muted small">({{ 'COMMUNITY.PHOTOS_HINT' | translate: { max: maxPhotos } }})</span></legend>
+        @if (photoError(); as e) {
+          <p class="field-error" role="alert">{{ e | translate }}</p>
+        }
+        <div class="photo-grid">
+          @for (p of photos(); track p.key; let i = $index) {
+            <div class="photo-item" [attr.data-photo]="i">
+              <img [src]="p.preview" [alt]="p.alt" />
+              <button type="button" class="icon-btn remove-photo" (click)="remove(p)" [attr.aria-label]="'COMMUNITY.REMOVE_PHOTO' | translate: { n: i + 1 }">
+                <app-icon name="close" [size]="16" />
+              </button>
+              <label class="sr-only" [for]="'alt-' + p.key">{{ 'COMMUNITY.ALT_TEXT' | translate }}</label>
+              <input [id]="'alt-' + p.key" class="alt-input" [value]="p.alt" maxlength="150" [placeholder]="'COMMUNITY.ALT_TEXT' | translate" (input)="setAlt(p, $any($event.target).value)" />
+            </div>
+          }
+          @if (photos().length < maxPhotos) {
+            <label class="add-photo" for="p-photos">
+              <span class="plus" aria-hidden="true">+</span>
+              <span>{{ 'COMMUNITY.ADD_PHOTOS' | translate }}</span>
+              <span class="small muted">{{ 'COMMUNITY.PHOTO_LIMITS' | translate }}</span>
+            </label>
+            <input id="p-photos" class="sr-only" type="file" accept="image/jpeg,image/png,image/webp" multiple (change)="pick($event)" />
+          }
+        </div>
+      </fieldset>
+
+      <div class="guidelines">
+        <strong>{{ 'COMMUNITY.GUIDELINES_TITLE' | translate }}</strong>
+        <ul>
+          <li>{{ 'COMMUNITY.GUIDELINE_OWN' | translate }}</li>
+          <li>{{ 'REVIEWS.GUIDELINE_NO_CONTACT' | translate }}</li>
+          <li>{{ 'REVIEWS.GUIDELINE_RESPECT' | translate }}</li>
+          <li>{{ 'COMMUNITY.GUIDELINE_PHOTOS' | translate }}</li>
+        </ul>
+      </div>
+
+      <div class="actions">
+        <button type="submit" class="btn btn-primary submit-post" [disabled]="saving()">
+          {{ (saving() ? 'COMMON.PLEASE_WAIT' : editing() ? 'COMMUNITY.SAVE_CHANGES' : 'COMMUNITY.PUBLISH') | translate }}
+        </button>
+        <a class="btn btn-ghost" [routerLink]="editing() ? ['/community/posts', id()] : ['/community']">{{ 'COMMON.CANCEL' | translate }}</a>
+      </div>
+    </form>
+  }
+</div>

@@ -58,7 +58,10 @@
     "ROUTE": "Route details",
     "REVIEW_NEW": "Write a review",
     "REVIEW_EDIT": "Edit review",
-    "ADMIN_REVIEWS": "Review moderation"
+    "ADMIN_REVIEWS": "Review moderation",
+    "COMMUNITY_NEW": "Write a post",
+    "COMMUNITY_POST": "Community post",
+    "COMMUNITY_EDIT": "Edit post"
   },
   "HOME": {
     "TITLE": "Book bus tickets across India",
@@ -673,7 +676,16 @@
     "REVIEW_REMOVED": "This review was removed by a moderator.",
     "REVIEW_REPORT_OWN": "You can't report your own review.",
     "REVIEW_ALREADY_REPORTED": "You have already reported this review.",
-    "REVIEW_HELPFUL_OWN": "You can't vote on your own review."
+    "REVIEW_HELPFUL_OWN": "You can't vote on your own review.",
+    "COMMUNITY_POST_NOT_FOUND": "This post could not be found.",
+    "COMMUNITY_COMMENT_NOT_FOUND": "This comment could not be found.",
+    "COMMUNITY_NOT_AUTHOR": "Only the author can change this.",
+    "COMMUNITY_POST_REMOVED": "This post was removed by a moderator.",
+    "COMMUNITY_REPLY_DEPTH": "You can only reply to a top-level comment.",
+    "COMMUNITY_TOO_MANY_PHOTOS": "You can add at most 4 photos.",
+    "COMMUNITY_PHOTO_TYPE": "Photos must be JPEG, PNG or WebP images.",
+    "COMMUNITY_PHOTO_TOO_LARGE": "Each photo can be at most 5 MB.",
+    "CONTENT_GUIDELINES": "Please remove links, email addresses, phone numbers and abusive words."
   },
   "FORBIDDEN": {
     "TITLE": "Access denied",
@@ -942,5 +954,116 @@
       "one": "{{count}} helpful vote",
       "other": "{{count}} helpful votes"
     }
+  },
+  "COMMUNITY": {
+    "TITLE": "Community",
+    "INTRO": "Share journey stories, travel tips and photos, and ask fellow travellers for advice.",
+    "NEW_POST": "New post",
+    "BOARDS_TITLE": "Discussion boards",
+    "BOARDS": {
+      "stories": {
+        "NAME": "Journey stories",
+        "DESC": "Tell the story of a trip you took."
+      },
+      "tips": {
+        "NAME": "Travel tips",
+        "DESC": "Packing, comfort and safety tips for bus travel."
+      },
+      "routes": {
+        "NAME": "Routes",
+        "DESC": "Talk about a route: timings, stops and operators."
+      },
+      "destinations": {
+        "NAME": "Destinations",
+        "DESC": "Places to see, eat and stay at the end of your journey."
+      },
+      "advice": {
+        "NAME": "Travel advice & Q&A",
+        "DESC": "Ask a question and get answers from fellow travellers."
+      }
+    },
+    "POSTS_COUNT": {
+      "one": "{{count}} post",
+      "other": "{{count}} posts"
+    },
+    "LIKES": {
+      "one": "{{count}} like",
+      "other": "{{count}} likes"
+    },
+    "COMMENTS_COUNT": {
+      "one": "{{count}} comment",
+      "other": "{{count}} comments"
+    },
+    "FEED": "Community posts",
+    "FILTER_ROUTE": "Route",
+    "ANY_ROUTE": "Any route",
+    "FILTER_CITY": "Destination",
+    "ANY_CITY": "Any destination",
+    "SORT_LABEL": "Sort posts",
+    "SORT": {
+      "latest": "Latest",
+      "top": "Most liked",
+      "discussed": "Most discussed"
+    },
+    "ALL_POSTS": "All posts",
+    "CLEAR_FILTERS": "Clear filters",
+    "LOAD_MORE": "Load more posts",
+    "NONE_MATCH": "No posts match these filters.",
+    "EMPTY_TITLE": "No posts yet",
+    "EMPTY_TEXT": "Be the first to share a journey story, a tip or a question.",
+    "OPEN_PHOTO": "Open photo {{n}} of {{total}}",
+    "PHOTO_OF": "Photo {{n}} of {{total}}",
+    "PREV_PHOTO": "Previous photo",
+    "NEXT_PHOTO": "Next photo",
+    "BACK": "Back to the community",
+    "BREADCRUMB": "Breadcrumb",
+    "EDITED": "Edited",
+    "LIKE": "Like",
+    "LIKED": "Liked",
+    "EDIT": "Edit",
+    "DELETE": "Delete",
+    "VERIFY_TO_ACT": "Please verify your email to like, comment on or write posts.",
+    "ADD_COMMENT": "Add a comment",
+    "POST_COMMENT": "Comment",
+    "SIGN_IN_TO_COMMENT": "Sign in to like and comment",
+    "REPLY_TO": "Reply to {{name}}",
+    "POST_REPLY": "Reply",
+    "REPLY": "Reply",
+    "NO_COMMENTS": "No comments yet. Start the conversation!",
+    "DELETE_POST_TITLE": "Delete this post?",
+    "DELETE_POST_TEXT": "The post, its photos and all its comments will be deleted. This cannot be undone.",
+    "DELETE_COMMENT_TITLE": "Delete this comment?",
+    "DELETE_COMMENT_TEXT": "The comment and any replies to it will be deleted.",
+    "COMMENT_POSTED": "Comment posted",
+    "POST_DELETED": "Post deleted",
+    "COMMENT_DELETED": "Comment deleted",
+    "NEW_TITLE": "Write a post",
+    "EDIT_TITLE": "Edit your post",
+    "VERIFY_TO_POST": "Only verified accounts can post in the community. Verify your email address, then come back to share.",
+    "BOARD": "Board",
+    "PICK_BOARD": "Choose a board",
+    "TAG_ROUTE": "Route",
+    "TAG_CITY": "Destination",
+    "OPTIONAL": "optional",
+    "NO_ROUTE": "No route",
+    "NO_CITY": "No destination",
+    "POST_TITLE": "Title",
+    "POST_BODY": "Your post",
+    "PHOTOS": "Photos",
+    "PHOTOS_HINT": "up to {{max}}",
+    "REMOVE_PHOTO": "Remove photo {{n}}",
+    "ALT_TEXT": "Describe the photo (optional)",
+    "ADD_PHOTOS": "Add photos",
+    "PHOTO_LIMITS": "JPEG, PNG or WebP · max 5 MB each",
+    "GUIDELINES_TITLE": "Community guidelines",
+    "GUIDELINE_OWN": "Share your own experiences and photos.",
+    "GUIDELINE_PHOTOS": "Location and camera details are removed from photos before they are saved.",
+    "SAVE_CHANGES": "Save changes",
+    "PUBLISH": "Publish",
+    "POST_UPDATED": "Your post was updated",
+    "POST_PUBLISHED": "Your post is live",
+    "ROUTE_POSTS_TITLE": "Travellers talk about this route",
+    "ROUTE_POSTS_TEXT": "Stories, tips and questions from the community about this route.",
+    "ROUTE_POSTS_LINK": "See community posts"
   }
 }

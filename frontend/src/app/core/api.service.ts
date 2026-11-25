@@ -2,6 +2,10 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import {
+  BoardInfo,
+  CommunityComment,
+  CommunityPost,
+  PostSort,
   AdminNotification,
   AdminPromotion,
   AdminReview,
@@ -50,6 +54,9 @@ export class ApiService {
   private patch<T>(url: string, body: unknown) {
     return firstValueFrom(this.http.patch<T>(`/api${url}`, body));
   }
+  private del<T>(url: string) {
+    return firstValueFrom(this.http.delete<T>(`/api${url}`));
+  }
 
   // Catalogue
   cities() {
@@ -66,6 +73,43 @@ export class ApiService {
   }
   route(id: string) {
     return this.get<RouteDetails>(`/routes/${id}`);
+  }
+  allRoutes() {
+    return this.get<{ routes: { id: string; from: string; to: string }[] }>('/routes');
+  }
+
+  // Community
+  communityBoards() {
+    return this.get<{ boards: BoardInfo[] }>('/community/boards');
+  }
+  communityPosts(params: { board?: string; routeId?: string; city?: string; sort?: PostSort; page?: number; limit?: number }) {
+    return this.get<{ posts: CommunityPost[]; total: number; page: number; limit: number; sort: PostSort }>('/community/posts', params);
+  }
+  communityPost(id: string) {
+    return this.get<{ post: CommunityPost; comments: CommunityComment[] }>(`/community/posts/${id}`);
+  }
+  /** Multipart: board, title, body, routeId, city, alts (JSON), photos[]. */
+  createPost(form: FormData) {
+    return this.post<{ post: CommunityPost }>('/community/posts', form);
+  }
+  /** Multipart: changed fields, keep (JSON [{ file, alt }]), alts (JSON), new photos[]. */
+  updatePost(id: string, form: FormData) {
+    return this.patch<{ post: CommunityPost }>(`/community/posts/${id}`, form);
+  }
+  deletePost(id: string) {
+    return this.del<{ deleted: boolean }>(`/community/posts/${id}`);
+  }
+  likePost(id: string) {
+    return this.post<{ liked: boolean; likeCount: number }>(`/community/posts/${id}/like`);
+  }
+  addComment(postId: string, body: string, parentId?: string) {
+    return this.post<{ comment: CommunityComment; commentCount: number }>(`/community/posts/${postId}/comments`, { body, parentId });
+  }
+  deleteComment(id: string) {
+    return this.del<{ deleted: boolean; commentCount: number }>(`/community/comments/${id}`);
+  }
+  likeComment(id: string) {
+    return this.post<{ liked: boolean; likeCount: number }>(`/community/comments/${id}/like`);
   }
 
   // Reviews
