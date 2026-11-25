@@ -3,12 +3,14 @@ import mongoose from 'mongoose';
 import * as admin from '../controllers/admin.controller';
 import * as auth from '../controllers/auth.controller';
 import * as bookings from '../controllers/booking.controller';
+import * as community from '../controllers/community.controller';
 import * as notifications from '../controllers/notification.controller';
 import * as promotions from '../controllers/promotion.controller';
 import * as reviews from '../controllers/review.controller';
 import * as trips from '../controllers/trip.controller';
 import * as users from '../controllers/user.controller';
 import { optionalAuth, requireAdmin, requireAuth, requireVerified } from '../middleware/auth';
+import { photoUpload } from '../services/upload.service';
 
 export const api = Router();
 
@@ -31,9 +33,22 @@ api.post('/users/me/password', requireAuth, users.changePassword);
 
 // Catalogue & search
 api.get('/cities', trips.listCities);
+api.get('/routes', trips.listAllRoutes);
 api.get('/routes/popular', trips.popularRoutes);
 api.get('/routes/:id', trips.getRoute);
 api.get('/routes/:id/reviews', optionalAuth, reviews.listForRoute);
+
+// Community (R1): reading is public; posting, commenting and liking need a verified account
+api.get('/community/boards', community.boards);
+api.get('/community/posts', optionalAuth, community.listPosts);
+api.get('/community/posts/:id', optionalAuth, community.getPost);
+api.post('/community/posts', requireAuth, requireVerified, photoUpload, community.createPost);
+api.patch('/community/posts/:id', requireAuth, requireVerified, photoUpload, community.updatePost);
+api.delete('/community/posts/:id', requireAuth, community.deletePost);
+api.post('/community/posts/:id/like', requireAuth, requireVerified, community.likePost);
+api.post('/community/posts/:id/comments', requireAuth, requireVerified, community.addComment);
+api.delete('/community/comments/:id', requireAuth, community.deleteComment);
+api.post('/community/comments/:id/like', requireAuth, requireVerified, community.likeComment);
 
 // Reviews (R6): only verified users who completed the journey can post; edits within 24 h
 api.get('/reviews/eligible', requireAuth, reviews.eligible);

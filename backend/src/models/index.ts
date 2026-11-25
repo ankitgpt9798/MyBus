@@ -1,8 +1,10 @@
 // Importing every model once guarantees they are registered before any populate() runs.
 export * from './Booking';
 export * from './Bus';
+export * from './Comment';
 export * from './Notification';
 export * from './Operator';
+export * from './Post';
 export * from './PushSubscription';
 export * from './Review';
 export * from './Promotion';

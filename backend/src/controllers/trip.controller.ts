@@ -43,6 +43,12 @@ export async function popularRoutes(_req: Request, res: Response) {
   res.json({ routes: routes.map(publicRoute) });
 }
 
+/** GET /routes: every route (for pickers), sorted by origin and destination. */
+export async function listAllRoutes(_req: Request, res: Response) {
+  const routes = await Route.find().select('from to').sort({ from: 1, to: 1 }).lean();
+  res.json({ routes: routes.map((r) => ({ id: String(r._id), from: r.from, to: r.to })) });
+}
+
 export async function getRoute(req: Request, res: Response) {
   if (!isObjectId(req.params.id)) throw notFound('ROUTE_NOT_FOUND');
   const route = await Route.findById(req.params.id).lean<RouteDoc>();
