@@ -2,7 +2,6 @@
 .post { display: grid; gap: 0.75rem; margin-bottom: 1rem; }
 .post-title { margin: 0; font-size: 1.6rem; line-height: 1.25; overflow-wrap: anywhere; }
 .meta { margin: -0.4rem 0 0; }
-.edited { font-style: italic; }
 .chips { display: flex; flex-wrap: wrap; gap: 0.35rem; }
 .chip-link { gap: 0.25rem; text-decoration: none; }
 .chip-link:hover { border-color: var(--color-primary); color: var(--color-primary); }
