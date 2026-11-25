@@ -9,6 +9,9 @@ import zlib from 'node:zlib';
 import { Types } from 'mongoose';
 import { Comment } from '../models/Comment';
 import { Post } from '../models/Post';
+import { Reaction } from '../models/Reaction';
+import { Review } from '../models/Review';
+import { ShareNetwork } from '../services/community.rules';
 import { COMMUNITY_DIR, deletePhotos } from '../services/upload.service';
 
 type Rgb = [number, number, number];
@@ -218,6 +221,17 @@ const POSTS: SeedPost[] = [
   },
 ];
 
+/** Shares (and visits back through them) for a few posts, so trending and the Popular badge have data. */
+const SHARES: Record<string, Partial<Record<ShareNetwork, number>>> = {
+  'Sunrise ride on the Mumbai–Pune Expressway': { whatsapp: 2, facebook: 1 },
+  'Five things I always pack for an overnight bus': { whatsapp: 2, x: 1, telegram: 1, copy: 1 },
+  'Is a sleeper bus safe for a solo woman traveller?': { whatsapp: 3 },
+  'জয়পুরে দুই দিন: কী দেখবেন': { facebook: 2 },
+  'హైదరాబాద్ నుండి బెంగళూరు – రాత్రి బస్సు అనుభవం': { telegram: 1 },
+};
+/** One open report on a post and on a comment, so the moderation tab has something to show. */
+const REPORTED_POST = { title: 'Delhi to Jaipur: which departure is best?', reason: 'misleading', note: 'The timings mentioned look out of date.' };
+
 /** Replaces all community posts and comments (and their photo files) with the demo content. */
 export async function seedCommunity(users: UserRef[], extraLikers: UserRef[], routes: RouteRef[]): Promise<{ posts: number; comments: number; photos: number }> {
   const old = await Post.find().select('photos').lean();
@@ -245,11 +259,21 @@ export async function seedCommunity(users: UserRef[], extraLikers: UserRef[], ro
       photos: files,
       likedBy,
       likeCount: likedBy.length,
+      ...shareCounts(SHARES[p.title]),
       createdAt,
     });
     let minute = 30;
     for (const c of p.comments ?? []) {
-      const top = await Comment.create({ post: post._id, author: users[c.by]._id, body: c.body, createdAt: new Date(createdAt.getTime() + minute++ * 60_000) });
+      // A few likes on comments too (from people other than the commenter).
+      const commentLikers = likers.filter((_, i) => i !== c.by).slice(0, minute % 3).map((u) => u._id);
+      const top = await Comment.create({
+        post: post._id,
+        author: users[c.by]._id,
+        body: c.body,
+        likedBy: commentLikers,
+        likeCount: commentLikers.length,
+        createdAt: new Date(createdAt.getTime() + minute++ * 60_000),
+      });
       comments++;
       for (const r of c.replies ?? []) {
         await Comment.create({ post: post._id, author: users[r.by]._id, parent: top._id, body: r.body, createdAt: new Date(createdAt.getTime() + minute++ * 60_000) });
@@ -258,5 +282,38 @@ export async function seedCommunity(users: UserRef[], extraLikers: UserRef[], ro
     }
     await Post.updateOne({ _id: post._id }, { $set: { commentCount: await Comment.countDocuments({ post: post._id }) } });
   }
+
+  const reporter = extraLikers[0];
+  if (reporter) {
+    const report = { user: reporter._id, reason: REPORTED_POST.reason, note: REPORTED_POST.note, createdAt: new Date(Date.now() - DAY_MS) };
+    await Post.updateOne({ title: REPORTED_POST.title }, { $push: { reports: report }, $inc: { reportCount: 1 } });
+    const comment = await Comment.findOne({ author: { $ne: reporter._id } }).sort({ createdAt: -1 });
+    if (comment) await Comment.updateOne({ _id: comment._id }, { $push: { reports: { ...report, reason: 'irrelevant', note: undefined } }, $inc: { reportCount: 1 } });
+  }
   return { posts: POSTS.length, comments, photos };
+}
+
+function shareCounts(shares: Partial<Record<ShareNetwork, number>> | undefined) {
+  if (!shares) return {};
+  const visits = Object.fromEntries(Object.entries(shares).map(([n, c]) => [n, c * 2]));
+  const total = Object.values(shares).reduce((a, b) => a + b, 0);
+  return { shares, shareCount: total, visits, visitCount: total * 2 };
+}
+
+/**
+ * Rebuilds the reaction log (when each like and helpful vote happened) from the seeded likes and votes,
+ * spread over the hours after the content was posted. Run after reviews and community content are seeded.
+ */
+export async function seedReactions(): Promise<number> {
+  await Reaction.deleteMany({});
+  const now = Date.now();
+  const at = (created: Date, i: number) => new Date(Math.min(now - 60_000, new Date(created).getTime() + (i + 1) * 47 * 60_000));
+  const docs: { user: Types.ObjectId; kind: string; target: Types.ObjectId; post?: Types.ObjectId; createdAt: Date }[] = [];
+  for (const p of await Post.find({}, 'likedBy createdAt').lean()) p.likedBy.forEach((u, i) => docs.push({ user: u, kind: 'post_like', target: p._id, createdAt: at(p.createdAt, i) }));
+  for (const c of await Comment.find({}, 'likedBy post createdAt').lean()) {
+    c.likedBy.forEach((u, i) => docs.push({ user: u, kind: 'comment_like', target: c._id, post: c.post, createdAt: at(c.createdAt, i) }));
+  }
+  for (const r of await Review.find({}, 'helpfulBy createdAt').lean()) r.helpfulBy.forEach((u, i) => docs.push({ user: u, kind: 'review_helpful', target: r._id, createdAt: at(r.createdAt, i) }));
+  if (docs.length) await Reaction.insertMany(docs);
+  return docs.length;
 }

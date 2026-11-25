@@ -16,9 +16,10 @@ import { Trip } from '../models/Trip';
 import { User } from '../models/User';
 import { generatePnr } from '../services/booking.service';
 import { REVIEW_EDIT_WINDOW_MS, REVIEW_HIDE_THRESHOLD } from '../services/review.rules';
-import { seedCommunity } from './community';
+import { seedCommunity, seedReactions } from './community';
 import { Comment } from '../models/Comment';
 import { Post } from '../models/Post';
+import { Reaction } from '../models/Reaction';
 import { recomputeRouteRating } from '../services/review.service';
 import { HOUR_MS, MINUTE_MS, istDateString, istDateTime } from '../utils/time';
 import {
@@ -144,7 +145,7 @@ async function upsertUser(data: { name: string; email: string; password: string;
 
 async function main() {
   await connectDb();
-  const models = [User, RevokedToken, Operator, Bus, Route, Trip, Booking, Review, Post, Comment];
+  const models = [User, RevokedToken, Operator, Bus, Route, Trip, Booking, Review, Post, Comment, Reaction];
   for (const m of models) await m.syncIndexes();
 
   console.log('[seed] clearing catalogue and bookings…');
@@ -163,6 +164,12 @@ async function main() {
   await upsertUser(DEMO_USERS.unverified);
   const reviewers: NonNullable<Awaited<ReturnType<typeof upsertUser>>>[] = [];
   for (const r of REVIEWERS) reviewers.push((await upsertUser({ ...r, password: DEMO_USERS.traveler.password, emailVerified: true }))!);
+  // Demo members joined a few months back (their reviews and posts are older than the seed run); only newer join dates are moved.
+  const dayMs = 24 * 60 * 60 * 1000;
+  for (const [i, u] of [traveler!, ...reviewers].entries()) {
+    const joined = new Date(Date.now() - (75 + i * 17) * dayMs);
+    await User.collection.updateOne({ _id: u._id, createdAt: { $gt: joined } }, { $set: { createdAt: joined } });
+  }
 
   // Operators & buses (3 buses per operator)
   const operators = await Operator.insertMany(OPERATORS);
@@ -321,9 +328,10 @@ async function main() {
 
   // Community: demo posts, comments and likes by the reviewers (photos are generated into uploads/community).
   const community = await seedCommunity(reviewers, [traveler!], routes);
+  const reactions = await seedReactions();
 
   console.log(
-    `[seed] ${operators.length} operators, ${buses.length} buses, ${routes.length} routes, ${tripDocs.length} trips, ${chosen.length} demo bookings, ${reviewCount} reviews on ${touchedRoutes.size} routes, ${community.posts} community posts (${community.comments} comments, ${community.photos} photos)`,
+    `[seed] ${operators.length} operators, ${buses.length} buses, ${routes.length} routes, ${tripDocs.length} trips, ${chosen.length} demo bookings, ${reviewCount} reviews on ${touchedRoutes.size} routes, ${community.posts} community posts (${community.comments} comments, ${community.photos} photos, ${reactions} likes and votes)`,
   );
   console.log(`[seed] admin:      ${admin!.email} / ${env.admin.password}`);
   console.log(`[seed] traveler:   ${DEMO_USERS.traveler.email} / ${DEMO_USERS.traveler.password} (verified)`);
