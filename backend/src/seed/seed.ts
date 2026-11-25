@@ -1,5 +1,5 @@
 /**
- * Resets the catalogue (operators, buses, routes, trips, bookings, reviews) and upserts the admin + demo users.
+ * Resets the catalogue (operators, buses, routes, trips, bookings, reviews, community posts) and upserts the admin + demo users.
  * Run with: npm run seed
  */
 import bcrypt from 'bcryptjs';
@@ -16,6 +16,9 @@ import { Trip } from '../models/Trip';
 import { User } from '../models/User';
 import { generatePnr } from '../services/booking.service';
 import { REVIEW_EDIT_WINDOW_MS, REVIEW_HIDE_THRESHOLD } from '../services/review.rules';
+import { seedCommunity } from './community';
+import { Comment } from '../models/Comment';
+import { Post } from '../models/Post';
 import { recomputeRouteRating } from '../services/review.service';
 import { HOUR_MS, MINUTE_MS, istDateString, istDateTime } from '../utils/time';
 import {
@@ -141,7 +144,7 @@ async function upsertUser(data: { name: string; email: string; password: string;
 
 async function main() {
   await connectDb();
-  const models = [User, RevokedToken, Operator, Bus, Route, Trip, Booking, Review];
+  const models = [User, RevokedToken, Operator, Bus, Route, Trip, Booking, Review, Post, Comment];
   for (const m of models) await m.syncIndexes();
 
   console.log('[seed] clearing catalogue and bookings…');
@@ -316,8 +319,11 @@ async function main() {
   }
   for (const id of touchedRoutes) await recomputeRouteRating(id);
 
+  // Community: demo posts, comments and likes by the reviewers (photos are generated into uploads/community).
+  const community = await seedCommunity(reviewers, [traveler!], routes);
+
   console.log(
-    `[seed] ${operators.length} operators, ${buses.length} buses, ${routes.length} routes, ${tripDocs.length} trips, ${chosen.length} demo bookings, ${reviewCount} reviews on ${touchedRoutes.size} routes`,
+    `[seed] ${operators.length} operators, ${buses.length} buses, ${routes.length} routes, ${tripDocs.length} trips, ${chosen.length} demo bookings, ${reviewCount} reviews on ${touchedRoutes.size} routes, ${community.posts} community posts (${community.comments} comments, ${community.photos} photos)`,
   );
   console.log(`[seed] admin:      ${admin!.email} / ${env.admin.password}`);
   console.log(`[seed] traveler:   ${DEMO_USERS.traveler.email} / ${DEMO_USERS.traveler.password} (verified)`);
