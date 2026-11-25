@@ -70,6 +70,7 @@ export const routes: Routes = [
       },
       { path: 'offers', loadComponent: () => import('./pages/admin/admin-offers').then((m) => m.AdminOffersPage), title: 'TITLES.ADMIN_OFFERS' },
       { path: 'reviews', loadComponent: () => import('./pages/admin/admin-reviews').then((m) => m.AdminReviewsPage), title: 'TITLES.ADMIN_REVIEWS' },
+      { path: 'community', loadComponent: () => import('./pages/admin/admin-community').then((m) => m.AdminCommunityPage), title: 'TITLES.ADMIN_COMMUNITY' },
     ],
   },
   { path: 'community', loadComponent: () => import('./pages/community/community').then((m) => m.CommunityPage), title: 'TITLES.COMMUNITY' },
