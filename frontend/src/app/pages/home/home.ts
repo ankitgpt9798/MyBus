@@ -2,16 +2,18 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ApiService } from '../../core/api.service';
-import { RouteSummary } from '../../core/models';
+import { CommunityPost, RouteSummary } from '../../core/models';
 import { istDate } from '../../core/time';
 import { Icon } from '../../shared/icons';
 import { RouteRating } from '../../shared/route-rating';
 import { CityPipe, DurationPipe, NumPipe } from '../../shared/pipes';
+import { PluralPipe } from '../../shared/plural.pipe';
+import { BOARD_ICONS } from '../../shared/post-card';
 import { SearchForm } from '../../shared/search-form';
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, TranslatePipe, SearchForm, Icon, CityPipe, DurationPipe, NumPipe, RouteRating],
+  imports: [RouterLink, TranslatePipe, SearchForm, Icon, CityPipe, DurationPipe, NumPipe, PluralPipe, RouteRating],
   template: `
     <section class="hero">
       <div class="container">
@@ -64,6 +66,27 @@ import { SearchForm } from '../../shared/search-form';
       }
     </section>
 
+    @if (trending().length) {
+      <section class="container section from-community" aria-labelledby="fc-title">
+        <div class="fc-head">
+          <h2 class="section-title" id="fc-title">{{ 'HOME.FROM_COMMUNITY' | translate }}</h2>
+          <a routerLink="/community" [queryParams]="{ sort: 'trending' }" class="small fc-all">{{ 'HOME.SEE_TRENDING' | translate }}</a>
+        </div>
+        <div class="fc-grid">
+          @for (p of trending(); track p.id) {
+            <article class="card fc-card" [attr.data-post]="p.id">
+              <span class="badge fc-board"><app-icon [name]="icons[p.board]" [size]="12" /> {{ 'COMMUNITY.BOARDS.' + p.board + '.NAME' | translate }}</span>
+              <h3 class="fc-title"><a [routerLink]="['/community/posts', p.id]" [attr.lang]="p.language">{{ p.title }}</a></h3>
+              <p class="small muted fc-meta">
+                {{ p.author.name }} · {{ 'COMMUNITY.LIKES' | plural: p.likeCount : { count: (p.likeCount | num) } }} ·
+                {{ 'COMMUNITY.COMMENTS_COUNT' | plural: p.commentCount : { count: (p.commentCount | num) } }}
+              </p>
+            </article>
+          }
+        </div>
+      </section>
+    }
+
     <section class="container section">
       <div class="promo card">
         <div>
@@ -83,6 +106,8 @@ export class HomePage implements OnInit {
   private readonly api = inject(ApiService);
   protected readonly routes = signal<RouteSummary[]>([]);
   protected readonly loadingRoutes = signal(true);
+  protected readonly trending = signal<CommunityPost[]>([]);
+  protected readonly icons = BOARD_ICONS;
   protected readonly tomorrow = istDate(new Date(), 1);
   protected readonly features = [
     { key: 'SAFE', icon: 'shield' },
@@ -91,6 +116,10 @@ export class HomePage implements OnInit {
   ];
 
   async ngOnInit(): Promise<void> {
+    void this.api
+      .trendingPosts(3)
+      .then((r) => this.trending.set(r.posts))
+      .catch(() => undefined); // the community strip is optional on the home page
     try {
       this.routes.set((await this.api.popularRoutes()).routes);
     } catch {
