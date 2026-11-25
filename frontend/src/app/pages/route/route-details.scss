@@ -48,11 +48,12 @@ h3 { margin: 0.9rem 0 0.4rem; font-size: 0.95rem; }
 .trusted { gap: 0.25rem; }
 .review-text { margin: 0.5rem 0 0.35rem; white-space: pre-line; overflow-wrap: anywhere; }
 .review-meta { margin: 0 0 0.5rem; }
-.edited { font-style: italic; }
 .review-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; }
 .helpful-btn.active { background: var(--color-primary-soft); }
 .more { display: flex; justify-content: center; margin-top: 0.75rem; }
 .how-to { margin: 1rem 0 0; }
+.community-link { margin-top: 1rem; }
+.cl-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .head-skeleton { height: 140px; margin-bottom: 1rem; }
 .body-skeleton { height: 320px; }
 

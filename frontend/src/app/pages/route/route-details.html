@@ -199,6 +199,17 @@
       }
       <p class="small muted how-to">{{ 'REVIEWS.HOW_TO' | translate }}</p>
     </section>
+
+    <section class="card route-head community-link">
+      <div>
+        <h2 class="sub-title">{{ 'COMMUNITY.ROUTE_POSTS_TITLE' | translate }}</h2>
+        <p class="muted small">{{ 'COMMUNITY.ROUTE_POSTS_TEXT' | translate }}</p>
+      </div>
+      <div class="cl-actions">
+        <a class="btn btn-outline route-posts" routerLink="/community" [queryParams]="{ routeId: d.route.id }">{{ 'COMMUNITY.ROUTE_POSTS_LINK' | translate }}</a>
+        <a class="btn btn-ghost" routerLink="/community/new" [queryParams]="{ board: 'routes', routeId: d.route.id }">{{ 'COMMUNITY.NEW_POST' | translate }}</a>
+      </div>
+    </section>
   } @else if (loading()) {
     <div class="card skeleton head-skeleton"></div>
     <div class="card skeleton body-skeleton"></div>
