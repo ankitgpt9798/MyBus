@@ -17,6 +17,12 @@ export const BOARD_ICONS: Record<Board, string> = { stories: 'bus', tips: 'check
     <article class="post-card card" [attr.data-post]="post().id">
       <div class="pc-main">
         <div class="pc-chips">
+          @if (post().popular) {
+            <span class="badge badge-warning popular-badge"><app-icon name="trending" [size]="12" /> {{ 'COMMUNITY.POPULAR' | translate }}</span>
+          }
+          @if (post().status !== 'visible') {
+            <span class="badge badge-danger status-badge">{{ 'COMMUNITY.STATUS.' + post().status | translate }}</span>
+          }
           <span class="badge board-chip"><app-icon [name]="icons[post().board]" [size]="12" /> {{ 'COMMUNITY.BOARDS.' + post().board + '.NAME' | translate }}</span>
           @if (post().route; as r) {
             <span class="badge">{{ r.from | city }} → {{ r.to | city }}</span>
@@ -26,7 +32,14 @@ export const BOARD_ICONS: Record<Board, string> = { stories: 'bus', tips: 'check
           }
         </div>
         <h3 class="pc-title"><a [routerLink]="['/community/posts', post().id]">{{ post().title }}</a></h3>
-        <p class="pc-meta small muted">{{ post().author.name }} · {{ post().createdAt | appDate: 'date' }}</p>
+        <p class="pc-meta small muted">
+          @if (post().author.id && linkAuthor()) {
+            <a class="pc-author" [routerLink]="['/users', post().author.id]">{{ post().author.name }}</a>
+          } @else {
+            {{ post().author.name }}
+          }
+          · {{ post().createdAt | appDate: 'date' }}
+        </p>
         <p class="pc-excerpt" [attr.lang]="post().language">{{ post().body }}</p>
         <p class="pc-stats small muted">
           <span>{{ 'COMMUNITY.LIKES' | plural: post().likeCount : { count: (post().likeCount | num) } }}</span> ·
@@ -47,7 +60,8 @@ export const BOARD_ICONS: Record<Board, string> = { stories: 'bus', tips: 'check
     .post-card { display: flex; gap: 1rem; }
     .pc-main { display: flex; flex-direction: column; gap: 0.35rem; min-width: 0; flex: 1; }
     .pc-chips { display: flex; flex-wrap: wrap; gap: 0.3rem; }
-    .board-chip { gap: 0.25rem; }
+    .board-chip, .popular-badge { gap: 0.25rem; }
+    .pc-author { color: inherit; font-weight: 600; }
     .pc-title { margin: 0.1rem 0 0; font-size: 1.08rem; overflow-wrap: anywhere; }
     .pc-title a { color: var(--color-text); text-decoration: none; }
     .pc-title a:hover { color: var(--color-primary); text-decoration: underline; }
@@ -64,5 +78,7 @@ export const BOARD_ICONS: Record<Board, string> = { stories: 'bus', tips: 'check
 })
 export class PostCard {
   readonly post = input.required<CommunityPost>();
+  /** Off on a profile page, where every post is by the same person. */
+  readonly linkAuthor = input(true);
   protected readonly icons = BOARD_ICONS;
 }

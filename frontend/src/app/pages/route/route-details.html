@@ -148,7 +148,7 @@
             <li class="review" [attr.data-id]="r.id">
               <div class="review-head">
                 <app-stars [value]="r.rating" />
-                <strong class="author">{{ r.author.name }}</strong>
+                <a class="author" [routerLink]="['/users', r.author.id]"><strong>{{ r.author.name }}</strong></a>
                 @if (r.author.isTrustedReviewer) {
                   <span class="badge badge-success trusted"><app-icon name="shield" [size]="12" /> {{ 'REVIEWS.TRUSTED_BADGE' | translate }}</span>
                 }
@@ -209,6 +209,7 @@
         <a class="btn btn-outline route-posts" routerLink="/community" [queryParams]="{ routeId: d.route.id }">{{ 'COMMUNITY.ROUTE_POSTS_LINK' | translate }}</a>
         <a class="btn btn-ghost" routerLink="/community/new" [queryParams]="{ board: 'routes', routeId: d.route.id }">{{ 'COMMUNITY.NEW_POST' | translate }}</a>
       </div>
+      <app-share-bar [url]="routeUrl()" [title]="'ROUTE.SHARE_TEXT' | translate: { from: (d.route.from | city), to: (d.route.to | city) }" campaign="routes" />
     </section>
   } @else if (loading()) {
     <div class="card skeleton head-skeleton"></div>

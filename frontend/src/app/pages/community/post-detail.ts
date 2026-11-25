@@ -6,13 +6,15 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { ApiService } from '../../core/api.service';
 import { errorKey } from '../../core/api-error';
 import { AuthService } from '../../core/auth.service';
-import { CommunityComment, CommunityPost } from '../../core/models';
+import { CommunityComment, CommunityPost, ContentReportReason, ShareNetwork } from '../../core/models';
 import { ToastService } from '../../core/toast.service';
 import { Dialog } from '../../shared/dialog';
 import { FieldError } from '../../shared/field-error';
 import { applyServerErrors } from '../../shared/form-errors';
 import { Icon } from '../../shared/icons';
 import { PhotoGallery } from '../../shared/photo-gallery';
+import { ReportDialog } from '../../shared/report-dialog';
+import { ShareBar } from '../../shared/share-bar';
 import { AppDatePipe, CityPipe, NumPipe } from '../../shared/pipes';
 import { PluralPipe } from '../../shared/plural.pipe';
 import { BOARD_ICONS } from '../../shared/post-card';
@@ -26,17 +28,20 @@ const trimmedMin =
     const len = String(c.value ?? '').trim().length;
     return len && len < min ? { minlength: { requiredLength: min } } : null;
   };
+const SOURCES: ShareNetwork[] = ['whatsapp', 'x', 'facebook', 'telegram', 'copy', 'native'];
 const commentControl = () => new FormControl('', { nonNullable: true, validators: [Validators.required, trimmedMin(COMMENT_MIN), Validators.maxLength(COMMENT_MAX)] });
 
 /** A community post with its photos, likes and comments (one level of replies). */
 @Component({
   selector: 'app-post-detail',
-  imports: [NgTemplateOutlet, ReactiveFormsModule, RouterLink, TranslatePipe, Icon, Dialog, FieldError, PhotoGallery, AppDatePipe, CityPipe, NumPipe, PluralPipe, TranslateOrPipe],
+  imports: [NgTemplateOutlet, ReactiveFormsModule, RouterLink, TranslatePipe, Icon, Dialog, FieldError, PhotoGallery, ReportDialog, ShareBar, AppDatePipe, CityPipe, NumPipe, PluralPipe, TranslateOrPipe],
   templateUrl: './post-detail.html',
   styleUrl: './post-detail.scss',
 })
 export class PostDetailPage {
   readonly id = input.required<string>();
+  /** Set when someone arrives through a shared link; counted once as a visit back, then removed from the URL. */
+  readonly utmSource = input<string | undefined>(undefined, { alias: 'utm_source' });
 
   private readonly api = inject(ApiService);
   private readonly router = inject(Router);
@@ -58,6 +63,11 @@ export class PostDetailPage {
   protected readonly commentSubmitted = signal(false);
   protected readonly replySubmitted = signal(false);
   protected readonly canWrite = computed(() => this.auth.isLoggedIn() && this.auth.isVerified());
+  protected readonly visible = computed(() => this.post()?.status === 'visible');
+  /** The share page renders link previews (Open Graph) and forwards people to this post. */
+  protected readonly shareUrl = computed(() => `${location.origin}/share/posts/${this.id()}`);
+  protected readonly reporting = signal<{ kind: 'post' } | { kind: 'comment'; comment: CommunityComment } | null>(null);
+  protected readonly reportError = signal<string | null>(null);
 
   constructor() {
     effect(() => {
@@ -73,10 +83,73 @@ export class PostDetailPage {
       const res = await this.api.communityPost(id);
       this.post.set(res.post);
       this.comments.set(res.comments);
+      this.countVisit(res.post);
     } catch (err) {
       this.error.set(errorKey(err));
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  private countVisit(post: CommunityPost): void {
+    const source = SOURCES.find((s) => s === this.utmSource());
+    if (!source) return;
+    if (post.status === 'visible') void this.api.visitPost(post.id, source).catch(() => undefined);
+    void this.router.navigate([], { queryParams: { utm_source: null, utm_medium: null, utm_campaign: null }, queryParamsHandling: 'merge', replaceUrl: true });
+  }
+
+  protected shared(network: ShareNetwork): void {
+    const p = this.post();
+    if (!p) return;
+    void this.api
+      .sharePost(p.id, network)
+      .then((res) => this.post.update((x) => (x ? { ...x, shareCount: res.shareCount } : x)))
+      .catch(() => undefined);
+  }
+
+  protected openReport(target: { kind: 'post' } | { kind: 'comment'; comment: CommunityComment }): void {
+    if (!this.canAct()) return;
+    this.reportError.set(null);
+    this.reporting.set(target);
+  }
+
+  protected async sendReport(report: { reason: ContentReportReason; note?: string }): Promise<void> {
+    const target = this.reporting();
+    const p = this.post();
+    if (!target || !p) return;
+    this.busy.set('report');
+    this.reportError.set(null);
+    try {
+      if (target.kind === 'post') {
+        const res = await this.api.reportPost(p.id, report);
+        this.reporting.set(null);
+        if (res.hidden) {
+          // Enough reports: the post is hidden until a moderator looks at it.
+          this.toast.success('COMMUNITY.REPORT_HID_POST');
+          await this.router.navigate(['/community']);
+          return;
+        }
+        this.post.set({ ...p, reportedByMe: true });
+      } else {
+        const id = target.comment.id;
+        const res = await this.api.reportComment(id, report);
+        this.reporting.set(null);
+        this.comments.update((list) =>
+          list
+            .filter((c) => !(res.hidden && c.id === id))
+            .map((c) => ({
+              ...c,
+              reportedByMe: c.reportedByMe || c.id === id,
+              replies: c.replies.filter((r) => !(res.hidden && r.id === id)).map((r) => ({ ...r, reportedByMe: r.reportedByMe || r.id === id })),
+            })),
+        );
+        this.post.set({ ...p, commentCount: res.commentCount });
+      }
+      this.toast.success('COMMUNITY.REPORT_THANKS');
+    } catch (err) {
+      this.reportError.set(errorKey(err));
+    } finally {
+      this.busy.set(null);
     }
   }
 

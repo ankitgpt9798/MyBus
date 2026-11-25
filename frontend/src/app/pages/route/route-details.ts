@@ -10,6 +10,7 @@ import { ToastService } from '../../core/toast.service';
 import { Dialog } from '../../shared/dialog';
 import { Icon } from '../../shared/icons';
 import { AppDatePipe, CityPipe, DurationPipe, InrPipe, NumPipe } from '../../shared/pipes';
+import { ShareBar } from '../../shared/share-bar';
 import { Stars } from '../../shared/stars';
 import { PluralPipe } from '../../shared/plural.pipe';
 import { TranslateOrPipe } from '../../shared/translate-or.pipe';
@@ -24,12 +25,14 @@ const STARS: StarKey[] = ['5', '4', '3', '2', '1'];
 /** Route details: stops, operators, next departures, the rating summary and genuine travellers' reviews (R6). */
 @Component({
   selector: 'app-route-details',
-  imports: [RouterLink, ReactiveFormsModule, TranslatePipe, Icon, Stars, Dialog, AppDatePipe, CityPipe, DurationPipe, InrPipe, NumPipe, TranslateOrPipe, PluralPipe],
+  imports: [RouterLink, ReactiveFormsModule, TranslatePipe, Icon, Stars, Dialog, ShareBar, AppDatePipe, CityPipe, DurationPipe, InrPipe, NumPipe, TranslateOrPipe, PluralPipe],
   templateUrl: './route-details.html',
   styleUrl: './route-details.scss',
 })
 export class RouteDetailsPage {
   readonly id = input.required<string>();
+  /** Shared links point straight at the route page (no preview card needed). */
+  protected readonly routeUrl = computed(() => `${location.origin}/routes/${this.id()}`);
 
   private readonly api = inject(ApiService);
   private readonly router = inject(Router);

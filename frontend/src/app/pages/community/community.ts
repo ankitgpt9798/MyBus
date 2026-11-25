@@ -3,7 +3,7 @@ import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ApiService } from '../../core/api.service';
 import { errorKey } from '../../core/api-error';
-import { Board, BoardInfo, CommunityPost, PostSort } from '../../core/models';
+import { Board, BoardInfo, CommunityPost, Contributor, PostSort } from '../../core/models';
 import { Icon } from '../../shared/icons';
 import { CityPipe, NumPipe } from '../../shared/pipes';
 import { PluralPipe } from '../../shared/plural.pipe';
@@ -11,7 +11,7 @@ import { BOARD_ICONS, PostCard } from '../../shared/post-card';
 import { TranslateOrPipe } from '../../shared/translate-or.pipe';
 
 const BOARDS: Board[] = ['stories', 'tips', 'routes', 'destinations', 'advice'];
-const SORTS: PostSort[] = ['latest', 'top', 'discussed'];
+const SORTS: PostSort[] = ['latest', 'trending', 'top', 'discussed'];
 const PAGE_SIZE = 10;
 
 /** Community home: discussion boards and a feed filtered by board, route or destination (?board&routeId&city&sort). */
@@ -36,6 +36,8 @@ export class CommunityPage {
   protected readonly boardInfo = signal<BoardInfo[]>([]);
   protected readonly routes = signal<{ id: string; from: string; to: string }[]>([]);
   protected readonly cities = signal<string[]>([]);
+  protected readonly trending = signal<CommunityPost[]>([]);
+  protected readonly contributors = signal<Contributor[]>([]);
   protected readonly posts = signal<CommunityPost[]>([]);
   protected readonly total = signal(0);
   protected readonly page = signal(1);
@@ -50,6 +52,8 @@ export class CommunityPage {
     void this.api.communityBoards().then((r) => this.boardInfo.set(r.boards)).catch(() => undefined);
     void this.api.allRoutes().then((r) => this.routes.set(r.routes)).catch(() => undefined);
     void this.api.cities().then((r) => this.cities.set(r.cities)).catch(() => undefined);
+    void this.api.trendingPosts(4).then((r) => this.trending.set(r.posts)).catch(() => undefined);
+    void this.api.topContributors().then((r) => this.contributors.set(r.contributors)).catch(() => undefined);
     effect(() => {
       const query = { board: this.activeBoard() ?? undefined, routeId: this.routeId() || undefined, city: this.city() || undefined, sort: this.activeSort() };
       untracked(() => void this.load(query, 1));

@@ -12,15 +12,36 @@
       <a routerLink="/community" [queryParams]="{ board: p.board }">{{ 'COMMUNITY.BOARDS.' + p.board + '.NAME' | translate }}</a>
     </nav>
 
+    @if (p.status !== 'visible') {
+      <div class="alert alert-warning status-notice" role="status" [attr.data-status]="p.status">
+        <app-icon name="alert" [size]="18" />
+        <span>
+          @if (p.status === 'removed') {
+            {{ 'COMMUNITY.NOTICE_REMOVED' | translate: { reason: ('COMMUNITY.REMOVE_REASONS.' + (p.moderation?.reason ?? 'other') | translate) } }}
+          } @else {
+            {{ (p.moderation?.auto ? 'COMMUNITY.NOTICE_HIDDEN_REPORTS' : 'COMMUNITY.NOTICE_HIDDEN_MODERATOR') | translate }}
+          }
+        </span>
+      </div>
+    }
+
     <article class="card post" [attr.lang]="p.language">
       <h1 class="post-title">{{ p.title }}</h1>
       <p class="meta small muted">
-        {{ p.author.name }} · <time [attr.datetime]="p.createdAt">{{ p.createdAt | appDate: 'datetime' }}</time>
+        @if (p.author.id) {
+          <a class="author-link" [routerLink]="['/users', p.author.id]">{{ p.author.name }}</a>
+        } @else {
+          {{ p.author.name }}
+        }
+        · <time [attr.datetime]="p.createdAt">{{ p.createdAt | appDate: 'datetime' }}</time>
         @if (p.editedAt) {
           · <span class="edited">{{ 'COMMUNITY.EDITED' | translate }}</span>
         }
       </p>
       <div class="chips">
+        @if (p.popular) {
+          <span class="badge badge-warning popular-badge"><app-icon name="trending" [size]="12" /> {{ 'COMMUNITY.POPULAR' | translate }}</span>
+        }
         <a class="badge chip-link" routerLink="/community" [queryParams]="{ board: p.board }"><app-icon [name]="icons[p.board]" [size]="12" /> {{ 'COMMUNITY.BOARDS.' + p.board + '.NAME' | translate }}</a>
         @if (p.route; as r) {
           <a class="badge chip-link route-chip" [routerLink]="['/routes', r.id]">{{ r.from | city }} → {{ r.to | city }}</a>
@@ -34,17 +55,32 @@
       }
       <div class="post-body">{{ p.body }}</div>
       <div class="post-actions">
-        <button type="button" class="btn btn-sm btn-outline like-btn" [class.active]="p.likedByMe" [attr.aria-pressed]="p.likedByMe" [disabled]="busy() === 'post'" (click)="likePost()">
-          <app-icon name="star" [size]="14" /> {{ (p.likedByMe ? 'COMMUNITY.LIKED' : 'COMMUNITY.LIKE') | translate }}
-          <span class="like-count">({{ p.likeCount | num }})</span>
-        </button>
+        @if (visible()) {
+          <button type="button" class="btn btn-sm btn-outline like-btn" [class.active]="p.likedByMe" [attr.aria-pressed]="p.likedByMe" [disabled]="busy() === 'post'" (click)="likePost()">
+            <app-icon name="star" [size]="14" /> {{ (p.likedByMe ? 'COMMUNITY.LIKED' : 'COMMUNITY.LIKE') | translate }}
+            <span class="like-count">({{ p.likeCount | num }})</span>
+          </button>
+        }
         <a class="btn btn-sm btn-ghost" href="#comments">{{ 'COMMUNITY.COMMENTS_COUNT' | plural: p.commentCount : { count: (p.commentCount | num) } }}</a>
+        <span class="small muted share-count">{{ 'COMMUNITY.SHARES' | plural: p.shareCount : { count: (p.shareCount | num) } }}</span>
+        <span class="spacer"></span>
+        @if (!p.mine && visible()) {
+          @if (p.reportedByMe) {
+            <span class="badge reported-badge">{{ 'REVIEWS.REPORTED' | translate }}</span>
+          } @else {
+            <button type="button" class="btn btn-sm btn-ghost report-post" (click)="openReport({ kind: 'post' })"><app-icon name="flag" [size]="14" /> {{ 'COMMUNITY.REPORT' | translate }}</button>
+          }
+        }
         @if (p.mine) {
-          <span class="spacer"></span>
-          <a class="btn btn-sm btn-ghost edit-post" [routerLink]="['/community/posts', p.id, 'edit']"><app-icon name="settings" [size]="14" /> {{ 'COMMUNITY.EDIT' | translate }}</a>
+          @if (p.status !== 'removed') {
+            <a class="btn btn-sm btn-ghost edit-post" [routerLink]="['/community/posts', p.id, 'edit']"><app-icon name="settings" [size]="14" /> {{ 'COMMUNITY.EDIT' | translate }}</a>
+          }
           <button type="button" class="btn btn-sm btn-danger-outline delete-post" (click)="confirmDelete.set({ kind: 'post' })">{{ 'COMMUNITY.DELETE' | translate }}</button>
         }
       </div>
+      @if (visible()) {
+        <app-share-bar [url]="shareUrl()" [title]="p.title" (shared)="shared($event)" />
+      }
     </article>
 
     <section class="card comments" id="comments" aria-labelledby="comments-title">
@@ -55,7 +91,9 @@
           <a [routerLink]="['/profile']" [queryParams]="{ verify: 1 }">{{ 'REVIEWS.VERIFY_NOW' | translate }}</a>
         </div>
       }
-      @if (canWrite()) {
+      @if (!visible()) {
+        <!-- no new comments while the post is hidden or removed -->
+      } @else if (canWrite()) {
         <form class="composer" [formGroup]="commentForm" (ngSubmit)="submit()" novalidate>
           <label for="comment-body" class="sr-only">{{ 'COMMUNITY.ADD_COMMENT' | translate }}</label>
           <textarea id="comment-body" formControlName="body" rows="3" [attr.maxlength]="max" [placeholder]="'COMMUNITY.ADD_COMMENT' | translate"></textarea>
@@ -115,22 +153,46 @@
 
 <ng-template #commentTpl let-c let-reply="reply">
   <div class="c-head small">
-    <strong>{{ c.author.name }}</strong>
+    @if (c.author.id) {
+      <a class="author-link" [routerLink]="['/users', c.author.id]"><strong>{{ c.author.name }}</strong></a>
+    } @else {
+      <strong>{{ c.author.name }}</strong>
+    }
     <span class="muted">· {{ c.createdAt | appDate: 'datetime' }}</span>
   </div>
   <p class="c-body">{{ c.body }}</p>
   <div class="c-actions">
-    <button type="button" class="link c-like" [class.active]="c.likedByMe" [attr.aria-pressed]="c.likedByMe" [disabled]="busy() === c.id" (click)="likeComment(c)">
-      {{ (c.likedByMe ? 'COMMUNITY.LIKED' : 'COMMUNITY.LIKE') | translate }} ({{ c.likeCount | num }})
-    </button>
-    @if (!reply) {
+    @if (visible()) {
+      <button type="button" class="link c-like" [class.active]="c.likedByMe" [attr.aria-pressed]="c.likedByMe" [disabled]="busy() === c.id" (click)="likeComment(c)">
+        {{ (c.likedByMe ? 'COMMUNITY.LIKED' : 'COMMUNITY.LIKE') | translate }} ({{ c.likeCount | num }})
+      </button>
+    }
+    @if (!reply && visible()) {
       <button type="button" class="link c-reply" (click)="startReply(c)">{{ 'COMMUNITY.REPLY' | translate }}</button>
+    }
+    @if (!c.mine && visible()) {
+      @if (c.reportedByMe) {
+        <span class="muted c-reported">{{ 'REVIEWS.REPORTED' | translate }}</span>
+      } @else {
+        <button type="button" class="link c-report" (click)="openReport({ kind: 'comment', comment: c })">{{ 'COMMUNITY.REPORT' | translate }}</button>
+      }
     }
     @if (c.mine) {
       <button type="button" class="link c-delete" (click)="confirmDelete.set({ kind: 'comment', id: c.id })">{{ 'COMMUNITY.DELETE' | translate }}</button>
     }
   </div>
 </ng-template>
+
+@if (reporting(); as r) {
+  <app-report-dialog
+    [title]="r.kind === 'post' ? 'COMMUNITY.REPORT_POST_TITLE' : 'COMMUNITY.REPORT_COMMENT_TITLE'"
+    [quote]="r.kind === 'post' ? (post()?.title ?? '') : r.comment.body"
+    [busy]="busy() === 'report'"
+    [error]="reportError()"
+    (send)="sendReport($event)"
+    (closed)="reporting.set(null)"
+  />
+}
 
 @if (confirmDelete(); as d) {
   <app-dialog [title]="(d.kind === 'post' ? 'COMMUNITY.DELETE_POST_TITLE' : 'COMMUNITY.DELETE_COMMENT_TITLE') | translate" (closed)="confirmDelete.set(null)">

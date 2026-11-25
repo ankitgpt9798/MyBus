@@ -31,7 +31,8 @@
     "LOGIN": "Log in",
     "SIGNUP": "Sign up",
     "PROFILE": "My profile",
-    "LOGOUT": "Log out"
+    "LOGOUT": "Log out",
+    "PUBLIC_PROFILE": "View my public profile"
   },
   "TITLES": {
     "HOME": "Book bus tickets online",
@@ -61,7 +62,9 @@
     "ADMIN_REVIEWS": "Review moderation",
     "COMMUNITY_NEW": "Write a post",
     "COMMUNITY_POST": "Community post",
-    "COMMUNITY_EDIT": "Edit post"
+    "COMMUNITY_EDIT": "Edit post",
+    "USER_PROFILE": "Member profile",
+    "ADMIN_COMMUNITY": "Community moderation"
   },
   "HOME": {
     "TITLE": "Book bus tickets across India",
@@ -83,7 +86,9 @@
       }
     },
     "COMMUNITY_TITLE": "Travel smarter with the MyBus community",
-    "COMMUNITY_TEXT": "Read journey stories and tips from fellow travellers, and plan routes with live traffic."
+    "COMMUNITY_TEXT": "Read journey stories and tips from fellow travellers, and plan routes with live traffic.",
+    "FROM_COMMUNITY": "From the community",
+    "SEE_TRENDING": "See what is trending"
   },
   "SEARCH": {
     "FROM": "From",
@@ -541,6 +546,28 @@
         "one": "Review restored. Route average now {{avg}} ({{count}} review).",
         "other": "Review restored. Route average now {{avg}} ({{count}} reviews)."
       }
+    },
+    "COMMUNITY_TAB": "Community",
+    "COMMUNITY": {
+      "TYPE": "Content type",
+      "TYPES": {
+        "post": "Posts",
+        "comment": "Comments"
+      },
+      "FOUND": {
+        "one": "{{count}} item",
+        "other": "{{count}} items"
+      },
+      "NONE": "Nothing here. The community is behaving!",
+      "CONFIRM_HIDE": "Hide this content?",
+      "CONFIRM_REMOVE": "Remove this content?",
+      "CONFIRM_RESTORE": "Restore this content?",
+      "EFFECT_HIDE": "It disappears from the community until it is restored; its author still sees it with a notice.",
+      "EFFECT_REMOVE": "It disappears from the community and its author can no longer edit it.",
+      "EFFECT_RESTORE": "It is shown in the community again and counts towards comments and popularity.",
+      "DONE_HIDE": "Hidden from the community",
+      "DONE_REMOVE": "Removed from the community",
+      "DONE_RESTORE": "Restored to the community"
     }
   },
   "AUTH": {
@@ -685,7 +712,11 @@
     "COMMUNITY_TOO_MANY_PHOTOS": "You can add at most 4 photos.",
     "COMMUNITY_PHOTO_TYPE": "Photos must be JPEG, PNG or WebP images.",
     "COMMUNITY_PHOTO_TOO_LARGE": "Each photo can be at most 5 MB.",
-    "CONTENT_GUIDELINES": "Please remove links, email addresses, phone numbers and abusive words."
+    "CONTENT_GUIDELINES": "Please remove links, email addresses, phone numbers and abusive words.",
+    "COMMUNITY_REPORT_OWN": "You cannot report your own post or comment.",
+    "COMMUNITY_ALREADY_REPORTED": "You have already reported this.",
+    "RATE_LIMITED": "Too many requests. Please try again in a minute.",
+    "USER_NOT_FOUND": "This member could not be found."
   },
   "FORBIDDEN": {
     "TITLE": "Access denied",
@@ -832,7 +863,8 @@
     },
     "NO_TRIPS": "No upcoming departures on this route.",
     "BACK_HOME": "Back to home",
-    "TAB_TITLE": "{{from}} to {{to}}"
+    "TAB_TITLE": "{{from}} to {{to}}",
+    "SHARE_TEXT": "Bus route {{from}} → {{to}} on MyBus"
   },
   "REVIEWS": {
     "STARS_LABEL": "{{value}} out of 5 stars",
@@ -1003,7 +1035,8 @@
     "SORT": {
       "latest": "Latest",
       "top": "Most liked",
-      "discussed": "Most discussed"
+      "discussed": "Most discussed",
+      "trending": "Trending"
     },
     "ALL_POSTS": "All posts",
     "CLEAR_FILTERS": "Clear filters",
@@ -1064,6 +1097,104 @@
     "POST_PUBLISHED": "Your post is live",
     "ROUTE_POSTS_TITLE": "Travellers talk about this route",
     "ROUTE_POSTS_TEXT": "Stories, tips and questions from the community about this route.",
-    "ROUTE_POSTS_LINK": "See community posts"
+    "ROUTE_POSTS_LINK": "See community posts",
+    "REPORT": "Report",
+    "REPORT_POST_TITLE": "Report this post",
+    "REPORT_COMMENT_TITLE": "Report this comment",
+    "REPORT_HINT": "Moderators will look at it. Content reported by several members is hidden until they do.",
+    "REPORT_REASON": "What is wrong with it?",
+    "REPORT_REASONS": {
+      "spam": "Spam or advertising",
+      "offensive": "Offensive or abusive",
+      "irrelevant": "Off-topic",
+      "misleading": "Misleading or false",
+      "other": "Something else"
+    },
+    "REMOVE_REASONS": {
+      "spam": "spam or advertising",
+      "offensive": "offensive or abusive content",
+      "irrelevant": "off-topic content",
+      "misleading": "misleading or false information",
+      "personal_info": "personal information",
+      "other": "a breach of the community guidelines"
+    },
+    "REPORT_THANKS": "Thanks, our moderators will take a look",
+    "REPORT_HID_POST": "Thanks for reporting. The post is now hidden until a moderator reviews it.",
+    "NOTICE_HIDDEN_REPORTS": "This post is hidden from the community after several reports, while a moderator reviews it. Only you and the moderators can see it.",
+    "NOTICE_HIDDEN_MODERATOR": "A moderator has hidden this post from the community. Only you and the moderators can see it.",
+    "NOTICE_REMOVED": "A moderator removed this post for {{reason}}. It is no longer shown in the community and can no longer be edited.",
+    "STATUS": {
+      "visible": "Visible",
+      "hidden": "Hidden",
+      "removed": "Removed"
+    },
+    "SHARES": {
+      "one": "{{count}} share",
+      "other": "{{count}} shares"
+    },
+    "POPULAR": "Popular",
+    "TRENDING_TITLE": "Trending this week",
+    "TOP_CONTRIBUTORS": "Top contributors",
+    "TOP_CONTRIBUTORS_HINT": "Most active members in the last 30 days"
+  },
+  "SHARE": {
+    "LABEL": "Share",
+    "ON": "Share on {{network}}",
+    "COPY": "Copy link",
+    "MORE": "More…",
+    "COPIED": "Link copied",
+    "COPY_FAILED": "Could not copy the link"
+  },
+  "USER": {
+    "VERIFIED": "Verified",
+    "MEMBER_SINCE": "Member since {{date}}",
+    "OWN_NOTE": "This is how other travellers see your profile. Your email is never shown.",
+    "EDIT_ACCOUNT": "Account settings",
+    "STATS": {
+      "POSTS": {
+        "one": "Post",
+        "other": "Posts"
+      },
+      "COMMENTS": {
+        "one": "Comment",
+        "other": "Comments"
+      },
+      "LIKES": {
+        "one": "Like received",
+        "other": "Likes received"
+      },
+      "REVIEWS": {
+        "one": "Review",
+        "other": "Reviews"
+      },
+      "HELPFUL": {
+        "one": "Helpful vote",
+        "other": "Helpful votes"
+      }
+    },
+    "TABS_LABEL": "Member activity",
+    "TABS": {
+      "activity": "Recent activity",
+      "posts": "Posts",
+      "comments": "Comments",
+      "reviews": "Reviews"
+    },
+    "ACTIVITY": {
+      "post": "Wrote a post",
+      "comment": "Commented on",
+      "review": "Reviewed the route",
+      "like_post": "Liked a post",
+      "like_comment": "Liked a comment on",
+      "helpful": "Found a review helpful on"
+    },
+    "EMPTY": {
+      "activity": "No activity yet.",
+      "posts": "No posts yet.",
+      "comments": "No comments yet.",
+      "reviews": "No reviews yet."
+    },
+    "COMMENTED_ON": "Comment on",
+    "REPLIED_ON": "Reply on",
+    "LOAD_MORE": "Show more"
   }
 }

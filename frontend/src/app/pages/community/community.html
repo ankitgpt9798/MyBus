@@ -9,6 +9,51 @@
     </a>
   </header>
 
+  @if (trending().length || contributors().length) {
+    <div class="highlights">
+      @if (trending().length) {
+        <section class="card trending" aria-labelledby="trending-title">
+          <h2 class="sub-title" id="trending-title"><app-icon name="trending" [size]="18" /> {{ 'COMMUNITY.TRENDING_TITLE' | translate }}</h2>
+          <ol class="trend-list">
+            @for (t of trending(); track t.id; let i = $index) {
+              <li class="trend" [attr.data-post]="t.id">
+                <span class="rank" aria-hidden="true">{{ i + 1 }}</span>
+                <div class="trend-main">
+                  <a class="trend-title" [routerLink]="['/community/posts', t.id]" [attr.lang]="t.language">{{ t.title }}</a>
+                  <span class="small muted">
+                    {{ t.author.name }} · {{ 'COMMUNITY.LIKES' | plural: t.likeCount : { count: (t.likeCount | num) } }} ·
+                    {{ 'COMMUNITY.COMMENTS_COUNT' | plural: t.commentCount : { count: (t.commentCount | num) } }} ·
+                    {{ 'COMMUNITY.SHARES' | plural: t.shareCount : { count: (t.shareCount | num) } }}
+                  </span>
+                </div>
+              </li>
+            }
+          </ol>
+        </section>
+      }
+      @if (contributors().length) {
+        <section class="card contributors" aria-labelledby="contributors-title">
+          <h2 class="sub-title" id="contributors-title"><app-icon name="users" [size]="18" /> {{ 'COMMUNITY.TOP_CONTRIBUTORS' | translate }}</h2>
+          <p class="small muted cb-hint">{{ 'COMMUNITY.TOP_CONTRIBUTORS_HINT' | translate }}</p>
+          <ul class="cb-list">
+            @for (c of contributors(); track c.id) {
+              <li class="cb">
+                <span class="avatar" aria-hidden="true">{{ c.name.charAt(0) }}</span>
+                <div class="cb-main">
+                  <a class="cb-name" [routerLink]="['/users', c.id]">{{ c.name }}</a>
+                  <span class="small muted">
+                    {{ 'COMMUNITY.POSTS_COUNT' | plural: c.posts : { count: (c.posts | num) } }} ·
+                    {{ 'COMMUNITY.COMMENTS_COUNT' | plural: c.comments : { count: (c.comments | num) } }}
+                  </span>
+                </div>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+    </div>
+  }
+
   <section class="boards" [attr.aria-label]="'COMMUNITY.BOARDS_TITLE' | translate">
     @for (b of boards; track b) {
       <button type="button" class="board-card card" [class.active]="activeBoard() === b" [attr.aria-pressed]="activeBoard() === b" [attr.data-board]="b"

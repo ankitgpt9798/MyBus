@@ -333,7 +333,7 @@ export interface RouteReview {
   createdAt: string;
   editedAt: string | null;
   travelledAt: string | null;
-  author: { name: string; isTrustedReviewer: boolean };
+  author: { id: string; name: string; isTrustedReviewer: boolean };
   helpfulCount: number;
   helpfulByMe: boolean;
   reportedByMe: boolean;
@@ -396,7 +396,11 @@ export interface AdminReview {
 // Community (R1)
 
 export type Board = 'stories' | 'tips' | 'routes' | 'destinations' | 'advice';
-export type PostSort = 'latest' | 'top' | 'discussed';
+export type PostSort = 'latest' | 'top' | 'discussed' | 'trending';
+export type ContentStatus = 'visible' | 'hidden' | 'removed';
+export type ContentReportReason = 'spam' | 'offensive' | 'irrelevant' | 'misleading' | 'other';
+export type ContentRemoveReason = ContentReportReason | 'personal_info';
+export type ShareNetwork = 'whatsapp' | 'x' | 'facebook' | 'telegram' | 'copy' | 'native';
 
 export interface BoardInfo {
   id: Board;
@@ -429,7 +433,16 @@ export interface CommunityPost {
   likeCount: number;
   likedByMe: boolean;
   commentCount: number;
+  shareCount: number;
+  /** Engagement (likes + 2 × comments + 3 × shares) at or above the Popular threshold. */
+  popular: boolean;
+  /** Trending score, only in trending lists. */
+  score?: number;
+  reportedByMe: boolean;
   mine: boolean;
+  /** Not visible: only its author (with the moderation notice) and admins see the post. */
+  status: ContentStatus;
+  moderation: { reason: string | null; auto: boolean; at: string } | null;
   createdAt: string;
   editedAt: string | null;
 }
@@ -441,7 +454,82 @@ export interface CommunityComment {
   author: CommunityAuthor;
   likeCount: number;
   likedByMe: boolean;
+  reportedByMe: boolean;
   mine: boolean;
   createdAt: string;
   replies: CommunityComment[];
+}
+
+export interface Contributor {
+  id: string;
+  name: string;
+  posts: number;
+  comments: number;
+  likesReceived: number;
+  points: number;
+}
+
+export interface AdminCommunityItem {
+  type: 'post' | 'comment';
+  id: string;
+  status: ContentStatus;
+  createdAt: string;
+  title: string | null;
+  text: string;
+  board: Board | null;
+  post: { id: string; title: string; status?: ContentStatus } | null;
+  route?: { id: string; from: string; to: string } | null;
+  city?: string | null;
+  photos?: number;
+  reply?: boolean;
+  author: { id: string; name: string; email: string | null } | null;
+  likeCount: number;
+  commentCount?: number;
+  shareCount?: number;
+  reportCount: number;
+  reports: { user: string | null; reason: ContentReportReason; note: string | null; createdAt: string | null }[];
+  moderation: { reason: string | null; note: string | null; auto: boolean; by: string | null; at: string } | null;
+}
+
+// Public profiles (R1)
+
+export interface PublicProfile {
+  user: { id: string; name: string; memberSince: string; verified: boolean; trustedReviewer: boolean };
+  stats: { posts: number; comments: number; likesReceived: number; reviews: number; helpfulReceived: number };
+  own: boolean;
+}
+
+export interface ProfileComment {
+  id: string;
+  body: string;
+  reply: boolean;
+  likeCount: number;
+  status: ContentStatus;
+  post: { id: string; title: string } | null;
+  createdAt: string;
+}
+
+export interface ProfileReview {
+  id: string;
+  rating: number;
+  text: string;
+  helpfulCount: number;
+  status: ContentStatus;
+  route: { id: string; from: string; to: string } | null;
+  createdAt: string;
+}
+
+export type ActivityType = 'post' | 'comment' | 'review' | 'like_post' | 'like_comment' | 'helpful';
+
+export interface ActivityItem {
+  key: string;
+  type: ActivityType;
+  at: string;
+  /** Only on the owner's own hidden / removed items. */
+  status?: ContentStatus;
+  post?: { id: string; title: string } | null;
+  route?: { id: string; from: string; to: string } | null;
+  text?: string;
+  reply?: boolean;
+  rating?: number;
 }

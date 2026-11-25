@@ -2,10 +2,20 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import {
+  ActivityItem,
+  AdminCommunityItem,
   BoardInfo,
   CommunityComment,
   CommunityPost,
+  ContentRemoveReason,
+  ContentReportReason,
+  ContentStatus,
+  Contributor,
   PostSort,
+  ProfileComment,
+  ProfileReview,
+  PublicProfile,
+  ShareNetwork,
   AdminNotification,
   AdminPromotion,
   AdminReview,
@@ -111,6 +121,41 @@ export class ApiService {
   likeComment(id: string) {
     return this.post<{ liked: boolean; likeCount: number }>(`/community/comments/${id}/like`);
   }
+  trendingPosts(limit = 4) {
+    return this.get<{ posts: CommunityPost[] }>('/community/trending', { limit });
+  }
+  topContributors() {
+    return this.get<{ contributors: Contributor[]; days: number }>('/community/contributors');
+  }
+  reportPost(id: string, report: { reason: ContentReportReason; note?: string }) {
+    return this.post<{ reported: boolean; hidden: boolean }>(`/community/posts/${id}/report`, report);
+  }
+  reportComment(id: string, report: { reason: ContentReportReason; note?: string }) {
+    return this.post<{ reported: boolean; hidden: boolean; commentCount: number }>(`/community/comments/${id}/report`, report);
+  }
+  sharePost(id: string, network: ShareNetwork) {
+    return this.post<{ counted: boolean; shareCount: number }>(`/community/posts/${id}/share`, { network });
+  }
+  visitPost(id: string, source: ShareNetwork) {
+    return this.post<{ counted: boolean; visitCount: number }>(`/community/posts/${id}/visit`, { source });
+  }
+
+  // Public profiles
+  userProfile(id: string) {
+    return this.get<PublicProfile>(`/users/${id}/profile`);
+  }
+  userPosts(id: string, page = 1) {
+    return this.get<{ posts: CommunityPost[]; total: number; page: number; limit: number }>(`/users/${id}/posts`, { page });
+  }
+  userComments(id: string, page = 1) {
+    return this.get<{ comments: ProfileComment[]; total: number; page: number; limit: number }>(`/users/${id}/comments`, { page });
+  }
+  userReviews(id: string, page = 1) {
+    return this.get<{ reviews: ProfileReview[]; total: number; page: number; limit: number }>(`/users/${id}/reviews`, { page });
+  }
+  userActivity(id: string, before?: string) {
+    return this.get<{ items: ActivityItem[]; next: string | null }>(`/users/${id}/activity`, before ? { before } : {});
+  }
 
   // Reviews
   routeReviews(routeId: string, sort: ReviewSort = 'recent', page = 1, limit = 10) {
@@ -198,6 +243,18 @@ export class ApiService {
   }
   adminRestoreReview(id: string, clearReports: boolean) {
     return this.post<{ review: { id: string; status: string }; summary: RatingSummary }>(`/admin/reviews/${id}/restore`, { clearReports });
+  }
+  adminCommunity(params: Params) {
+    return this.get<{ items: AdminCommunityItem[]; total: number; page: number; limit: number }>('/admin/community', params);
+  }
+  adminHideContent(type: 'post' | 'comment', id: string, note?: string) {
+    return this.post<{ item: { id: string; status: ContentStatus }; commentCount: number }>(`/admin/community/${type}/${id}/hide`, { note });
+  }
+  adminRemoveContent(type: 'post' | 'comment', id: string, reason: ContentRemoveReason, note?: string) {
+    return this.post<{ item: { id: string; status: ContentStatus }; commentCount: number }>(`/admin/community/${type}/${id}/remove`, { reason, note });
+  }
+  adminRestoreContent(type: 'post' | 'comment', id: string, clearReports: boolean) {
+    return this.post<{ item: { id: string; status: ContentStatus }; commentCount: number }>(`/admin/community/${type}/${id}/restore`, { clearReports });
   }
   adminPromotions() {
     return this.get<{ promotions: AdminPromotion[] }>('/admin/promotions');
