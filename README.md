@@ -40,7 +40,7 @@ npm install
 | --- | --- |
 | `PORT` | API port (default `4000`) |
 | `MONGODB_URI` | MongoDB connection string (database `mybus`) |
-| `FRONTEND_URL` | App URL used in email links (default `http://localhost:4200`) |
+| `FRONTEND_URL` | Public app URL used in email links, shared community links and their preview images (default `http://localhost:4200`) |
 | `JWT_SECRET`, `JWT_EXPIRES_IN` | Signing secret and lifetime for login tokens |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME` | Admin account created by the seed script |
 | `SMTP_*`, `MAIL_FROM` | Outgoing email. Leave `SMTP_HOST` empty to print emails and verification links in the backend console instead |
@@ -57,7 +57,7 @@ cd backend
 npm run seed
 ```
 
-This resets the catalogue, bookings, reviews and community posts (with their photos) in the `mybus` database, then creates or updates these accounts:
+This resets the catalogue, bookings, reviews and community content (posts, photos, comments, reports, shares and the likes timeline) in the `mybus` database, then creates or updates these accounts:
 
 | Account | Email | Password |
 | --- | --- | --- |
@@ -85,7 +85,7 @@ cd frontend
 npm start
 ```
 
-The Angular dev server forwards `/api` and `/uploads` (community photos) to the backend (`frontend/proxy.conf.json`). To check that both are up, open `http://localhost:4200/api/health`.
+The Angular dev server forwards `/api`, `/uploads` (community photos) and `/share` (link previews for shared posts) to the backend (`frontend/proxy.conf.json`); a production web server needs the same three routes. To check that both are up, open `http://localhost:4200/api/health`.
 
 ## Production build
 
