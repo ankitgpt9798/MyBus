@@ -1,8 +1,9 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, effect, inject, signal, untracked } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ApiService } from '../../core/api.service';
-import { CommunityPost, RouteSummary } from '../../core/models';
+import { AuthService } from '../../core/auth.service';
+import { CommunityPost, RouteSummary, SavedRoute } from '../../core/models';
 import { istDate } from '../../core/time';
 import { Icon } from '../../shared/icons';
 import { RouteRating } from '../../shared/route-rating';
@@ -66,6 +67,24 @@ import { SearchForm } from '../../shared/search-form';
       }
     </section>
 
+    @if (saved().length) {
+      <section class="container section my-routes" aria-labelledby="my-routes-title">
+        <div class="fc-head">
+          <h2 class="section-title" id="my-routes-title">{{ 'HOME.SAVED_ROUTES' | translate }}</h2>
+          <a routerLink="/route-planner" class="small fc-all">{{ 'HOME.OPEN_PLANNER' | translate }}</a>
+        </div>
+        <div class="fc-grid">
+          @for (s of saved(); track s.id) {
+            <a class="card fc-card saved-quick" [routerLink]="['/route-planner']" [queryParams]="{ saved: s.id }" [attr.data-saved]="s.id">
+              <span class="badge"><app-icon name="map" [size]="12" /> {{ 'PLANNER.USED_TIMES' | plural: s.useCount : { count: (s.useCount | num) } }}</span>
+              <strong class="fc-title">{{ s.name }}</strong>
+              <span class="small muted fc-meta">{{ s.start.label }} → {{ s.end.label }}</span>
+            </a>
+          }
+        </div>
+      </section>
+    }
+
     @if (trending().length) {
       <section class="container section from-community" aria-labelledby="fc-title">
         <div class="fc-head">
@@ -107,6 +126,22 @@ export class HomePage implements OnInit {
   protected readonly routes = signal<RouteSummary[]>([]);
   protected readonly loadingRoutes = signal(true);
   protected readonly trending = signal<CommunityPost[]>([]);
+  /** The signed-in user's three most used saved routes (quick access to the route planner). */
+  protected readonly saved = signal<SavedRoute[]>([]);
+  private readonly auth = inject(AuthService);
+
+  constructor() {
+    effect(() => {
+      const user = this.auth.user();
+      untracked(() => {
+        if (!user) return this.saved.set([]);
+        void this.api
+          .savedRoutes('used', 3)
+          .then((r) => this.saved.set(r.saved))
+          .catch(() => this.saved.set([]));
+      });
+    });
+  }
   protected readonly icons = BOARD_ICONS;
   protected readonly tomorrow = istDate(new Date(), 1);
   protected readonly features = [
