@@ -53,7 +53,6 @@ h3 { margin: 0.9rem 0 0.4rem; font-size: 0.95rem; }
 .more { display: flex; justify-content: center; margin-top: 0.75rem; }
 .how-to { margin: 1rem 0 0; }
 .community-link { margin-top: 1rem; }
-.cl-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .head-skeleton { height: 140px; margin-bottom: 1rem; }
 .body-skeleton { height: 320px; }
 
@@ -65,5 +64,5 @@ h3 { margin: 0.9rem 0 0.4rem; font-size: 0.95rem; }
   .summary { grid-template-columns: 1fr; gap: 0.75rem; }
   .next-trip { grid-template-columns: 1fr auto; }
   .nt-op { grid-column: 1 / -1; grid-row: 2; }
-  .find-buses { width: 100%; }
+  .head-actions, .head-actions .btn { width: 100%; }
 }

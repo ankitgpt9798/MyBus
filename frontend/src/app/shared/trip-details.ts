@@ -1,4 +1,5 @@
 import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ApiService } from '../core/api.service';
 import { errorKey } from '../core/api-error';
@@ -13,7 +14,7 @@ type Tab = 'points' | 'bus' | 'policy';
 /** Read-only trip information shown inside a search result card. */
 @Component({
   selector: 'app-trip-details',
-  imports: [TranslatePipe, AppDatePipe, CityPipe, NumPipe, TranslateOrPipe, RouteRating, PluralPipe],
+  imports: [RouterLink, TranslatePipe, AppDatePipe, CityPipe, NumPipe, TranslateOrPipe, RouteRating, PluralPipe],
   template: `
     <div class="tabs" role="tablist">
       @for (t of tabs; track t) {
@@ -56,6 +57,7 @@ type Tab = 'points' | 'bus' | 'policy';
               <li><span>{{ d.trip.arrivalTime | appDate: 'time' }}</span> {{ d.route.to | city }}</li>
             </ol>
           }
+          <a class="plan-on-map small" routerLink="/route-planner" [queryParams]="{ from: d.route.from, to: d.route.to }">{{ 'TRIP.PLAN_ON_MAP' | translate }}</a>
         }
         @case ('bus') {
           <dl class="kv">
@@ -109,6 +111,7 @@ type Tab = 'points' | 'bus' | 'policy';
     .timeline li { padding: 0.2rem 0; }
     .timeline span { display: inline-block; min-width: 4.5rem; color: var(--color-text-muted); }
     .kv { margin-bottom: 1rem; }
+    .plan-on-map { display: inline-block; margin-top: 0.5rem; font-weight: 600; }
     .tag-list { display: flex; flex-wrap: wrap; gap: 0.35rem; }
     .policy { list-style: none; margin: 0 0 0.5rem; padding: 0; font-size: 0.9rem; }
     .policy li { display: flex; justify-content: space-between; gap: 1rem; padding: 0.4rem 0; border-bottom: 1px dashed var(--color-border); }

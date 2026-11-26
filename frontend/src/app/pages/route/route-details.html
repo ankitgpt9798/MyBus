@@ -23,9 +23,14 @@
           </a>
         }
       </div>
-      <a class="btn btn-primary find-buses" [routerLink]="['/search']" [queryParams]="{ from: d.route.from, to: d.route.to, date: today }">
-        <app-icon name="bus" [size]="18" /> {{ 'ROUTE.FIND_BUSES' | translate }}
-      </a>
+      <div class="btn-row head-actions">
+        <a class="btn btn-primary find-buses" [routerLink]="['/search']" [queryParams]="{ from: d.route.from, to: d.route.to, date: today }">
+          <app-icon name="bus" [size]="18" /> {{ 'ROUTE.FIND_BUSES' | translate }}
+        </a>
+        <a class="btn btn-outline plan-on-map" routerLink="/route-planner" [queryParams]="{ from: d.route.from, to: d.route.to }">
+          <app-icon name="map" [size]="18" /> {{ 'ROUTE.PLAN_ON_MAP' | translate }}
+        </a>
+      </div>
     </header>
 
     <div class="route-grid">
@@ -205,7 +210,7 @@
         <h2 class="sub-title">{{ 'COMMUNITY.ROUTE_POSTS_TITLE' | translate }}</h2>
         <p class="muted small">{{ 'COMMUNITY.ROUTE_POSTS_TEXT' | translate }}</p>
       </div>
-      <div class="cl-actions">
+      <div class="btn-row">
         <a class="btn btn-outline route-posts" routerLink="/community" [queryParams]="{ routeId: d.route.id }">{{ 'COMMUNITY.ROUTE_POSTS_LINK' | translate }}</a>
         <a class="btn btn-ghost" routerLink="/community/new" [queryParams]="{ board: 'routes', routeId: d.route.id }">{{ 'COMMUNITY.NEW_POST' | translate }}</a>
       </div>
