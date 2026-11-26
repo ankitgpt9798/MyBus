@@ -49,6 +49,21 @@ npm install
 | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | Web push keys. Leave empty to generate a pair on first start (saved to the git-ignored `backend/.vapid-keys.json`) |
 | `NOTIFY_RETRY_DELAYS_MS`, `NOTIFY_RETRY_INTERVAL_MS`, `NOTIFY_STREAM_HEARTBEAT_MS` | Tests only: shorten the email/push retry backoff (default 1, 5, 15 min), the retry check (30 s) and the live-stream heartbeat (15 s) |
 | `REMINDER_LEADS_MS`, `REMINDER_INTERVAL_MS` | Tests only: shorten the journey reminder lead times (default 24 h and 2 h before departure) and how often they are checked (1 min) |
+| `TOMTOM_API_KEY` | Route planner map provider key (see below). Stays on the server; leave empty to use the fallback |
+| `TOMTOM_BASE_URL`, `OSRM_BASE_URL`, `PLANNER_TIMEOUT_MS` | Tests only: point the planner at a mock server (defaults `https://api.tomtom.com` and `https://router.project-osrm.org`) and shorten the upstream timeout (default 8000 ms) |
+
+### Route planner (TomTom)
+
+The route planner uses a [TomTom](https://developer.tomtom.com/) key with these products enabled: **Search** (place typeahead), **Routing** (routes with live traffic and alternatives), **Traffic** (traffic data in routes) and **Map Display** (map tiles). The browser never sees the key: everything goes through the API.
+
+| Endpoint | What it does |
+| --- | --- |
+| `GET /api/planner/status` | Provider in use, whether live traffic is available, which map tiles to show |
+| `GET /api/planner/search?q=&near=lat,lon` | Place suggestions (cached for 10 minutes) |
+| `POST /api/planner/routes` | Suggested routes with alternatives, ETAs and traffic sections (`{ start, end, waypoints (up to 5), departAt? }`) |
+| `GET /api/planner/tiles/{z}/{x}/{y}.png?style=main\|night` | Map tiles with the key added on the server |
+
+Without a key, or when TomTom refuses it, times out or fails, the planner keeps working without live traffic: place search uses the MyBus cities and bus stops (no external geocoder), routes come from the public OSRM demo router, the map uses OpenStreetMap tiles, and the page shows a notice.
 
 ## Seed the database
 
