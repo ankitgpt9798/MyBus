@@ -11,6 +11,9 @@ import {
   ContentReportReason,
   ContentStatus,
   Contributor,
+  PlanResponse,
+  PlannerPlace,
+  PlannerStatus,
   PostSort,
   ProfileComment,
   ProfileReview,
@@ -138,6 +141,20 @@ export class ApiService {
   }
   visitPost(id: string, source: ShareNetwork) {
     return this.post<{ counted: boolean; visitCount: number }>(`/community/posts/${id}/visit`, { source });
+  }
+
+  // Route planner
+  plannerStatus() {
+    return this.get<PlannerStatus>('/planner/status');
+  }
+  plannerCities() {
+    return this.get<{ cities: { name: string; lat: number; lon: number }[] }>('/planner/cities');
+  }
+  plannerSearch(q: string, lang: string, near?: { lat: number; lon: number } | null) {
+    return this.get<{ results: PlannerPlace[]; provider: 'tomtom' | 'mybus' }>('/planner/search', { q, lang, near: near ? `${near.lat},${near.lon}` : undefined });
+  }
+  planRoutes(body: { start: { lat: number; lon: number }; end: { lat: number; lon: number }; waypoints: { lat: number; lon: number }[]; departAt?: string }) {
+    return this.post<PlanResponse>('/planner/routes', body);
   }
 
   // Public profiles

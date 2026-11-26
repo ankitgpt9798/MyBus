@@ -245,7 +245,8 @@
     "HOLD_HINT": {
       "one": "Your seats are held for {{n}} minute while you complete the booking.",
       "other": "Your seats are held for {{n}} minutes while you complete the booking."
-    }
+    },
+    "PLAN_ON_MAP": "Plan this route on the map"
   },
   "SEATS": {
     "AVAILABLE": "Available",
@@ -716,7 +717,12 @@
     "COMMUNITY_REPORT_OWN": "You cannot report your own post or comment.",
     "COMMUNITY_ALREADY_REPORTED": "You have already reported this.",
     "RATE_LIMITED": "Too many requests. Please try again in a minute.",
-    "USER_NOT_FOUND": "This member could not be found."
+    "USER_NOT_FOUND": "This member could not be found.",
+    "PLANNER_UNAVAILABLE": "Route planning is not available right now. Please try again later.",
+    "PLANNER_NO_ROUTE": "No road route was found between these places.",
+    "PLANNER_TOO_MANY_WAYPOINTS": "You can add at most 5 stops.",
+    "PLANNER_OUTSIDE_INDIA": "Please choose places in India.",
+    "PLANNER_TILES_UNAVAILABLE": "Map tiles are not available right now."
   },
   "FORBIDDEN": {
     "TITLE": "Access denied",
@@ -864,7 +870,8 @@
     "NO_TRIPS": "No upcoming departures on this route.",
     "BACK_HOME": "Back to home",
     "TAB_TITLE": "{{from}} to {{to}}",
-    "SHARE_TEXT": "Bus route {{from}} → {{to}} on MyBus"
+    "SHARE_TEXT": "Bus route {{from}} → {{to}} on MyBus",
+    "PLAN_ON_MAP": "Plan this route on the map"
   },
   "REVIEWS": {
     "STARS_LABEL": "{{value}} out of 5 stars",
@@ -1196,5 +1203,56 @@
     "COMMENTED_ON": "Comment on",
     "REPLIED_ON": "Reply on",
     "LOAD_MORE": "Show more"
+  },
+  "PLANNER": {
+    "TITLE": "Route planner",
+    "INTRO": "Plan a journey on the map: pick a start and a destination, add stops and compare the suggested routes.",
+    "NO_LIVE_TRAFFIC": "Live traffic unavailable — showing routes without traffic.",
+    "START": "Start",
+    "DESTINATION": "Destination",
+    "STOP_N": "Stop {{n}}",
+    "SEARCH_PLACEHOLDER": "City, bus stand or address",
+    "CLEAR_FIELD": "Clear {{field}}",
+    "SEARCHING": "Searching…",
+    "NO_SUGGESTIONS": "No matching places",
+    "SUGGESTION_COUNT": {
+      "one": "{{count}} suggestion",
+      "other": "{{count}} suggestions"
+    },
+    "MOVE_UP": "Move stop {{n}} up",
+    "MOVE_DOWN": "Move stop {{n}} down",
+    "REMOVE_STOP": "Remove stop {{n}}",
+    "ADD_STOP": "Add a stop",
+    "STOPS_LEFT": {
+      "one": "{{count}} more stop allowed",
+      "other": "{{count}} more stops allowed"
+    },
+    "SWAP": "Swap start and destination",
+    "QUICK_PICKS": "MyBus cities",
+    "DEPART": "Departure",
+    "DEPART_NOW": "Leave now",
+    "DEPART_LATER": "Leave later",
+    "DEPART_AT": "Departure date and time",
+    "PLAN": "Plan route",
+    "PLANNING": "Planning…",
+    "MAP_CLICK_HINT": "Tip: click the map to set the field you are editing.",
+    "SUGGESTED": {
+      "one": "{{count}} suggested route",
+      "other": "{{count}} suggested routes"
+    },
+    "PROVIDER_LIVE": "Travel times include live traffic.",
+    "PROVIDER_FALLBACK": "Travel times are estimates without live traffic.",
+    "FASTEST": "Fastest route",
+    "ALTERNATIVE": "Alternative {{n}}",
+    "KM": "{{km}} km",
+    "ARRIVE": "arrive {{time}}",
+    "TRAFFIC_DELAY": {
+      "one": "+{{count}} min traffic delay",
+      "other": "+{{count}} min traffic delay"
+    },
+    "NO_DELAY": "No traffic delays",
+    "EMPTY_TITLE": "Where are you going?",
+    "EMPTY_TEXT": "Pick a start and a destination to see suggested routes with travel times.",
+    "MAP_LABEL": "Route map"
   }
 }

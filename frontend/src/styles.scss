@@ -1,5 +1,8 @@
 /* MyBus design system: plain SCSS + CSS custom properties (no CSS framework). */
 
+// Leaflet map styles (route planner); its control images are bundled by the build.
+@use 'leaflet/dist/leaflet';
+
 :root {
   --color-bg: #f4f5f7;
   --color-surface: #ffffff;
@@ -113,6 +116,7 @@ img { max-width: 100%; }
 .sub-title { margin: 1.25rem 0 0.75rem; font-size: 1rem; &:first-child { margin-top: 0; } }
 .muted { color: var(--color-text-muted); }
 .small { font-size: 0.85rem; }
+.btn-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .edited { font-style: italic; }
 .text-warning { color: var(--color-warning); font-weight: 600; }
 .sr-only {

@@ -1,0 +1,134 @@
+<div class="planner">
+  <section class="panel" aria-labelledby="planner-title">
+    <h1 class="page-title" id="planner-title">{{ 'PLANNER.TITLE' | translate }}</h1>
+    <p class="muted small intro">{{ 'PLANNER.INTRO' | translate }}</p>
+
+    @if (!liveTraffic()) {
+      <div class="alert alert-warning traffic-notice" role="status">
+        <app-icon name="alert" [size]="16" />
+        <span>{{ 'PLANNER.NO_LIVE_TRAFFIC' | translate }}</span>
+      </div>
+    }
+
+    <form class="card plan-form" (submit)="submit($event)" novalidate>
+      <div class="ends">
+        <app-place-input inputId="pl-start" badge="A" [label]="'PLANNER.START' | translate" [placeholder]="'PLANNER.SEARCH_PLACEHOLDER' | translate"
+          [value]="start()" [near]="end()" (picked)="setField('start', $event)" (focused)="activeField.set('start')" />
+
+        @for (w of waypoints(); track w.key; let i = $index, first = $first, last = $last) {
+          <div class="via-row" [attr.data-key]="w.key" [attr.data-via]="i">
+            <app-place-input [inputId]="'via-' + w.key" [badge]="'' + (i + 1)" [label]="'PLANNER.STOP_N' | translate: { n: i + 1 }"
+              [placeholder]="'PLANNER.SEARCH_PLACEHOLDER' | translate" [value]="w.place" [near]="start()" (picked)="setField(w.key, $event)" (focused)="activeField.set(w.key)" />
+            <div class="via-actions">
+              <button type="button" class="icon-btn via-up" [disabled]="first" (click)="moveWaypoint(w.key, -1)" [attr.aria-label]="'PLANNER.MOVE_UP' | translate: { n: i + 1 }">
+                <app-icon name="chevron-left" [size]="16" class="up" />
+              </button>
+              <button type="button" class="icon-btn via-down" [disabled]="last" (click)="moveWaypoint(w.key, 1)" [attr.aria-label]="'PLANNER.MOVE_DOWN' | translate: { n: i + 1 }">
+                <app-icon name="chevron-left" [size]="16" class="down" />
+              </button>
+              <button type="button" class="icon-btn via-remove" (click)="removeWaypoint(w.key)" [attr.aria-label]="'PLANNER.REMOVE_STOP' | translate: { n: i + 1 }">
+                <app-icon name="close" [size]="16" />
+              </button>
+            </div>
+          </div>
+        }
+
+        <div class="stop-row">
+          <button type="button" class="btn btn-ghost btn-sm add-stop" [disabled]="waypoints().length >= maxWaypoints" (click)="addWaypoint()">
+            + {{ 'PLANNER.ADD_STOP' | translate }}
+          </button>
+          <span class="small muted stops-left">{{ 'PLANNER.STOPS_LEFT' | plural: maxWaypoints - waypoints().length : { count: maxWaypoints - waypoints().length } }}</span>
+          <button type="button" class="icon-btn swap-btn" (click)="swap()" [attr.aria-label]="'PLANNER.SWAP' | translate" [title]="'PLANNER.SWAP' | translate">
+            <app-icon name="swap" [size]="18" />
+          </button>
+        </div>
+
+        <app-place-input inputId="pl-end" badge="B" [label]="'PLANNER.DESTINATION' | translate" [placeholder]="'PLANNER.SEARCH_PLACEHOLDER' | translate"
+          [value]="end()" [near]="start()" (picked)="setField('end', $event)" (focused)="activeField.set('end')" />
+      </div>
+
+      @if (cities().length) {
+        <div class="quick" role="group" [attr.aria-label]="'PLANNER.QUICK_PICKS' | translate">
+          <span class="small muted">{{ 'PLANNER.QUICK_PICKS' | translate }}</span>
+          <div class="quick-chips">
+            @for (c of cities(); track c.name) {
+              <button type="button" class="chip city-pick" [attr.data-city]="c.name" (mousedown)="$event.preventDefault()" (click)="pickCity(c)">{{ c.name | city }}</button>
+            }
+          </div>
+        </div>
+      }
+
+      <fieldset class="depart">
+        <legend class="small">{{ 'PLANNER.DEPART' | translate }}</legend>
+        <label class="check"><input type="radio" name="depart" [checked]="!departLater()" (change)="departLater.set(false)" /> {{ 'PLANNER.DEPART_NOW' | translate }}</label>
+        <label class="check"><input type="radio" name="depart" class="depart-later" [checked]="departLater()" (change)="departLater.set(true)" /> {{ 'PLANNER.DEPART_LATER' | translate }}</label>
+        @if (departLater()) {
+          <label class="sr-only" for="pl-depart">{{ 'PLANNER.DEPART_AT' | translate }}</label>
+          <input id="pl-depart" type="datetime-local" [min]="minDepart()" [value]="departAt()" (change)="departAt.set($any($event.target).value)" />
+        }
+      </fieldset>
+
+      <button type="submit" class="btn btn-primary plan-btn" [disabled]="!canPlan()">
+        {{ (planning() ? 'PLANNER.PLANNING' : 'PLANNER.PLAN') | translate }}
+      </button>
+      <p class="small muted hint">{{ 'PLANNER.MAP_CLICK_HINT' | translate }}</p>
+    </form>
+
+    @if (error(); as e) {
+      <div class="alert alert-error plan-error" role="alert">{{ e | translateOr: 'ERRORS.GENERIC' }}</div>
+    }
+
+    @if (result(); as r) {
+      <section class="routes" aria-labelledby="routes-title">
+        <h2 class="sub-title" id="routes-title">{{ 'PLANNER.SUGGESTED' | plural: r.routes.length : { count: r.routes.length } }}</h2>
+        <p class="small muted provider-note">{{ (r.liveTraffic ? 'PLANNER.PROVIDER_LIVE' : 'PLANNER.PROVIDER_FALLBACK') | translate }}</p>
+        <ul class="route-list">
+          @for (rt of r.routes; track rt.id; let i = $index) {
+            <li>
+              <button type="button" class="route-card" [class.selected]="rt.id === selectedId()" [attr.aria-pressed]="rt.id === selectedId()" [attr.data-route]="rt.id" (click)="selectedId.set(rt.id)">
+                <span class="rc-head">
+                  @let title = routeTitle(rt);
+                  <span class="rc-title">{{ title.key | translate: { n: title.n } }}</span>
+                  <strong class="rc-time">{{ minutes(rt.summary.travelTimeS) | duration }}</strong>
+                </span>
+                <span class="rc-meta small">
+                  <span class="rc-distance">{{ 'PLANNER.KM' | translate: { km: (rt.summary.distanceM / 1000 | num) } }}</span> ·
+                  <span class="rc-arrive">{{ 'PLANNER.ARRIVE' | translate: { time: (rt.summary.arrivalTime | appDate: arrivalStyle(rt)) } }}</span>
+                </span>
+                @if (r.liveTraffic) {
+                  <span class="rc-traffic small" [class.delayed]="rt.summary.trafficDelayS >= 60">
+                    @if (rt.summary.trafficDelayS >= 60) {
+                      {{ 'PLANNER.TRAFFIC_DELAY' | plural: minutes(rt.summary.trafficDelayS) : { count: minutes(rt.summary.trafficDelayS) } }}
+                    } @else {
+                      {{ 'PLANNER.NO_DELAY' | translate }}
+                    }
+                  </span>
+                }
+              </button>
+            </li>
+          }
+        </ul>
+      </section>
+    } @else if (planning()) {
+      <div class="card skeleton routes-skeleton"></div>
+    } @else if (!error()) {
+      <div class="empty card">
+        <app-icon name="map" [size]="28" />
+        <p><strong>{{ 'PLANNER.EMPTY_TITLE' | translate }}</strong></p>
+        <p class="small muted">{{ 'PLANNER.EMPTY_TEXT' | translate }}</p>
+      </div>
+    }
+  </section>
+
+  <div class="map-wrap">
+    <app-planner-map
+      [routes]="result()?.routes ?? []"
+      [selectedId]="selectedId()"
+      [stops]="stops()"
+      [tiles]="tiles()"
+      (routeSelected)="selectedId.set($event)"
+      (mapClicked)="onMapClick($event)"
+      (tilesFellBack)="tilesFallback.set(true)"
+    />
+  </div>
+</div>

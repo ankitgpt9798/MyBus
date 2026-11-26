@@ -1,7 +1,6 @@
 import { Routes } from '@angular/router';
 import { adminGuard, authGuard, guestGuard } from './core/guards';
 
-const comingSoon = () => import('./pages/coming-soon/coming-soon').then((m) => m.ComingSoonPage);
 
 export const routes: Routes = [
   { path: '', loadComponent: () => import('./pages/home/home').then((m) => m.HomePage), title: 'TITLES.HOME' },
@@ -110,6 +109,6 @@ export const routes: Routes = [
   { path: 'forbidden', loadComponent: () => import('./pages/forbidden/forbidden').then((m) => m.ForbiddenPage), title: 'TITLES.FORBIDDEN' },
 
   // Placeholders: each section is replaced by its real page as it is built.
-  { path: 'route-planner', loadComponent: comingSoon, data: { feature: 'ROUTE_PLANNER' }, title: 'TITLES.ROUTE_PLANNER' },
+  { path: 'route-planner', loadComponent: () => import('./pages/planner/route-planner').then((m) => m.RoutePlannerPage), title: 'TITLES.ROUTE_PLANNER' },
   { path: '**', loadComponent: () => import('./pages/not-found/not-found').then((m) => m.NotFoundPage), title: 'TITLES.NOT_FOUND' },
 ];

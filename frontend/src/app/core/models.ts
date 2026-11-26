@@ -533,3 +533,60 @@ export interface ActivityItem {
   reply?: boolean;
   rating?: number;
 }
+
+// Route planner (R3)
+
+export type PlaceType = 'city' | 'stop' | 'poi' | 'street' | 'address' | 'pin';
+
+export interface PlannerPlace {
+  id: string;
+  label: string;
+  address: string;
+  lat: number;
+  lon: number;
+  type: PlaceType;
+}
+
+export interface PlannerStatus {
+  provider: 'tomtom' | 'osrm';
+  liveTraffic: boolean;
+  tiles: 'tomtom' | 'osm';
+  reason?: string;
+}
+
+export interface TrafficSection {
+  startIndex: number;
+  endIndex: number;
+  delayS: number;
+  magnitude: number;
+  simpleCategory: string;
+  effectiveSpeedKmh: number | null;
+}
+
+export interface PlannedRoute {
+  id: string;
+  kind: 'fastest' | 'alternative';
+  summary: {
+    distanceM: number;
+    travelTimeS: number;
+    noTrafficTimeS: number;
+    historicTrafficTimeS: number | null;
+    liveIncidentsTimeS: number | null;
+    trafficDelayS: number;
+    trafficLengthM: number;
+    departureTime: string;
+    arrivalTime: string;
+  };
+  points: [number, number][];
+  bbox: [[number, number], [number, number]];
+  legs: { distanceM: number; travelTimeS: number; trafficDelayS: number; startIndex: number }[];
+  trafficSections: TrafficSection[];
+}
+
+export interface PlanResponse {
+  routes: PlannedRoute[];
+  provider: 'tomtom' | 'osrm';
+  liveTraffic: boolean;
+  fallbackReason?: string;
+  departAt: string | null;
+}
