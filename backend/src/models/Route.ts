@@ -7,6 +7,9 @@ const stopSchema = new Schema(
     name: { type: String, required: true },
     type: { type: String, enum: STOP_TYPES, required: true },
     offsetMinutes: { type: Number, required: true }, // minutes after the trip's departure
+    // Location (WGS84) for the route planner; older data may not have it.
+    lat: Number,
+    lon: Number,
   },
   { _id: false },
 );

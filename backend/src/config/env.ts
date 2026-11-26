@@ -42,6 +42,15 @@ export const env = {
     from: str('MAIL_FROM', 'MyBus <no-reply@mybus.local>'),
   },
   seatHoldMinutes: num('SEAT_HOLD_MINUTES', 10),
+  // Route planner. The TomTom key stays on the server (Search, Routing, Traffic and Map Display APIs).
+  // Without a working key the planner falls back to the app's own places and the public OSRM router.
+  planner: {
+    tomtomKey: str('TOMTOM_API_KEY').trim(),
+    // Tests only: point the providers at a local mock server and shorten the upstream timeout.
+    tomtomBaseUrl: str('TOMTOM_BASE_URL', 'https://api.tomtom.com').replace(/\/$/, ''),
+    osrmBaseUrl: str('OSRM_BASE_URL', 'https://router.project-osrm.org').replace(/\/$/, ''),
+    timeoutMs: num('PLANNER_TIMEOUT_MS', 8000),
+  },
   // Web push (VAPID). If the keys are not set, they are generated once and kept in backend/.vapid-keys.json.
   vapid: {
     publicKey: str('VAPID_PUBLIC_KEY'),

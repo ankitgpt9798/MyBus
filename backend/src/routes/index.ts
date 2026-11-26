@@ -5,6 +5,7 @@ import * as auth from '../controllers/auth.controller';
 import * as bookings from '../controllers/booking.controller';
 import * as community from '../controllers/community.controller';
 import * as notifications from '../controllers/notification.controller';
+import * as planner from '../controllers/planner.controller';
 import * as profiles from '../controllers/profile.controller';
 import * as promotions from '../controllers/promotion.controller';
 import * as reviews from '../controllers/review.controller';
@@ -45,6 +46,13 @@ api.get('/routes', trips.listAllRoutes);
 api.get('/routes/popular', trips.popularRoutes);
 api.get('/routes/:id', trips.getRoute);
 api.get('/routes/:id/reviews', optionalAuth, reviews.listForRoute);
+
+// Route planner (R3): the map provider key stays on the server
+api.get('/planner/status', planner.status);
+api.get('/planner/cities', planner.cities);
+api.get('/planner/search', optionalAuth, planner.search);
+api.post('/planner/routes', planner.routes);
+api.get('/planner/tiles/:z/:x/:y.png', planner.tile);
 
 // Community (R1): reading and sharing are public; posting, commenting, liking and reporting need a verified account
 api.get('/community/boards', community.boards);
