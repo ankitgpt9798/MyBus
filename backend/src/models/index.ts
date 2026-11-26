@@ -11,5 +11,6 @@ export * from './Review';
 export * from './Promotion';
 export * from './RevokedToken';
 export * from './Route';
+export * from './SavedRoute';
 export * from './Trip';
 export * from './User';

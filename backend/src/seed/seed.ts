@@ -21,6 +21,7 @@ import { seedCommunity, seedReactions } from './community';
 import { Comment } from '../models/Comment';
 import { Post } from '../models/Post';
 import { Reaction } from '../models/Reaction';
+import { SavedRoute } from '../models/SavedRoute';
 import { recomputeRouteRating } from '../services/review.service';
 import { HOUR_MS, MINUTE_MS, istDateString, istDateTime } from '../utils/time';
 import {
@@ -150,7 +151,7 @@ async function upsertUser(data: { name: string; email: string; password: string;
 
 async function main() {
   await connectDb();
-  const models = [User, RevokedToken, Operator, Bus, Route, Trip, Booking, Review, Post, Comment, Reaction];
+  const models = [User, RevokedToken, Operator, Bus, Route, Trip, Booking, Review, Post, Comment, Reaction, SavedRoute];
   for (const m of models) await m.syncIndexes();
 
   console.log('[seed] clearing catalogue and bookings…');

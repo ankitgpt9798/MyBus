@@ -6,6 +6,7 @@ import * as bookings from '../controllers/booking.controller';
 import * as community from '../controllers/community.controller';
 import * as notifications from '../controllers/notification.controller';
 import * as planner from '../controllers/planner.controller';
+import * as savedRoutes from '../controllers/saved-route.controller';
 import * as profiles from '../controllers/profile.controller';
 import * as promotions from '../controllers/promotion.controller';
 import * as reviews from '../controllers/review.controller';
@@ -54,6 +55,11 @@ api.get('/planner/search', optionalAuth, planner.search);
 api.post('/planner/routes', planner.routes);
 api.get('/planner/tiles/:z/:x/:y.png', planner.tile);
 api.get('/planner/traffic-tiles/:z/:x/:y.png', planner.trafficTileImage);
+api.get('/planner/saved', requireAuth, savedRoutes.list);
+api.post('/planner/saved', requireAuth, savedRoutes.create);
+api.patch('/planner/saved/:id', requireAuth, savedRoutes.rename);
+api.delete('/planner/saved/:id', requireAuth, savedRoutes.remove);
+api.post('/planner/saved/:id/use', requireAuth, savedRoutes.use);
 
 // Community (R1): reading and sharing are public; posting, commenting, liking and reporting need a verified account
 api.get('/community/boards', community.boards);
