@@ -88,7 +88,9 @@
     "COMMUNITY_TITLE": "Travel smarter with the MyBus community",
     "COMMUNITY_TEXT": "Read journey stories and tips from fellow travellers, and plan routes with live traffic.",
     "FROM_COMMUNITY": "From the community",
-    "SEE_TRENDING": "See what is trending"
+    "SEE_TRENDING": "See what is trending",
+    "SAVED_ROUTES": "Your saved routes",
+    "OPEN_PLANNER": "Open the route planner"
   },
   "SEARCH": {
     "FROM": "From",
@@ -722,7 +724,10 @@
     "PLANNER_NO_ROUTE": "No road route was found between these places.",
     "PLANNER_TOO_MANY_WAYPOINTS": "You can add at most 5 stops.",
     "PLANNER_OUTSIDE_INDIA": "Please choose places in India.",
-    "PLANNER_TILES_UNAVAILABLE": "Map tiles are not available right now."
+    "PLANNER_TILES_UNAVAILABLE": "Map tiles are not available right now.",
+    "PLANNER_SAVED_LIMIT": "You can save up to 20 routes. Delete one to save another.",
+    "PLANNER_SAVED_DUPLICATE": "This route is already saved.",
+    "PLANNER_SAVED_NOT_FOUND": "This saved route could not be found."
   },
   "FORBIDDEN": {
     "TITLE": "Access denied",
@@ -1253,6 +1258,111 @@
     "NO_DELAY": "No traffic delays",
     "EMPTY_TITLE": "Where are you going?",
     "EMPTY_TEXT": "Pick a start and a destination to see suggested routes with travel times.",
-    "MAP_LABEL": "Route map"
+    "MAP_LABEL": "Route map",
+    "TRAFFIC_LAYER": "Traffic layer",
+    "LEGEND": "Traffic legend",
+    "LEVELS": {
+      "free": "Free flow",
+      "slow": "Slow",
+      "queuing": "Queuing",
+      "stationary": "Stationary",
+      "closed": "Closed"
+    },
+    "DELAY_MIN": {
+      "one": "+{{count}} min delay",
+      "other": "+{{count}} min delay"
+    },
+    "NO_EXTRA_DELAY": "No extra delay",
+    "CATEGORY": {
+      "JAM": "Traffic jam",
+      "ROAD_WORK": "Road works",
+      "ROAD_CLOSURE": "Road closed",
+      "OTHER": "Traffic"
+    },
+    "SPEED": "{{speed}} km/h",
+    "INCIDENTS_LABEL": "Traffic on this route",
+    "WITHOUT_TRAFFIC": "{{time}} without traffic",
+    "IN_TRAFFIC": "{{km}} km in traffic",
+    "CONGESTION": {
+      "low": "Low traffic",
+      "moderate": "Moderate traffic",
+      "heavy": "Heavy traffic"
+    },
+    "FASTER_AVAILABLE": "Faster route available",
+    "SAVES": {
+      "one": "{{route}} saves {{count}} min due to traffic",
+      "other": "{{route}} saves {{count}} min due to traffic"
+    },
+    "SWITCH": "Switch",
+    "DISMISS": "Dismiss",
+    "LAST_UPDATED": "Last updated {{time}}",
+    "UPDATES": {
+      "live": "live updates on",
+      "paused": "updates paused while the page is hidden",
+      "stopped": "updates paused after inactivity",
+      "off": "live updates off"
+    },
+    "REFRESH_NOW": "Refresh now",
+    "REFRESHING": "Refreshing…",
+    "LIVE_UPDATES_UNAVAILABLE": "Live updates unavailable",
+    "UPDATE_SLOWER": {
+      "one": "Traffic update: your route is now {{count}} min slower",
+      "other": "Traffic update: your route is now {{count}} min slower"
+    },
+    "UPDATE_FASTER": {
+      "one": "Traffic update: your route is now {{count}} min faster",
+      "other": "Traffic update: your route is now {{count}} min faster"
+    },
+    "TAB_TITLE": "{{from}} → {{to}} · Route planner",
+    "VIEW_LABEL": "How to show the routes",
+    "VIEW_LIST": "Routes",
+    "VIEW_COMPARE": "Compare",
+    "COMPARE_BY": "Sort by",
+    "SORT": {
+      "time": "Travel time",
+      "distance": "Distance",
+      "traffic": "Traffic impact"
+    },
+    "COMPARE_TITLE": "Route comparison",
+    "COMPARE_CAPTION": "Suggested routes compared side by side",
+    "COL": {
+      "route": "Route",
+      "distance": "Distance",
+      "time": "Travel time",
+      "noTraffic": "Without traffic",
+      "delay": "Traffic delay",
+      "congested": "In traffic",
+      "congestion": "Congestion",
+      "arrival": "Arrival",
+      "incidents": "Incidents"
+    },
+    "MIN": "{{n}} min",
+    "BEST_NOTE": "Best value in each column",
+    "SAVE_ROUTE": "Save this route",
+    "SAVE_TITLE": "Save this route",
+    "ROUTE_NAME": "Name",
+    "SAVED_TOAST": "Route saved",
+    "ALREADY_SAVED_AS": "This route is already saved as \"{{name}}\".",
+    "SAVED_TITLE": "Saved routes",
+    "SAVED_SORT": "Sort saved routes",
+    "SAVED_MOST_USED": "Most used",
+    "SAVED_RECENT": "Recently used",
+    "SAVED_EMPTY": "No saved routes yet. Plan a route and save it for quick access.",
+    "VIA_STOPS": {
+      "one": "via {{count}} stop",
+      "other": "via {{count}} stops"
+    },
+    "USED_TIMES": {
+      "one": "Used {{count}} time",
+      "other": "Used {{count}} times"
+    },
+    "RENAME_ROUTE": "Rename {{name}}",
+    "DELETE_ROUTE": "Delete {{name}}",
+    "RENAME_TITLE": "Rename saved route",
+    "SAVE_NAME": "Save name",
+    "DELETE_TITLE": "Delete this saved route?",
+    "DELETE_TEXT": "\"{{name}}\" will be removed from your saved routes.",
+    "RENAMED": "Saved route renamed",
+    "DELETED": "Saved route deleted"
   }
 }

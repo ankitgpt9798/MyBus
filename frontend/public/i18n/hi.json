@@ -88,7 +88,9 @@
     "COMMUNITY_TITLE": "MyBus समुदाय के साथ समझदारी से यात्रा करें",
     "COMMUNITY_TEXT": "साथी यात्रियों की कहानियाँ और सुझाव पढ़ें, और लाइव ट्रैफ़िक के साथ रूट की योजना बनाएँ।",
     "FROM_COMMUNITY": "समुदाय से",
-    "SEE_TRENDING": "देखें क्या ट्रेंड कर रहा है"
+    "SEE_TRENDING": "देखें क्या ट्रेंड कर रहा है",
+    "SAVED_ROUTES": "आपके सहेजे गए रूट",
+    "OPEN_PLANNER": "रूट प्लानर खोलें"
   },
   "SEARCH": {
     "FROM": "कहाँ से",
@@ -722,7 +724,10 @@
     "PLANNER_NO_ROUTE": "इन जगहों के बीच कोई सड़क रूट नहीं मिला।",
     "PLANNER_TOO_MANY_WAYPOINTS": "आप अधिकतम 5 पड़ाव जोड़ सकते हैं।",
     "PLANNER_OUTSIDE_INDIA": "कृपया भारत में स्थित जगहें चुनें।",
-    "PLANNER_TILES_UNAVAILABLE": "मानचित्र अभी उपलब्ध नहीं है।"
+    "PLANNER_TILES_UNAVAILABLE": "मानचित्र अभी उपलब्ध नहीं है।",
+    "PLANNER_SAVED_LIMIT": "आप अधिकतम 20 रूट सहेज सकते हैं। नया सहेजने के लिए कोई एक हटाएँ।",
+    "PLANNER_SAVED_DUPLICATE": "यह रूट पहले से सहेजा गया है।",
+    "PLANNER_SAVED_NOT_FOUND": "यह सहेजा गया रूट नहीं मिला।"
   },
   "FORBIDDEN": {
     "TITLE": "पहुँच अस्वीकृत",
@@ -1253,6 +1258,111 @@
     "NO_DELAY": "ट्रैफ़िक से कोई देरी नहीं",
     "EMPTY_TITLE": "आप कहाँ जा रहे हैं?",
     "EMPTY_TEXT": "सुझाए गए रूट और यात्रा समय देखने के लिए शुरुआत और मंज़िल चुनें।",
-    "MAP_LABEL": "रूट का मानचित्र"
+    "MAP_LABEL": "रूट का मानचित्र",
+    "TRAFFIC_LAYER": "ट्रैफ़िक परत",
+    "LEGEND": "ट्रैफ़िक संकेत",
+    "LEVELS": {
+      "free": "सुचारू",
+      "slow": "धीमा",
+      "queuing": "कतार",
+      "stationary": "रुका हुआ",
+      "closed": "बंद"
+    },
+    "DELAY_MIN": {
+      "one": "+{{count}} मिनट की देरी",
+      "other": "+{{count}} मिनट की देरी"
+    },
+    "NO_EXTRA_DELAY": "कोई अतिरिक्त देरी नहीं",
+    "CATEGORY": {
+      "JAM": "ट्रैफ़िक जाम",
+      "ROAD_WORK": "सड़क निर्माण कार्य",
+      "ROAD_CLOSURE": "सड़क बंद",
+      "OTHER": "ट्रैफ़िक"
+    },
+    "SPEED": "{{speed}} किमी/घंटा",
+    "INCIDENTS_LABEL": "इस रूट पर ट्रैफ़िक",
+    "WITHOUT_TRAFFIC": "बिना ट्रैफ़िक {{time}}",
+    "IN_TRAFFIC": "{{km}} किमी ट्रैफ़िक में",
+    "CONGESTION": {
+      "low": "कम ट्रैफ़िक",
+      "moderate": "मध्यम ट्रैफ़िक",
+      "heavy": "भारी ट्रैफ़िक"
+    },
+    "FASTER_AVAILABLE": "तेज़ रूट उपलब्ध है",
+    "SAVES": {
+      "one": "ट्रैफ़िक के कारण {{route}} से {{count}} मिनट बचेंगे",
+      "other": "ट्रैफ़िक के कारण {{route}} से {{count}} मिनट बचेंगे"
+    },
+    "SWITCH": "बदलें",
+    "DISMISS": "हटाएँ",
+    "LAST_UPDATED": "आख़िरी अपडेट {{time}}",
+    "UPDATES": {
+      "live": "लाइव अपडेट चालू",
+      "paused": "पेज छिपा होने तक अपडेट रुके हैं",
+      "stopped": "निष्क्रियता के कारण अपडेट रुके हैं",
+      "off": "लाइव अपडेट बंद"
+    },
+    "REFRESH_NOW": "अभी रीफ़्रेश करें",
+    "REFRESHING": "रीफ़्रेश हो रहा है…",
+    "LIVE_UPDATES_UNAVAILABLE": "लाइव अपडेट उपलब्ध नहीं",
+    "UPDATE_SLOWER": {
+      "one": "ट्रैफ़िक अपडेट: आपका रूट अब {{count}} मिनट धीमा है",
+      "other": "ट्रैफ़िक अपडेट: आपका रूट अब {{count}} मिनट धीमा है"
+    },
+    "UPDATE_FASTER": {
+      "one": "ट्रैफ़िक अपडेट: आपका रूट अब {{count}} मिनट तेज़ है",
+      "other": "ट्रैफ़िक अपडेट: आपका रूट अब {{count}} मिनट तेज़ है"
+    },
+    "TAB_TITLE": "{{from}} → {{to}} · रूट प्लानर",
+    "VIEW_LABEL": "रूट कैसे दिखाएँ",
+    "VIEW_LIST": "रूट",
+    "VIEW_COMPARE": "तुलना",
+    "COMPARE_BY": "इसके अनुसार क्रम",
+    "SORT": {
+      "time": "यात्रा समय",
+      "distance": "दूरी",
+      "traffic": "ट्रैफ़िक का असर"
+    },
+    "COMPARE_TITLE": "रूट की तुलना",
+    "COMPARE_CAPTION": "सुझाए गए रूट की साथ-साथ तुलना",
+    "COL": {
+      "route": "रूट",
+      "distance": "दूरी",
+      "time": "यात्रा समय",
+      "noTraffic": "बिना ट्रैफ़िक",
+      "delay": "ट्रैफ़िक देरी",
+      "congested": "ट्रैफ़िक में",
+      "congestion": "भीड़",
+      "arrival": "पहुँच",
+      "incidents": "घटनाएँ"
+    },
+    "MIN": "{{n}} मिनट",
+    "BEST_NOTE": "हर कॉलम में सबसे अच्छा मान",
+    "SAVE_ROUTE": "यह रूट सहेजें",
+    "SAVE_TITLE": "यह रूट सहेजें",
+    "ROUTE_NAME": "नाम",
+    "SAVED_TOAST": "रूट सहेजा गया",
+    "ALREADY_SAVED_AS": "यह रूट पहले से \"{{name}}\" नाम से सहेजा गया है।",
+    "SAVED_TITLE": "सहेजे गए रूट",
+    "SAVED_SORT": "सहेजे गए रूट का क्रम",
+    "SAVED_MOST_USED": "सबसे ज़्यादा इस्तेमाल",
+    "SAVED_RECENT": "हाल में इस्तेमाल",
+    "SAVED_EMPTY": "अभी कोई सहेजा गया रूट नहीं। रूट बनाएँ और जल्दी खोलने के लिए सहेज लें।",
+    "VIA_STOPS": {
+      "one": "{{count}} पड़ाव होकर",
+      "other": "{{count}} पड़ाव होकर"
+    },
+    "USED_TIMES": {
+      "one": "{{count}} बार इस्तेमाल",
+      "other": "{{count}} बार इस्तेमाल"
+    },
+    "RENAME_ROUTE": "{{name}} का नाम बदलें",
+    "DELETE_ROUTE": "{{name}} हटाएँ",
+    "RENAME_TITLE": "सहेजे गए रूट का नाम बदलें",
+    "SAVE_NAME": "नाम सहेजें",
+    "DELETE_TITLE": "यह सहेजा गया रूट हटाएँ?",
+    "DELETE_TEXT": "\"{{name}}\" आपके सहेजे गए रूट से हटा दिया जाएगा।",
+    "RENAMED": "सहेजे गए रूट का नाम बदल दिया गया",
+    "DELETED": "सहेजा गया रूट हटा दिया गया"
   }
 }

@@ -551,8 +551,12 @@ export interface PlannerStatus {
   provider: 'tomtom' | 'osrm';
   liveTraffic: boolean;
   tiles: 'tomtom' | 'osm';
+  /** How often an open plan is refreshed while live traffic is available. */
+  refreshMs?: number;
   reason?: string;
 }
+
+export type Congestion = 'low' | 'moderate' | 'heavy';
 
 export interface TrafficSection {
   startIndex: number;
@@ -576,6 +580,10 @@ export interface PlannedRoute {
     trafficLengthM: number;
     departureTime: string;
     arrivalTime: string;
+    /** Live traffic only (null without). */
+    congestion: Congestion | null;
+    congestedPct: number | null;
+    incidents: number | null;
   };
   points: [number, number][];
   bbox: [[number, number], [number, number]];
@@ -589,4 +597,22 @@ export interface PlanResponse {
   liveTraffic: boolean;
   fallbackReason?: string;
   departAt: string | null;
+  fetchedAt: string;
+}
+
+export interface SavedPlace {
+  label: string;
+  lat: number;
+  lon: number;
+}
+
+export interface SavedRoute {
+  id: string;
+  name: string;
+  start: SavedPlace;
+  end: SavedPlace;
+  waypoints: SavedPlace[];
+  useCount: number;
+  lastUsedAt: string | null;
+  createdAt: string;
 }

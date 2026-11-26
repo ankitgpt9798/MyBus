@@ -14,6 +14,8 @@ import {
   PlanResponse,
   PlannerPlace,
   PlannerStatus,
+  SavedPlace,
+  SavedRoute,
   PostSort,
   ProfileComment,
   ProfileReview,
@@ -155,6 +157,22 @@ export class ApiService {
   }
   planRoutes(body: { start: { lat: number; lon: number }; end: { lat: number; lon: number }; waypoints: { lat: number; lon: number }[]; departAt?: string }) {
     return this.post<PlanResponse>('/planner/routes', body);
+  }
+
+  savedRoutes(sort: 'used' | 'recent' = 'used', limit?: number) {
+    return this.get<{ saved: SavedRoute[]; max: number; sort: string }>('/planner/saved', { sort, limit });
+  }
+  saveRoute(body: { name: string; start: SavedPlace; end: SavedPlace; waypoints: SavedPlace[] }) {
+    return this.post<{ saved: SavedRoute }>('/planner/saved', body);
+  }
+  renameSavedRoute(id: string, name: string) {
+    return this.patch<{ saved: SavedRoute }>(`/planner/saved/${id}`, { name });
+  }
+  deleteSavedRoute(id: string) {
+    return this.del<{ deleted: boolean }>(`/planner/saved/${id}`);
+  }
+  useSavedRoute(id: string) {
+    return this.post<{ saved: SavedRoute }>(`/planner/saved/${id}/use`);
   }
 
   // Public profiles

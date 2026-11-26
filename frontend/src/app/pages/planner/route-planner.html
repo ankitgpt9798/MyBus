@@ -10,6 +10,10 @@
       </div>
     }
 
+    @if (auth.isLoggedIn()) {
+      <app-saved-routes [version]="savedVersion()" (load)="openSaved($event)" />
+    }
+
     <form class="card plan-form" (submit)="submit($event)" novalidate>
       <div class="ends">
         <app-place-input inputId="pl-start" badge="A" [label]="'PLANNER.START' | translate" [placeholder]="'PLANNER.SEARCH_PLACEHOLDER' | translate"
@@ -80,34 +84,100 @@
 
     @if (result(); as r) {
       <section class="routes" aria-labelledby="routes-title">
-        <h2 class="sub-title" id="routes-title">{{ 'PLANNER.SUGGESTED' | plural: r.routes.length : { count: r.routes.length } }}</h2>
+        <div class="routes-head">
+          <h2 class="sub-title" id="routes-title">{{ 'PLANNER.SUGGESTED' | plural: r.routes.length : { count: r.routes.length } }}</h2>
+          <button type="button" class="btn btn-outline btn-sm save-route" (click)="openSave()"><app-icon name="star" [size]="14" /> {{ 'PLANNER.SAVE_ROUTE' | translate }}</button>
+        </div>
         <p class="small muted provider-note">{{ (r.liveTraffic ? 'PLANNER.PROVIDER_LIVE' : 'PLANNER.PROVIDER_FALLBACK') | translate }}</p>
-        <ul class="route-list">
-          @for (rt of r.routes; track rt.id; let i = $index) {
-            <li>
-              <button type="button" class="route-card" [class.selected]="rt.id === selectedId()" [attr.aria-pressed]="rt.id === selectedId()" [attr.data-route]="rt.id" (click)="selectedId.set(rt.id)">
-                <span class="rc-head">
-                  @let title = routeTitle(rt);
-                  <span class="rc-title">{{ title.key | translate: { n: title.n } }}</span>
-                  <strong class="rc-time">{{ minutes(rt.summary.travelTimeS) | duration }}</strong>
-                </span>
-                <span class="rc-meta small">
-                  <span class="rc-distance">{{ 'PLANNER.KM' | translate: { km: (rt.summary.distanceM / 1000 | num) } }}</span> ·
-                  <span class="rc-arrive">{{ 'PLANNER.ARRIVE' | translate: { time: (rt.summary.arrivalTime | appDate: arrivalStyle(rt)) } }}</span>
-                </span>
-                @if (r.liveTraffic) {
-                  <span class="rc-traffic small" [class.delayed]="rt.summary.trafficDelayS >= 60">
-                    @if (rt.summary.trafficDelayS >= 60) {
-                      {{ 'PLANNER.TRAFFIC_DELAY' | plural: minutes(rt.summary.trafficDelayS) : { count: minutes(rt.summary.trafficDelayS) } }}
-                    } @else {
-                      {{ 'PLANNER.NO_DELAY' | translate }}
-                    }
-                  </span>
-                }
-              </button>
-            </li>
+
+        @if (r.liveTraffic) {
+          <div class="live-row small" [attr.data-updates]="updates()">
+            <span class="live-dot" [class.on]="updates() === 'live'" aria-hidden="true"></span>
+            <span class="last-updated">{{ 'PLANNER.LAST_UPDATED' | translate: { time: (lastUpdated() | appDate: 'time') } }}</span>
+            <span class="muted update-state">· {{ 'PLANNER.UPDATES.' + updates() | translate }}</span>
+            <button type="button" class="link refresh-now" [disabled]="refreshing()" (click)="refresh(true)">
+              {{ (refreshing() ? 'PLANNER.REFRESHING' : 'PLANNER.REFRESH_NOW') | translate }}
+            </button>
+          </div>
+        } @else {
+          <p class="small muted live-unavailable">{{ 'PLANNER.LIVE_UPDATES_UNAVAILABLE' | translate }}</p>
+        }
+        <p class="sr-only" aria-live="polite">
+          @if (change(); as c) {
+            {{ (c > 0 ? 'PLANNER.UPDATE_SLOWER' : 'PLANNER.UPDATE_FASTER') | plural: minutes(c > 0 ? c : -c) : { count: minutes(c > 0 ? c : -c) } }}
           }
-        </ul>
+        </p>
+
+        @if (suggestion(); as s) {
+          <div class="alert suggestion" role="status">
+            <app-icon name="trending" [size]="18" />
+            <div class="sg-text">
+              <strong>{{ 'PLANNER.FASTER_AVAILABLE' | translate }}</strong>
+              <span>{{ 'PLANNER.SAVES' | plural: minutes(s.savingS) : { count: minutes(s.savingS), route: titleFor(s.route) } }}</span>
+            </div>
+            <div class="sg-actions">
+              <button type="button" class="btn btn-primary btn-sm switch-route" (click)="switchTo(s.route.id)">{{ 'PLANNER.SWITCH' | translate }}</button>
+              <button type="button" class="btn btn-ghost btn-sm dismiss-suggestion" (click)="dismissSuggestion()">{{ 'PLANNER.DISMISS' | translate }}</button>
+            </div>
+          </div>
+        }
+
+        <div class="view-tabs" role="tablist" [attr.aria-label]="'PLANNER.VIEW_LABEL' | translate">
+          <button type="button" role="tab" class="tab view-list" [class.active]="view() === 'list'" [attr.aria-selected]="view() === 'list'" (click)="view.set('list')">{{ 'PLANNER.VIEW_LIST' | translate }}</button>
+          <button type="button" role="tab" class="tab view-compare" [class.active]="view() === 'compare'" [attr.aria-selected]="view() === 'compare'" (click)="view.set('compare')">{{ 'PLANNER.VIEW_COMPARE' | translate }}</button>
+        </div>
+
+        @if (view() === 'list') {
+          <ul class="route-list" role="tabpanel">
+            @for (rt of r.routes; track rt.id) {
+              <li>
+                <button type="button" class="route-card" [class.selected]="rt.id === selectedId()" [attr.aria-pressed]="rt.id === selectedId()" [attr.data-route]="rt.id" (click)="selectedId.set(rt.id)">
+                  <span class="rc-head">
+                    @let title = routeTitle(rt);
+                    <span class="rc-title">{{ title.key | translate: { n: title.n } }}</span>
+                    @if (rt.summary.congestion; as cg) {
+                      <span [class]="'congestion rc-congestion ' + cg">{{ 'PLANNER.CONGESTION.' + cg | translate }}</span>
+                    }
+                    <strong class="rc-time">{{ minutes(rt.summary.travelTimeS) | duration }}</strong>
+                  </span>
+                  <span class="rc-meta small">
+                    <span class="rc-distance">{{ 'PLANNER.KM' | translate: { km: (rt.summary.distanceM / 1000 | num) } }}</span> ·
+                    <span class="rc-arrive">{{ 'PLANNER.ARRIVE' | translate: { time: (rt.summary.arrivalTime | appDate: arrivalStyle(rt)) } }}</span>
+                  </span>
+                  @if (r.liveTraffic) {
+                    <span class="rc-traffic small" [class.delayed]="rt.summary.trafficDelayS >= 60">
+                      @if (rt.summary.trafficDelayS >= 60) {
+                        {{ 'PLANNER.TRAFFIC_DELAY' | plural: minutes(rt.summary.trafficDelayS) : { count: minutes(rt.summary.trafficDelayS) } }}
+                      } @else {
+                        {{ 'PLANNER.NO_DELAY' | translate }}
+                      }
+                    </span>
+                    <span class="rc-details small muted">
+                      <span class="rc-notraffic">{{ 'PLANNER.WITHOUT_TRAFFIC' | translate: { time: (minutes(rt.summary.noTrafficTimeS) | duration) } }}</span> ·
+                      <span class="rc-length">{{ 'PLANNER.IN_TRAFFIC' | translate: { km: (km(rt.summary.trafficLengthM) | num) } }}</span>
+                    </span>
+                  }
+                </button>
+                @if (r.liveTraffic && rt.id === selectedId() && rt.trafficSections.length) {
+                  <ul class="incidents small" [attr.aria-label]="'PLANNER.INCIDENTS_LABEL' | translate">
+                    @for (s of rt.trafficSections; track $index) {
+                      <li [attr.data-level]="level(s)">
+                        <span [class]="'dot ' + level(s)" aria-hidden="true"></span>
+                        <strong>{{ s.delayS >= 60 ? ('PLANNER.DELAY_MIN' | plural: minutes(s.delayS) : { count: minutes(s.delayS) }) : ('PLANNER.NO_EXTRA_DELAY' | translate) }}</strong>
+                        · {{ category(s) | translate }} · {{ 'PLANNER.LEVELS.' + level(s) | translate }}
+                        @if (s.effectiveSpeedKmh !== null) {
+                          · {{ 'PLANNER.SPEED' | translate: { speed: s.effectiveSpeedKmh } }}
+                        }
+                      </li>
+                    }
+                  </ul>
+                }
+              </li>
+            }
+          </ul>
+        } @else {
+          <app-compare-table role="tabpanel" [routes]="r.routes" [selectedId]="selectedId()" [live]="r.liveTraffic" [title]="titleFor" (selected)="selectedId.set($event)" />
+        }
       </section>
     } @else if (planning()) {
       <div class="card skeleton routes-skeleton"></div>
@@ -126,9 +196,30 @@
       [selectedId]="selectedId()"
       [stops]="stops()"
       [tiles]="tiles()"
+      [liveTraffic]="!!result()?.liveTraffic"
+      [fitKey]="fitKey()"
       (routeSelected)="selectedId.set($event)"
       (mapClicked)="onMapClick($event)"
       (tilesFellBack)="tilesFallback.set(true)"
     />
   </div>
 </div>
+
+@if (saveOpen()) {
+  <app-dialog [title]="'PLANNER.SAVE_TITLE' | translate" (closed)="saveOpen.set(false)">
+    <form (submit)="save($event)" class="save-form" novalidate>
+      @if (saveError(); as e) {
+        <div class="alert alert-error save-error" role="alert">{{ e.key | translate: e.params }}</div>
+      }
+      <div class="form-field">
+        <label for="save-name">{{ 'PLANNER.ROUTE_NAME' | translate }}</label>
+        <input id="save-name" [formControl]="saveName" [attr.maxlength]="nameMax" />
+        <app-field-error [control]="saveName" [submitted]="saveSubmitted()" />
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-ghost" (click)="saveOpen.set(false)">{{ 'COMMON.CANCEL' | translate }}</button>
+        <button type="submit" class="btn btn-primary confirm-save" [disabled]="saveBusy()">{{ 'PLANNER.SAVE_ROUTE' | translate }}</button>
+      </div>
+    </form>
+  </app-dialog>
+}

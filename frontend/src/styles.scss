@@ -117,6 +117,11 @@ img { max-width: 100%; }
 .muted { color: var(--color-text-muted); }
 .small { font-size: 0.85rem; }
 .btn-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+/* Route congestion label (route planner). */
+.congestion { display: inline-block; padding: 0.05rem 0.45rem; border-radius: 999px; font-size: 0.75rem; font-weight: 700; }
+.congestion.low { background: var(--color-success-soft); color: var(--color-success); }
+.congestion.moderate { background: var(--color-warning-soft); color: var(--color-warning); }
+.congestion.heavy { background: var(--color-danger-soft); color: var(--color-danger); }
 .edited { font-style: italic; }
 .text-warning { color: var(--color-warning); font-weight: 600; }
 .sr-only {
