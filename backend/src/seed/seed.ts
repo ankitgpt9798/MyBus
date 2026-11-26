@@ -16,6 +16,7 @@ import { Trip } from '../models/Trip';
 import { User } from '../models/User';
 import { generatePnr } from '../services/booking.service';
 import { REVIEW_EDIT_WINDOW_MS, REVIEW_HIDE_THRESHOLD } from '../services/review.rules';
+import { stopCoords } from '../data/places';
 import { seedCommunity, seedReactions } from './community';
 import { Comment } from '../models/Comment';
 import { Post } from '../models/Post';
@@ -123,7 +124,11 @@ function buildStops(from: string, to: string, durationMinutes: number, via: stri
     type: 'dropping',
     offsetMinutes: durationMinutes - (drops.length - 1 - i) * 15,
   }));
-  return [...boarding, ...viaStops, ...dropping];
+  // Each stop gets its map position (route planner search and quick picks).
+  return [...boarding, ...viaStops, ...dropping].map((s) => {
+    const at = stopCoords(s.name);
+    return at ? { ...s, lat: at[0], lon: at[1] } : s;
+  });
 }
 
 function fareFor(distanceKm: number, type: 'seater' | 'sleeper', ac: boolean) {
