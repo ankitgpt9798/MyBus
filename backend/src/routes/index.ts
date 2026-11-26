@@ -53,6 +53,7 @@ api.get('/planner/cities', planner.cities);
 api.get('/planner/search', optionalAuth, planner.search);
 api.post('/planner/routes', planner.routes);
 api.get('/planner/tiles/:z/:x/:y.png', planner.tile);
+api.get('/planner/traffic-tiles/:z/:x/:y.png', planner.trafficTileImage);
 
 // Community (R1): reading and sharing are public; posting, commenting, liking and reporting need a verified account
 api.get('/community/boards', community.boards);

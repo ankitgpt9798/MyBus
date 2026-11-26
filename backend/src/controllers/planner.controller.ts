@@ -1,13 +1,14 @@
 import type { Request, Response } from 'express';
+import { env } from '../config/env';
 import { isLang } from '../i18n';
 import { MAX_WAYPOINTS, Point, inIndia, parseLatLon, readPoint } from '../services/planner.geo';
-import { ProviderError, cityPlaces, mapTile, planRoutes, plannerStatus, searchPlaces } from '../services/planner.service';
+import { ProviderError, TRAFFIC_STYLES, cityPlaces, mapTile, planRoutes, plannerStatus, searchPlaces, trafficTile } from '../services/planner.service';
 import { AppError, badRequest } from '../utils/AppError';
 import { allow } from '../utils/rate-limit';
 
 /** Route planner endpoints (R3). Everything goes through the server so the map provider key stays private. */
 
-const LIMITS = { search: 60, routes: 20, tiles: 600 } as const;
+const LIMITS = { search: 60, routes: env.planner.routesPerMinute, tiles: 600, traffic: 600 } as const;
 const MAX_DEPART_AHEAD_MS = 14 * 24 * 60 * 60 * 1000;
 
 function limit(req: Request, kind: keyof typeof LIMITS) {
@@ -68,23 +69,41 @@ export async function routes(req: Request, res: Response) {
   res.json({ ...result, departAt: departAt?.toISOString() ?? null });
 }
 
-/** GET /planner/tiles/:z/:x/:y.png?style=main|night : map tiles from the provider (key added on the server). */
-export async function tile(req: Request, res: Response) {
-  limit(req, 'tiles');
+/** z/x/y of a map tile: z 0–20, x and y within 0 … 2^z − 1, digits only. */
+function tileCoords(req: Request): [number, number, number] {
   const [z, x, y] = [req.params.z, req.params.x, req.params.y].map((v) => (/^\d{1,7}$/.test(String(v)) ? Number(v) : NaN));
   const size = 2 ** z;
   if (!Number.isInteger(z) || z < 0 || z > 20 || !Number.isInteger(x) || !Number.isInteger(y) || x >= size || y >= size) {
     throw badRequest('VALIDATION_ERROR', 'Invalid tile', [{ field: 'tile', rule: 'range' }]);
   }
-  const style = req.query.style === 'night' ? 'night' : 'main';
+  return [z, x, y];
+}
+
+async function sendTile(res: Response, maxAgeS: number, load: () => Promise<Buffer>) {
   try {
-    const png = await mapTile(style, z, x, y);
+    const png = await load();
     res.setHeader('Content-Type', 'image/png');
-    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.setHeader('Cache-Control', `public, max-age=${maxAgeS}`);
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.send(png);
   } catch (err) {
     if (err instanceof ProviderError) throw new AppError(503, 'PLANNER_TILES_UNAVAILABLE', 'Map tiles are not available right now');
     throw err;
   }
+}
+
+/** GET /planner/tiles/:z/:x/:y.png?style=main|night : map tiles from the provider (key added on the server). */
+export async function tile(req: Request, res: Response) {
+  limit(req, 'tiles');
+  const [z, x, y] = tileCoords(req);
+  const style = req.query.style === 'night' ? 'night' : 'main';
+  await sendTile(res, 3600, () => mapTile(style, z, x, y));
+}
+
+/** GET /planner/traffic-tiles/:z/:x/:y.png?style=relative0|relative0-dark|absolute : live traffic flow overlay tiles. */
+export async function trafficTileImage(req: Request, res: Response) {
+  limit(req, 'traffic');
+  const [z, x, y] = tileCoords(req);
+  const style = TRAFFIC_STYLES.find((s) => s === req.query.style) ?? 'relative0';
+  await sendTile(res, 60, () => trafficTile(style, z, x, y));
 }

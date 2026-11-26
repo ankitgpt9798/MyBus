@@ -4,6 +4,7 @@ import { cityName } from '../i18n';
 import { Route } from '../models/Route';
 import { AppError } from '../utils/AppError';
 import { MAX_ROUTE_POINTS, Point, bbox, distanceM, inIndia, simplify } from './planner.geo';
+import { Congestion, congestionLevel } from './planner.rules';
 
 /**
  * Route planner providers (R3). TomTom (Search, Routing with live traffic, Map Display tiles) is used when a working
@@ -72,12 +73,14 @@ export interface PlannerStatus {
   provider: 'tomtom' | 'osrm';
   liveTraffic: boolean;
   tiles: 'tomtom' | 'osm';
+  /** How often the web app refreshes an open plan (live traffic only). */
+  refreshMs: number;
   reason?: FallbackReason;
 }
 
 /** Which provider the planner will use right now (checks TomTom once with a tiny search when unsure). */
 export async function plannerStatus(): Promise<PlannerStatus> {
-  const fallback = (reason: FallbackReason): PlannerStatus => ({ provider: 'osrm', liveTraffic: false, tiles: 'osm', reason });
+  const fallback = (reason: FallbackReason): PlannerStatus => ({ provider: 'osrm', liveTraffic: false, tiles: 'osm', refreshMs: env.planner.refreshMs, reason });
   if (!hasKey()) return fallback('no_key');
   if (state.authDownUntil > Date.now()) return fallback('auth');
   if (Date.now() - state.lastOkAt > OK_TTL_MS) {
@@ -95,7 +98,7 @@ export async function plannerStatus(): Promise<PlannerStatus> {
     if (state.authDownUntil > Date.now()) return fallback('auth');
     if (Date.now() - state.lastOkAt > OK_TTL_MS) return fallback(state.probeReason);
   }
-  return { provider: 'tomtom', liveTraffic: true, tiles: 'tomtom' };
+  return { provider: 'tomtom', liveTraffic: true, tiles: 'tomtom', refreshMs: env.planner.refreshMs };
 }
 
 // ---------- Search
@@ -248,6 +251,10 @@ export interface PlannedRoute {
     trafficLengthM: number;
     departureTime: string;
     arrivalTime: string;
+    /** Live traffic only (null without): congestion label, share of the route in traffic (%) and traffic incidents. */
+    congestion: Congestion | null;
+    congestedPct: number | null;
+    incidents: number | null;
   };
   points: [number, number][];
   bbox: [[number, number], [number, number]];
@@ -267,6 +274,8 @@ export interface PlanResult {
   provider: 'tomtom' | 'osrm';
   liveTraffic: boolean;
   fallbackReason?: FallbackReason;
+  /** When the provider computed these routes (answers are shared for a few seconds between identical requests). */
+  fetchedAt: string;
 }
 
 interface TomtomRoute {
@@ -296,19 +305,33 @@ function normaliseTomtom(r: TomtomRoute, i: number): PlannedRoute {
   const keep = new Set([...legStarts, ...legStarts.map((s) => s - 1), ...sections.flatMap((s) => [s.startPointIndex, s.endPointIndex])]);
   const { points, index } = simplify(raw, keep, MAX_ROUTE_POINTS);
   const s = r.summary;
+  const trafficSections = sections.map((sec) => ({
+    startIndex: index(sec.startPointIndex),
+    endIndex: index(sec.endPointIndex),
+    delayS: n(sec.delayInSeconds),
+    magnitude: Math.max(0, Math.min(4, n(sec.magnitudeOfDelay))),
+    simpleCategory: sec.simpleCategory ?? 'OTHER',
+    effectiveSpeedKmh: typeof sec.effectiveSpeedInKmh === 'number' ? sec.effectiveSpeedInKmh : null,
+  }));
+  const travel = n(s.travelTimeInSeconds);
+  const delay = n(s.trafficDelayInSeconds);
+  const noTraffic = n(s.noTrafficTravelTimeInSeconds, travel - delay);
   return {
     id: `tomtom-${i}`,
     kind: i === 0 ? 'fastest' : 'alternative',
     summary: {
       distanceM: n(s.lengthInMeters),
       travelTimeS: n(s.travelTimeInSeconds),
-      noTrafficTimeS: n(s.noTrafficTravelTimeInSeconds, n(s.travelTimeInSeconds) - n(s.trafficDelayInSeconds)),
+      noTrafficTimeS: noTraffic,
       historicTrafficTimeS: typeof s.historicTrafficTravelTimeInSeconds === 'number' ? s.historicTrafficTravelTimeInSeconds : null,
       liveIncidentsTimeS: typeof s.liveTrafficIncidentsTravelTimeInSeconds === 'number' ? s.liveTrafficIncidentsTravelTimeInSeconds : null,
-      trafficDelayS: n(s.trafficDelayInSeconds),
+      trafficDelayS: delay,
       trafficLengthM: n(s.trafficLengthInMeters),
       departureTime: String(s.departureTime ?? new Date().toISOString()),
-      arrivalTime: String(s.arrivalTime ?? new Date(Date.now() + n(s.travelTimeInSeconds) * 1000).toISOString()),
+      arrivalTime: String(s.arrivalTime ?? new Date(Date.now() + travel * 1000).toISOString()),
+      congestion: congestionLevel(delay, noTraffic, trafficSections),
+      congestedPct: n(s.lengthInMeters) > 0 ? Math.round((n(s.trafficLengthInMeters) / n(s.lengthInMeters)) * 1000) / 10 : 0,
+      incidents: trafficSections.length,
     },
     points,
     bbox: bbox(points),
@@ -318,14 +341,7 @@ function normaliseTomtom(r: TomtomRoute, i: number): PlannedRoute {
       trafficDelayS: n(leg.summary.trafficDelayInSeconds),
       startIndex: index(legStarts[li]),
     })),
-    trafficSections: sections.map((sec) => ({
-      startIndex: index(sec.startPointIndex),
-      endIndex: index(sec.endPointIndex),
-      delayS: n(sec.delayInSeconds),
-      magnitude: Math.max(0, Math.min(4, n(sec.magnitudeOfDelay))),
-      simpleCategory: sec.simpleCategory ?? 'OTHER',
-      effectiveSpeedKmh: typeof sec.effectiveSpeedInKmh === 'number' ? sec.effectiveSpeedInKmh : null,
-    })),
+    trafficSections,
   };
 }
 
@@ -394,6 +410,9 @@ async function osrmRoutes(input: PlanInput): Promise<PlannedRoute[]> {
         trafficLengthM: 0,
         departureTime: departure.toISOString(),
         arrivalTime: new Date(departure.getTime() + r.duration * 1000).toISOString(),
+        congestion: null,
+        congestedPct: null,
+        incidents: null,
       },
       points,
       bbox: bbox(points),
@@ -416,18 +435,33 @@ function nearestIndex(points: [number, number][], p: Point): number {
   return best;
 }
 
-/** Suggested routes with live traffic from TomTom, or OSRM routes without traffic when TomTom is not available. */
+const routeCache = new Map<string, { at: number; result: PlanResult }>();
+const routeKey = (input: PlanInput) =>
+  [input.start, ...input.waypoints, input.end].map((p) => `${p.lat.toFixed(5)},${p.lon.toFixed(5)}`).join(';') + `|${input.departAt?.toISOString() ?? 'now'}`;
+
+/**
+ * Suggested routes with live traffic from TomTom, or OSRM routes without traffic when TomTom is not available.
+ * Identical requests within PLANNER_ROUTE_CACHE_MS share one TomTom answer (several tabs refreshing the same plan).
+ */
 export async function planRoutes(input: PlanInput): Promise<PlanResult> {
+  const key = routeKey(input);
+  const hit = routeCache.get(key);
+  if (hit && Date.now() - hit.at < env.planner.routeCacheMs) return hit.result;
   let reason: FallbackReason;
   try {
-    return { routes: await tomtomRoutes(input), provider: 'tomtom', liveTraffic: true };
+    const result: PlanResult = { routes: await tomtomRoutes(input), provider: 'tomtom', liveTraffic: true, fetchedAt: new Date().toISOString() };
+    if (env.planner.routeCacheMs > 0) {
+      if (routeCache.size > 200) routeCache.delete(routeCache.keys().next().value!);
+      routeCache.set(key, { at: Date.now(), result });
+    }
+    return result;
   } catch (err) {
     if (!(err instanceof ProviderError)) throw err;
     reason = err.reason;
     if (reason !== 'no_key') warn('routing', reason);
   }
   try {
-    return { routes: await osrmRoutes(input), provider: 'osrm', liveTraffic: false, fallbackReason: reason };
+    return { routes: await osrmRoutes(input), provider: 'osrm', liveTraffic: false, fallbackReason: reason, fetchedAt: new Date().toISOString() };
   } catch (err) {
     if (err instanceof ProviderError) {
       console.warn(`[planner] OSRM routing unavailable (${err.reason})`);
@@ -450,5 +484,22 @@ export async function mapTile(style: 'main' | 'night', z: number, x: number, y: 
   const png = (await tomtomGet(`/map/1/tile/basic/${style}/${z}/${x}/${y}.png`, { tileSize: 256, view: 'IN' }, 'buffer')) as Buffer;
   if (tileCache.size >= 400) tileCache.delete(tileCache.keys().next().value!);
   tileCache.set(key, { at: Date.now(), png });
+  return png;
+}
+
+// ---------- Traffic flow tiles
+
+export const TRAFFIC_STYLES = ['relative0', 'relative0-dark', 'absolute'] as const;
+const TRAFFIC_TILE_TTL_MS = 2 * 60 * 1000;
+const trafficTileCache = new Map<string, { at: number; png: Buffer }>();
+
+/** A TomTom Traffic Flow raster tile (transparent overlay), cached for two minutes because traffic changes. */
+export async function trafficTile(style: (typeof TRAFFIC_STYLES)[number], z: number, x: number, y: number): Promise<Buffer> {
+  const key = `${style}/${z}/${x}/${y}`;
+  const hit = trafficTileCache.get(key);
+  if (hit && Date.now() - hit.at < TRAFFIC_TILE_TTL_MS) return hit.png;
+  const png = (await tomtomGet(`/traffic/map/4/tile/flow/${style}/${z}/${x}/${y}.png`, { tileSize: 256 }, 'buffer')) as Buffer;
+  if (trafficTileCache.size >= 400) trafficTileCache.delete(trafficTileCache.keys().next().value!);
+  trafficTileCache.set(key, { at: Date.now(), png });
   return png;
 }

@@ -50,6 +50,11 @@ export const env = {
     tomtomBaseUrl: str('TOMTOM_BASE_URL', 'https://api.tomtom.com').replace(/\/$/, ''),
     osrmBaseUrl: str('OSRM_BASE_URL', 'https://router.project-osrm.org').replace(/\/$/, ''),
     timeoutMs: num('PLANNER_TIMEOUT_MS', 8000),
+    // How often the web app refreshes an open plan, how long identical route requests share one provider answer,
+    // and how many route requests one visitor may make per minute (tests compress or raise these).
+    refreshMs: num('PLANNER_REFRESH_MS', 60_000),
+    routeCacheMs: num('PLANNER_ROUTE_CACHE_MS', 30_000),
+    routesPerMinute: num('PLANNER_ROUTES_PER_MIN', 20),
   },
   // Web push (VAPID). If the keys are not set, they are generated once and kept in backend/.vapid-keys.json.
   vapid: {
