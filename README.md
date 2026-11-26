@@ -51,6 +51,7 @@ npm install
 | `REMINDER_LEADS_MS`, `REMINDER_INTERVAL_MS` | Tests only: shorten the journey reminder lead times (default 24 h and 2 h before departure) and how often they are checked (1 min) |
 | `TOMTOM_API_KEY` | Route planner map provider key (see below). Stays on the server; leave empty to use the fallback |
 | `TOMTOM_BASE_URL`, `OSRM_BASE_URL`, `PLANNER_TIMEOUT_MS` | Tests only: point the planner at a mock server (defaults `https://api.tomtom.com` and `https://router.project-osrm.org`) and shorten the upstream timeout (default 8000 ms) |
+| `PLANNER_REFRESH_MS`, `PLANNER_ROUTE_CACHE_MS`, `PLANNER_ROUTES_PER_MIN` | Tests only: how often an open plan refreshes its live traffic (default 60000 ms), how long identical route requests share one TomTom answer (default 30000 ms, `0` turns it off) and route requests allowed per visitor per minute (default 20) |
 
 ### Route planner (TomTom)
 
@@ -62,6 +63,10 @@ The route planner uses a [TomTom](https://developer.tomtom.com/) key with these 
 | `GET /api/planner/search?q=&near=lat,lon` | Place suggestions (cached for 10 minutes) |
 | `POST /api/planner/routes` | Suggested routes with alternatives, ETAs and traffic sections (`{ start, end, waypoints (up to 5), departAt? }`) |
 | `GET /api/planner/tiles/{z}/{x}/{y}.png?style=main\|night` | Map tiles with the key added on the server |
+| `GET /api/planner/traffic-tiles/{z}/{x}/{y}.png?style=relative0\|relative0-dark\|absolute` | Live traffic flow overlay tiles (cached for 2 minutes) |
+| `GET/POST /api/planner/saved`, `PATCH/DELETE /api/planner/saved/:id`, `POST /api/planner/saved/:id/use` | The signed-in user's saved routes (up to 20, no duplicates; sorted by most used or `?sort=recent`) |
+
+While a plan is open, the web app refreshes it every minute (paused while the tab is hidden or offline, stopped after an hour without activity), colours the selected route by live traffic, suggests a clearly faster alternative and tells the user when the travel time changes by 3 minutes or more.
 
 Without a key, or when TomTom refuses it, times out or fails, the planner keeps working without live traffic: place search uses the MyBus cities and bus stops (no external geocoder), routes come from the public OSRM demo router, the map uses OpenStreetMap tiles, and the page shows a notice.
 
