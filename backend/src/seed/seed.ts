@@ -332,12 +332,12 @@ async function main() {
   }
   for (const id of touchedRoutes) await recomputeRouteRating(id);
 
-  // Community: demo posts, comments and likes by the reviewers (photos are generated into uploads/community).
+  // Community: demo posts, comments and likes by the reviewers (generated photos, stored with the configured PHOTO_STORAGE).
   const community = await seedCommunity(reviewers, [traveler!], routes);
   const reactions = await seedReactions();
 
   console.log(
-    `[seed] ${operators.length} operators, ${buses.length} buses, ${routes.length} routes, ${tripDocs.length} trips, ${chosen.length} demo bookings, ${reviewCount} reviews on ${touchedRoutes.size} routes, ${community.posts} community posts (${community.comments} comments, ${community.photos} photos, ${reactions} likes and votes)`,
+    `[seed] ${operators.length} operators, ${buses.length} buses, ${routes.length} routes, ${tripDocs.length} trips, ${chosen.length} demo bookings, ${reviewCount} reviews on ${touchedRoutes.size} routes, ${community.posts} community posts (${community.comments} comments, ${community.photos} photos stored ${env.photos.storage === 'cloudinary' ? 'on Cloudinary' : 'locally'}, ${reactions} likes and votes)`,
   );
   console.log(`[seed] admin:      ${admin!.email} / ${env.admin.password}`);
   console.log(`[seed] traveler:   ${DEMO_USERS.traveler.email} / ${DEMO_USERS.traveler.password} (verified)`);

@@ -1,10 +1,8 @@
 /**
  * Demo community content: posts on every board in several languages, with comments, replies, likes and a few
- * generated photos (simple illustrations encoded as PNG with node:zlib, written to uploads/community).
+ * generated photos (simple illustrations encoded as PNG with node:zlib, stored like any upload: in uploads/community
+ * or on Cloudinary, tagged "mybus-seed").
  */
-import crypto from 'node:crypto';
-import fs from 'node:fs/promises';
-import path from 'node:path';
 import zlib from 'node:zlib';
 import { Types } from 'mongoose';
 import { Comment } from '../models/Comment';
@@ -12,7 +10,7 @@ import { Post } from '../models/Post';
 import { Reaction } from '../models/Reaction';
 import { Review } from '../models/Review';
 import { ShareNetwork } from '../services/community.rules';
-import { COMMUNITY_DIR, deletePhotos } from '../services/upload.service';
+import { StoredPhoto, isCloudinary, removePhotos, storeImages } from '../services/photo-storage.service';
 
 type Rgb = [number, number, number];
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -113,12 +111,9 @@ const SCENES: Record<string, (x: number, y: number) => Rgb> = {
   },
 };
 
-async function writeScene(name: keyof typeof SCENES) {
-  await fs.mkdir(COMMUNITY_DIR, { recursive: true });
-  const data = png(W, H, SCENES[name]);
-  const file = `${crypto.randomBytes(16).toString('hex')}.png`;
-  await fs.writeFile(path.join(COMMUNITY_DIR, file), data);
-  return { file, type: 'png' as const, size: data.length };
+async function storeScene(name: keyof typeof SCENES) {
+  const [photo] = await storeImages([{ data: png(W, H, SCENES[name]), type: 'png' }], { seed: true });
+  return photo;
 }
 
 type UserRef = { _id: Types.ObjectId };
@@ -232,10 +227,13 @@ const SHARES: Record<string, Partial<Record<ShareNetwork, number>>> = {
 /** One open report on a post and on a comment, so the moderation tab has something to show. */
 const REPORTED_POST = { title: 'Delhi to Jaipur: which departure is best?', reason: 'misleading', note: 'The timings mentioned look out of date.' };
 
-/** Replaces all community posts and comments (and their photo files) with the demo content. */
+/**
+ * Replaces all community posts and comments with the demo content. Local photo files of the old posts are deleted;
+ * on Cloudinary only the images the seed created itself (marked `seed` in the database) are destroyed.
+ */
 export async function seedCommunity(users: UserRef[], extraLikers: UserRef[], routes: RouteRef[]): Promise<{ posts: number; comments: number; photos: number }> {
   const old = await Post.find().select('photos').lean();
-  await deletePhotos(old.flatMap((p) => p.photos.map((ph) => ph.file)));
+  await removePhotos(old.flatMap((p) => p.photos as StoredPhoto[]).filter((ph) => !isCloudinary(ph) || ph.seed));
   await Promise.all([Comment.deleteMany({}), Post.deleteMany({})]);
 
   const likers = [...users, ...extraLikers];
@@ -245,7 +243,7 @@ export async function seedCommunity(users: UserRef[], extraLikers: UserRef[], ro
     const route = p.route ? routes.find((r) => r.from === p.route![0] && r.to === p.route![1]) : undefined;
     const createdAt = new Date(Date.now() - p.daysAgo * DAY_MS);
     const files = [];
-    for (const ph of p.photos ?? []) files.push({ ...(await writeScene(ph.scene)), alt: ph.alt });
+    for (const ph of p.photos ?? []) files.push({ ...(await storeScene(ph.scene)), alt: ph.alt });
     photos += files.length;
     const likedBy = likers.filter((_, i) => i !== p.by).slice(0, p.likes).map((u) => u._id);
     const post = await Post.create({
