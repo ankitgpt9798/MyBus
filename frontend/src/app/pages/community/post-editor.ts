@@ -13,6 +13,8 @@ import { FieldError } from '../../shared/field-error';
 import { applyServerErrors } from '../../shared/form-errors';
 import { Icon } from '../../shared/icons';
 import { CityPipe, NumPipe } from '../../shared/pipes';
+import { PluralPipe } from '../../shared/plural.pipe';
+import { BOARD_ICONS } from '../../shared/post-card';
 import { TranslateOrPipe } from '../../shared/translate-or.pipe';
 
 const BOARDS: Board[] = ['stories', 'tips', 'routes', 'destinations', 'advice'];
@@ -38,10 +40,10 @@ interface EditorPhoto {
   blob?: File; // new upload
 }
 
-/** Write (/community/new) or edit (/community/posts/:id/edit) a post. */
+/** Write (/community/new) or edit (/community/posts/:id/edit) a post: board cards, title and text, tags, photos (pick or drag and drop) and the guidelines. */
 @Component({
   selector: 'app-post-editor',
-  imports: [ReactiveFormsModule, RouterLink, TranslatePipe, FieldError, Icon, CityPipe, NumPipe, TranslateOrPipe],
+  imports: [ReactiveFormsModule, RouterLink, TranslatePipe, FieldError, Icon, CityPipe, NumPipe, PluralPipe, TranslateOrPipe],
   templateUrl: './post-editor.html',
   styleUrl: './post-editor.scss',
 })
@@ -59,6 +61,7 @@ export class PostEditorPage {
   private readonly language = inject(LanguageService);
   protected readonly auth = inject(AuthService);
   protected readonly boards = BOARDS;
+  protected readonly icons = BOARD_ICONS;
   protected readonly title = TITLE;
   protected readonly bodyLimits = BODY;
   protected readonly maxPhotos = MAX_PHOTOS;
@@ -80,6 +83,8 @@ export class PostEditorPage {
   protected readonly cities = signal<string[]>([]);
   protected readonly photos = signal<EditorPhoto[]>([]);
   protected readonly photoError = signal<string | null>(null);
+  /** Photos are being dragged over the drop zone. */
+  protected readonly dragOver = signal(false);
   protected readonly loading = signal(false);
   protected readonly saving = signal(false);
   protected readonly submitted = signal(false);
@@ -128,6 +133,24 @@ export class PostEditorPage {
     const input = event.target as HTMLInputElement;
     const picked = [...(input.files ?? [])];
     input.value = '';
+    this.addFiles(picked);
+  }
+
+  protected onDragOver(event: DragEvent): void {
+    if (!event.dataTransfer?.types.includes('Files')) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'copy';
+    this.dragOver.set(true);
+  }
+
+  protected onDrop(event: DragEvent): void {
+    event.preventDefault();
+    this.dragOver.set(false);
+    this.addFiles([...(event.dataTransfer?.files ?? [])]);
+  }
+
+  /** Same checks for picked and dropped files. */
+  private addFiles(picked: File[]): void {
     this.photoError.set(null);
     const room = MAX_PHOTOS - this.photos().length;
     if (picked.length > room) this.photoError.set('ERRORS.COMMUNITY_TOO_MANY_PHOTOS');
