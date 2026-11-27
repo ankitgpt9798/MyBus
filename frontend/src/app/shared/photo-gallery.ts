@@ -11,7 +11,7 @@ import { Icon } from './icons';
     <div [class]="'gallery n' + photos().length">
       @for (p of photos(); track p.url; let i = $index) {
         <button type="button" class="thumb" (click)="open(i)" [attr.aria-label]="'COMMUNITY.OPEN_PHOTO' | translate: { n: i + 1, total: photos().length }">
-          <img [src]="p.url" [alt]="p.alt" loading="lazy" />
+          <img [src]="p.url" [alt]="p.alt" [attr.width]="p.width" [attr.height]="p.height" loading="lazy" />
         </button>
       }
     </div>
@@ -19,7 +19,7 @@ import { Icon } from './icons';
       <div class="lightbox" role="dialog" aria-modal="true" [attr.aria-label]="'COMMUNITY.PHOTO_OF' | translate: { n: index()! + 1, total: photos().length }"
         (keydown)="onKey($event)" (click)="close()">
         <figure (click)="$event.stopPropagation()">
-          <img [src]="p.url" [alt]="p.alt" />
+          <img [src]="p.fullUrl || p.url" [alt]="p.alt" [attr.width]="p.width" [attr.height]="p.height" />
           <figcaption>
             <span>{{ 'COMMUNITY.PHOTO_OF' | translate: { n: index()! + 1, total: photos().length } }}</span>
             @if (p.alt) {
@@ -48,7 +48,7 @@ import { Icon } from './icons';
     .thumb:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 2px; }
     .lightbox { position: fixed; inset: 0; z-index: 95; display: grid; place-items: center; padding: 3.5rem 1rem 1rem; background: rgb(0 0 0 / 0.88); }
     figure { margin: 0; max-width: min(1100px, 100%); text-align: center; }
-    figure img { max-width: 100%; max-height: calc(100vh - 9rem); object-fit: contain; border-radius: var(--radius-sm); }
+    figure img { width: auto; height: auto; max-width: 100%; max-height: calc(100vh - 9rem); object-fit: contain; border-radius: var(--radius-sm); }
     figcaption { margin-top: 0.5rem; color: #f2f2f2; font-size: 0.9rem; display: flex; flex-wrap: wrap; justify-content: center; gap: 0.3rem; }
     .lb-btn { position: absolute; display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 50%; background: rgb(255 255 255 / 0.15); color: #fff; cursor: pointer; }
     .lb-btn:hover, .lb-btn:focus-visible { background: rgb(255 255 255 / 0.3); outline: 2px solid #fff; }

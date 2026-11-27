@@ -47,7 +47,7 @@ export const BOARD_ICONS: Record<Board, string> = { stories: 'bus', tips: 'light
       </div>
       @if (post().photos[0]; as ph) {
         <a class="pc-thumb" [routerLink]="['/community/posts', post().id]" tabindex="-1" aria-hidden="true">
-          <img [src]="ph.url" [alt]="ph.alt" loading="lazy" />
+          <img [src]="ph.url" [alt]="ph.alt" [attr.width]="ph.width" [attr.height]="ph.height" loading="lazy" />
           @if (post().photos.length > 1) {
             <span class="more"><app-icon name="image" [size]="12" /> +{{ post().photos.length - 1 }}</span>
           }

@@ -727,7 +727,8 @@
     "PLANNER_TILES_UNAVAILABLE": "नकाशा सध्या उपलब्ध नाही.",
     "PLANNER_SAVED_LIMIT": "तुम्ही जास्तीत जास्त 20 मार्ग जतन करू शकता. नवीन जतन करण्यासाठी एखादा हटवा.",
     "PLANNER_SAVED_DUPLICATE": "हा मार्ग आधीच जतन केला आहे.",
-    "PLANNER_SAVED_NOT_FOUND": "हा जतन केलेला मार्ग सापडला नाही."
+    "PLANNER_SAVED_NOT_FOUND": "हा जतन केलेला मार्ग सापडला नाही.",
+    "COMMUNITY_PHOTO_UPLOAD_FAILED": "फोटो अपलोड होऊ शकले नाहीत. कृपया पुन्हा प्रयत्न करा."
   },
   "FORBIDDEN": {
     "TITLE": "प्रवेश नाकारला",

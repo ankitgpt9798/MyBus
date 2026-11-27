@@ -36,7 +36,7 @@ interface EditorPhoto {
   key: string;
   preview: string;
   alt: string;
-  file?: string; // existing photo (its stored name)
+  file?: string; // existing photo (its id from the API)
   blob?: File; // new upload
 }
 
@@ -120,7 +120,7 @@ export class PostEditorPage {
       const { post } = await this.api.communityPost(id);
       if (!post.mine) return this.blocked.set('ERRORS.COMMUNITY_NOT_AUTHOR');
       this.form.reset({ board: post.board, title: post.title, body: post.body, routeId: post.route?.id ?? '', city: post.city ?? '' });
-      this.photos.set(post.photos.map((ph) => ({ key: `e${this.nextKey++}`, preview: ph.url, alt: ph.alt, file: ph.url.split('/').pop() })));
+      this.photos.set(post.photos.map((ph) => ({ key: `e${this.nextKey++}`, preview: ph.url, alt: ph.alt, file: ph.id })));
     } catch (err) {
       this.blocked.set(errorKey(err));
     } finally {

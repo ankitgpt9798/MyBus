@@ -408,8 +408,13 @@ export interface BoardInfo {
   latestAt: string | null;
 }
 
+/** A post photo: `url` is sized for cards and thumbnails, `fullUrl` for the enlarged view; `id` identifies it when editing. */
 export interface PostPhoto {
+  id: string;
   url: string;
+  fullUrl: string;
+  width: number | null;
+  height: number | null;
   alt: string;
 }
 

@@ -727,7 +727,8 @@
     "PLANNER_TILES_UNAVAILABLE": "Map tiles are not available right now.",
     "PLANNER_SAVED_LIMIT": "You can save up to 20 routes. Delete one to save another.",
     "PLANNER_SAVED_DUPLICATE": "This route is already saved.",
-    "PLANNER_SAVED_NOT_FOUND": "This saved route could not be found."
+    "PLANNER_SAVED_NOT_FOUND": "This saved route could not be found.",
+    "COMMUNITY_PHOTO_UPLOAD_FAILED": "The photos could not be uploaded. Please try again."
   },
   "FORBIDDEN": {
     "TITLE": "Access denied",

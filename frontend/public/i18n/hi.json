@@ -727,7 +727,8 @@
     "PLANNER_TILES_UNAVAILABLE": "मानचित्र अभी उपलब्ध नहीं है।",
     "PLANNER_SAVED_LIMIT": "आप अधिकतम 20 रूट सहेज सकते हैं। नया सहेजने के लिए कोई एक हटाएँ।",
     "PLANNER_SAVED_DUPLICATE": "यह रूट पहले से सहेजा गया है।",
-    "PLANNER_SAVED_NOT_FOUND": "यह सहेजा गया रूट नहीं मिला।"
+    "PLANNER_SAVED_NOT_FOUND": "यह सहेजा गया रूट नहीं मिला।",
+    "COMMUNITY_PHOTO_UPLOAD_FAILED": "फ़ोटो अपलोड नहीं हो सकीं। कृपया फिर से कोशिश करें।"
   },
   "FORBIDDEN": {
     "TITLE": "पहुँच अस्वीकृत",
