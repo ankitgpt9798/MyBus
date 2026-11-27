@@ -47,7 +47,7 @@ npm ci
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM` | Outgoing email, e.g. with Brevo: `SMTP_HOST=smtp-relay.brevo.com`, `SMTP_PORT=587`, your Brevo SMTP login and SMTP key, and a sender address verified in Brevo. Leave `SMTP_HOST` empty to print emails and verification links in the backend console instead |
 | `SEAT_HOLD_MINUTES` | How long selected seats are held while paying |
 | `UPLOADS_DIR` | Where community photos are stored and served from at `/uploads` (default `backend/uploads`, git-ignored) |
-| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | Web push keys. Leave empty to generate a pair on first start (saved to the git-ignored `backend/.vapid-keys.json`) |
+| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | Web push keys. Leave empty to generate a pair automatically the first time push is used (saved to the git-ignored `backend/.vapid-keys.json` and reused after restarts) |
 | `NOTIFY_RETRY_DELAYS_MS`, `NOTIFY_RETRY_INTERVAL_MS`, `NOTIFY_STREAM_HEARTBEAT_MS` | Tests only: shorten the email/push retry backoff (default 1, 5, 15 min), the retry check (30 s) and the live-stream heartbeat (15 s) |
 | `REMINDER_LEADS_MS`, `REMINDER_INTERVAL_MS` | Tests only: shorten the journey reminder lead times (default 24 h and 2 h before departure) and how often they are checked (1 min) |
 | `TOMTOM_API_KEY` | Route planner key with the TomTom Search, Routing, Traffic and Map Display products (see below). Stays on the server; leave empty to use the fallback |
