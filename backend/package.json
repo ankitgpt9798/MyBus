@@ -8,6 +8,7 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "seed": "tsx src/seed/seed.ts",
+    "migrate:photos": "tsx src/scripts/migrate-photos.ts",
     "typecheck": "tsc --noEmit"
   },
   "type": "commonjs",
