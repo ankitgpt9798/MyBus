@@ -3,12 +3,12 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { PostPhoto } from '../core/models';
 import { Icon } from './icons';
 
-/** Photo grid; a photo opens enlarged in an overlay (Esc closes, ← → browse, focus returns to the thumbnail). */
+/** Photo mosaic (one large photo, a pair, or a large photo with the rest beside it); a photo opens enlarged in an overlay (Esc closes, ← → browse, focus returns to the thumbnail). */
 @Component({
   selector: 'app-photo-gallery',
   imports: [TranslatePipe, Icon],
   template: `
-    <div class="gallery" [class.single]="photos().length === 1">
+    <div [class]="'gallery n' + photos().length">
       @for (p of photos(); track p.url; let i = $index) {
         <button type="button" class="thumb" (click)="open(i)" [attr.aria-label]="'COMMUNITY.OPEN_PHOTO' | translate: { n: i + 1, total: photos().length }">
           <img [src]="p.url" [alt]="p.alt" loading="lazy" />
@@ -36,10 +36,15 @@ import { Icon } from './icons';
     }
   `,
   styles: `
-    .gallery { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
-    .gallery.single { grid-template-columns: 1fr; }
-    .thumb { padding: 0; border: 0; border-radius: var(--radius-sm); overflow: hidden; background: var(--color-surface-2); cursor: zoom-in; aspect-ratio: 16 / 10; }
-    .thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+    .gallery { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
+    .gallery.n1 { grid-template-columns: minmax(0, 1fr); }
+    .gallery.n3, .gallery.n4 { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
+    .thumb { padding: 0; border: 0; border-radius: var(--radius-md); overflow: hidden; background: var(--color-surface-2); cursor: zoom-in; aspect-ratio: 4 / 3; }
+    .n1 .thumb { aspect-ratio: 16 / 9; }
+    .n3 .thumb:first-child { grid-row: span 2; aspect-ratio: auto; }
+    .n4 .thumb:first-child { grid-row: span 3; aspect-ratio: auto; }
+    .thumb img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+    .thumb:hover img { transform: scale(1.03); }
     .thumb:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 2px; }
     .lightbox { position: fixed; inset: 0; z-index: 95; display: grid; place-items: center; padding: 3.5rem 1rem 1rem; background: rgb(0 0 0 / 0.88); }
     figure { margin: 0; max-width: min(1100px, 100%); text-align: center; }

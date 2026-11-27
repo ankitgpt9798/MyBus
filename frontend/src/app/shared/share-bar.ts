@@ -29,20 +29,21 @@ export function withUtm(url: string, source: ShareNetwork, campaign: string): st
     <div class="share-bar" role="group" [attr.aria-label]="'SHARE.LABEL' | translate">
       <span class="share-label small muted"><app-icon name="share" [size]="14" /> {{ 'SHARE.LABEL' | translate }}</span>
       @for (n of networks; track n.id) {
-        <a class="btn btn-sm btn-outline share-link" [attr.data-network]="n.id" [href]="href(n.id)" target="_blank" rel="noopener noreferrer"
+        <a class="btn btn-sm share-btn share-link" [attr.data-network]="n.id" [href]="href(n.id)" target="_blank" rel="noopener noreferrer"
           [attr.aria-label]="'SHARE.ON' | translate: { network: n.label }" (click)="shared.emit(n.id)">{{ n.label }}</a>
       }
-      <button type="button" class="btn btn-sm btn-outline copy-link" (click)="copy()"><app-icon name="link" [size]="14" /> {{ 'SHARE.COPY' | translate }}</button>
+      <button type="button" class="btn btn-sm share-btn copy-link" (click)="copy()"><app-icon name="link" [size]="14" /> {{ 'SHARE.COPY' | translate }}</button>
       @if (canShareNatively) {
-        <button type="button" class="btn btn-sm btn-primary native-share" (click)="shareNatively()"><app-icon name="share" [size]="14" /> {{ 'SHARE.MORE' | translate }}</button>
+        <button type="button" class="btn btn-sm share-btn native-share" (click)="shareNatively()"><app-icon name="share" [size]="14" /> {{ 'SHARE.MORE' | translate }}</button>
       }
     </div>
   `,
   styles: `
     :host { display: block; flex: 1 1 100%; }
     .share-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; }
-    .share-label { display: inline-flex; align-items: center; gap: 0.3rem; margin-right: 0.2rem; }
-    .share-link { text-decoration: none; }
+    .share-label { display: flex; align-items: center; gap: 0.35rem; flex-basis: 100%; color: var(--color-text); font-weight: 700; }
+    .share-btn { border-color: var(--color-border); background: var(--color-surface); color: var(--color-text); text-decoration: none; }
+    .share-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
   `,
 })
 export class ShareBar {

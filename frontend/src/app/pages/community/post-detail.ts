@@ -6,7 +6,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { ApiService } from '../../core/api.service';
 import { errorKey } from '../../core/api-error';
 import { AuthService } from '../../core/auth.service';
-import { CommunityComment, CommunityPost, ContentReportReason, ShareNetwork } from '../../core/models';
+import { CommunityComment, CommunityPost, ContentReportReason, PublicProfile, ShareNetwork } from '../../core/models';
 import { ToastService } from '../../core/toast.service';
 import { Dialog } from '../../shared/dialog';
 import { FieldError } from '../../shared/field-error';
@@ -31,7 +31,7 @@ const trimmedMin =
 const SOURCES: ShareNetwork[] = ['whatsapp', 'x', 'facebook', 'telegram', 'copy', 'native'];
 const commentControl = () => new FormControl('', { nonNullable: true, validators: [Validators.required, trimmedMin(COMMENT_MIN), Validators.maxLength(COMMENT_MAX)] });
 
-/** A community post with its photos, likes and comments (one level of replies). */
+/** A community post: article with photos, likes, sharing and reporting, an author card, and comments with one level of replies. */
 @Component({
   selector: 'app-post-detail',
   imports: [NgTemplateOutlet, ReactiveFormsModule, RouterLink, TranslatePipe, Icon, Dialog, FieldError, PhotoGallery, ReportDialog, ShareBar, AppDatePipe, CityPipe, NumPipe, PluralPipe, TranslateOrPipe],
@@ -52,6 +52,9 @@ export class PostDetailPage {
 
   protected readonly post = signal<CommunityPost | null>(null);
   protected readonly comments = signal<CommunityComment[]>([]);
+  /** The author's public profile for the author card (badges and stats); optional. */
+  protected readonly author = signal<PublicProfile | null>(null);
+  protected readonly myInitial = computed(() => this.auth.user()?.name.charAt(0) ?? '');
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
   protected readonly busy = signal<string | null>(null);
@@ -84,11 +87,17 @@ export class PostDetailPage {
       this.post.set(res.post);
       this.comments.set(res.comments);
       this.countVisit(res.post);
+      this.loadAuthor(res.post.author.id);
     } catch (err) {
       this.error.set(errorKey(err));
     } finally {
       this.loading.set(false);
     }
+  }
+
+  private loadAuthor(id: string | null | undefined): void {
+    this.author.set(null);
+    if (id) void this.api.userProfile(id).then((p) => this.author.set(p)).catch(() => undefined);
   }
 
   private countVisit(post: CommunityPost): void {
