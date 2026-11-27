@@ -1,0 +1,74 @@
+/* Community pages: pieces shared by the feed, post page, editor and public profiles (kept global to stay within the per-component style budget). */
+
+/* Initials avatar; links to a profile where there is one. */
+.cm-avatar {
+  display: inline-grid; place-items: center; flex: none; width: 36px; height: 36px; border-radius: 50%;
+  background: var(--color-primary-soft); color: var(--color-primary);
+  font-size: 0.95rem; font-weight: 700; line-height: 1; text-decoration: none; text-transform: uppercase;
+  &.sm { width: 28px; height: 28px; font-size: 0.8rem; }
+  &.lg { width: 52px; height: 52px; font-size: 1.3rem; }
+  &.xl { width: 84px; height: 84px; font-size: 2.1rem; font-weight: 800; }
+}
+a.cm-avatar:hover { box-shadow: 0 0 0 2px var(--color-primary); }
+
+/* Board tones: one colour per board so they are easy to tell apart (semantic tokens + violet). */
+.tone-stories { --tone: var(--color-primary); --tone-soft: var(--color-primary-soft); }
+.tone-tips { --tone: var(--color-success); --tone-soft: var(--color-success-soft); }
+.tone-routes { --tone: var(--color-info); --tone-soft: var(--color-info-soft); }
+.tone-destinations { --tone: var(--color-warning); --tone-soft: var(--color-warning-soft); }
+.tone-advice { --tone: var(--color-violet); --tone-soft: var(--color-violet-soft); }
+.cm-board-icon {
+  display: inline-grid; place-items: center; flex: none; width: 38px; height: 38px; border-radius: var(--radius-md);
+  background: var(--tone-soft, var(--color-primary-soft)); color: var(--tone, var(--color-primary));
+}
+.badge.cm-board-chip { gap: 0.25rem; border-color: transparent; background: var(--tone-soft); color: var(--tone); text-decoration: none; }
+a.badge.cm-board-chip:hover { box-shadow: inset 0 0 0 1px var(--tone); }
+.badge.cm-tag { gap: 0.25rem; text-decoration: none; }
+a.badge.cm-tag:hover { border-color: var(--color-primary); color: var(--color-primary); }
+
+/* Content + sidebar; a single column on tablets and phones. */
+.cm-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 1.5rem; align-items: start; }
+.cm-side { display: grid; gap: 1rem; min-width: 0; }
+.cm-side-card { padding: 1.1rem 1.15rem; }
+.cm-side-title { display: flex; align-items: center; gap: 0.45rem; margin: 0 0 0.85rem; font-size: 1rem; app-icon { color: var(--color-primary); } }
+@media (max-width: 960px) {
+  .cm-layout { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Titles and names that are links but should read as text. */
+.cm-link { color: var(--color-text); font-weight: 600; text-decoration: none; overflow-wrap: anywhere; &:hover { color: var(--color-primary); text-decoration: underline; } }
+.cm-stat { display: inline-flex; align-items: center; gap: 0.3rem; white-space: nowrap; }
+.cm-count { display: inline-grid; place-items: center; min-width: 1.6rem; padding: 0 0.4rem; border-radius: 999px; background: var(--color-surface-2); color: var(--color-text); font-size: 0.8rem; font-weight: 700; }
+
+/* Skeleton card while posts load. */
+.cm-skeleton { display: grid; gap: 0.6rem; }
+.cm-skeleton .row { display: flex; align-items: center; gap: 0.6rem; }
+.cm-skeleton .dot { width: 28px; height: 28px; border-radius: 50%; }
+.cm-skeleton .line { height: 0.8rem; border-radius: 4px; width: 100%; }
+.cm-skeleton .line.title { height: 1.1rem; width: 70%; }
+.cm-skeleton .line.short { width: 35%; }
+.cm-skeleton .line.mid { width: 85%; }
+.cm-skeleton .skeleton { background: linear-gradient(90deg, var(--color-surface-2) 0%, var(--color-border) 50%, var(--color-surface-2) 100%); background-size: 200% 100%; }
+/* A liked post or comment shows a filled heart. */
+.like-btn.active app-icon svg, .c-like.active app-icon svg { fill: currentColor; }
+
+/* Community home sidebar: trending posts, top contributors, safety note. */
+.cm-side {
+  .trend-list, .cb-list { display: grid; gap: 0.9rem; margin: 0; padding: 0; list-style: none; }
+  .trend { display: flex; align-items: flex-start; gap: 0.7rem; min-width: 0; }
+  .rank { display: grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: var(--radius-sm); background: var(--color-primary-soft); color: var(--color-primary); font-weight: 800; }
+  .trend-main, .cb-main { display: grid; gap: 0.15rem; min-width: 0; }
+  .trend-stats { display: flex; flex-wrap: wrap; gap: 0.15rem 0.7rem; }
+  .cb { display: flex; align-items: center; gap: 0.65rem; min-width: 0; }
+  .cb-hint { margin: -0.5rem 0 0.85rem; }
+  .safety p { margin: 0; line-height: 1.5; }
+}
+
+/* Small stats row (post author card). */
+.cm-mini-stats {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0; border: 1px solid var(--color-border); border-radius: var(--radius-sm);
+  > div { display: flex; flex-direction: column-reverse; min-width: 0; padding: 0.5rem 0.4rem; text-align: center; }
+  > div + div { border-left: 1px solid var(--color-border); }
+  dt { color: var(--color-text-muted); font-size: 0.72rem; overflow-wrap: anywhere; }
+  dd { margin: 0; font-size: 1.1rem; font-weight: 800; }
+}

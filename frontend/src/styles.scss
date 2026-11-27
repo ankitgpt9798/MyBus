@@ -2,6 +2,8 @@
 
 // Leaflet map styles (route planner); its control images are bundled by the build.
 @use 'leaflet/dist/leaflet';
+// Community pages: avatars, board tones, two-column layout and side cards.
+@use 'community';
 
 :root {
   --color-bg: #f4f5f7;
@@ -27,6 +29,9 @@
   --color-danger-fill: #c5221f;
   --color-info: #1a5fc8;
   --color-info-soft: #e8f0fe;
+  /* Accent for the fifth community board (the other boards reuse the semantic colours) */
+  --color-violet: #6b46c1;
+  --color-violet-soft: #f1ecfd;
   --seat-available: #2e9d4f;
   --seat-hover: #e6f4ea;
   --seat-selected: #1f7a3a;
@@ -72,6 +77,8 @@ html[data-theme='dark'] {
   --color-danger-fill: #b3261e;
   --color-info: #8ab4f8;
   --color-info-soft: #1b2a42;
+  --color-violet: #b69df8;
+  --color-violet-soft: #2a2340;
   --seat-available: #4caf6a;
   --seat-hover: #1c3324;
   --seat-selected: #237a36;
