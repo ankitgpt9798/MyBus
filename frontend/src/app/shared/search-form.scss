@@ -5,6 +5,7 @@
   gap: 0.75rem;
   padding: 1.25rem;
   background: var(--color-surface);
+  border: var(--hero-card-border, none);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   color: var(--color-text);

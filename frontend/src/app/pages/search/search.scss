@@ -1,4 +1,4 @@
-.search-top { padding: 1rem 0; background: var(--hero-gradient); }
+.search-top { padding: 1rem 0; background: var(--hero-gradient); border-bottom: var(--hero-edge, none); }
 .results-head {
   display: flex;
   flex-wrap: wrap;
