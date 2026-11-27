@@ -5,7 +5,7 @@ import { SUPPORTED_LANGUAGES, t } from '../i18n';
 import { Post } from '../models/Post';
 import { SHARE_NETWORKS, UTM } from '../services/community.rules';
 import { excerpt } from '../services/community.service';
-import { photoUrl } from '../services/upload.service';
+import { StoredPhoto, shareImageUrl } from '../services/photo-storage.service';
 import { isObjectId } from '../utils/validate';
 
 /**
@@ -38,7 +38,7 @@ function securityHeaders(res: Response, nonce?: string) {
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.setHeader(
     'Content-Security-Policy',
-    `default-src 'none'; img-src 'self' https: data:; style-src 'nonce-${nonce ?? 'none'}'; script-src 'nonce-${nonce ?? 'none'}'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'`,
+    `default-src 'none'; img-src 'self' https://res.cloudinary.com data:; style-src 'nonce-${nonce ?? 'none'}'; script-src 'nonce-${nonce ?? 'none'}'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'`,
   );
 }
 
@@ -66,8 +66,9 @@ export async function sharePage(req: Request, res: Response) {
   const target = `${env.frontendUrl}/community/posts/${id}${utmQuery(req.query)}`;
   const canonical = `${env.frontendUrl}/share/posts/${id}`;
   const description = excerpt(post.body.replace(/\s+/g, ' ').trim(), 200);
-  const photo = post.photos[0];
-  const image = photo ? `${env.frontendUrl}${photoUrl(photo.file)}` : null;
+  // Absolute URL so link previews work: a Cloudinary image, or the photo served by this site.
+  const photo = post.photos[0] as StoredPhoto | undefined;
+  const image = photo ? shareImageUrl(photo) : null;
   const isBot = BOTS.test(String(req.headers['user-agent'] ?? ''));
   const meta = (attr: 'property' | 'name', key: string, value: string) => `<meta ${attr}="${key}" content="${esc(value)}">`;
 
