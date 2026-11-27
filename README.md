@@ -46,7 +46,11 @@ npm ci
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME` | Admin account created by the seed script |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM` | Outgoing email, e.g. with Brevo: `SMTP_HOST=smtp-relay.brevo.com`, `SMTP_PORT=587`, your Brevo SMTP login and SMTP key, and a sender address verified in Brevo. Leave `SMTP_HOST` empty to print emails and verification links in the backend console instead |
 | `SEAT_HOLD_MINUTES` | How long selected seats are held while paying |
-| `UPLOADS_DIR` | Where community photos are stored and served from at `/uploads` (default `backend/uploads`, git-ignored) |
+| `UPLOADS_DIR` | Where community photos are stored and served from at `/uploads` when they are kept locally (default `backend/uploads`, git-ignored) |
+| `PHOTO_STORAGE` | `cloudinary` or `local`. Default: `cloudinary` when the three `CLOUDINARY_*` credentials below are set, otherwise `local` |
+| `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | Cloudinary account for community photos (see below). Stay on the server |
+| `CLOUDINARY_FOLDER` | Cloudinary folder for MyBus images (default `mybus/community`); nothing outside it is ever touched |
+| `CLOUDINARY_API_BASE`, `CLOUDINARY_TIMEOUT_MS` | Tests only: point uploads at a mock server (default `https://api.cloudinary.com`) and change the upload timeout (default 15000 ms) |
 | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | Web push keys. Leave empty to generate a pair automatically the first time push is used (saved to the git-ignored `backend/.vapid-keys.json` and reused after restarts) |
 | `NOTIFY_RETRY_DELAYS_MS`, `NOTIFY_RETRY_INTERVAL_MS`, `NOTIFY_STREAM_HEARTBEAT_MS` | Tests only: shorten the email/push retry backoff (default 1, 5, 15 min), the retry check (30 s) and the live-stream heartbeat (15 s) |
 | `REMINDER_LEADS_MS`, `REMINDER_INTERVAL_MS` | Tests only: shorten the journey reminder lead times (default 24 h and 2 h before departure) and how often they are checked (1 min) |
@@ -70,6 +74,25 @@ The route planner uses a [TomTom](https://developer.tomtom.com/) key with these 
 While a plan is open, the web app refreshes it every minute (paused while the tab is hidden or offline, stopped after an hour without activity), colours the selected route by live traffic, suggests a clearly faster alternative and tells the user when the travel time changes by 3 minutes or more.
 
 Without a key, or when TomTom refuses it, times out or fails, the planner keeps working without live traffic: place search uses the MyBus cities and bus stops (no external geocoder), routes come from the public OSRM demo router, the map uses OpenStreetMap tiles, and the page shows a notice.
+
+### Community photos (Cloudinary)
+
+Photos are checked on the server first (real JPEG / PNG / WebP, at most 5 MB each and 4 per post) and their camera and GPS metadata is removed; only these cleaned bytes are uploaded. MyBus talks to Cloudinary's REST API directly (signed upload and destroy, no SDK) and stores each image as `<CLOUDINARY_FOLDER>/<random id>`, tagged `mybus` (`mybus-seed` for demo photos).
+
+- Cards and thumbnails load a version limited to 800 px wide, the enlarged view 1600 px, and link previews (`og:image`) an absolute 1200 px JPEG, all with automatic format and quality (`f_auto,q_auto`).
+- Deleting a post, or removing a photo while editing it, deletes the image from Cloudinary. A moderator removing a post keeps its images, so the post can be restored.
+- The seed deletes only the images it created itself (recorded in the database), never anything else in the account.
+- With `PHOTO_STORAGE=local` (or no Cloudinary credentials) photos are kept in `UPLOADS_DIR` as before. Photos stored locally before Cloudinary was enabled keep working.
+
+To copy existing local photos to Cloudinary (it uses `MONGODB_URI`, `UPLOADS_DIR` and the `CLOUDINARY_*` settings from `backend/.env` or the environment):
+
+```bash
+cd backend
+npm run migrate:photos -- --dry-run   # counts only: local photos found, files present or missing, already on Cloudinary
+npm run migrate:photos                # upload and point those photo entries at Cloudinary
+```
+
+The migration only changes photo entries that are not on Cloudinary yet, never deletes the local files (they stay as a backup) or any other data, and is safe to run again after an interruption.
 
 ## Seed the database
 
