@@ -2,6 +2,7 @@ import { Component, computed, effect, inject, input, signal, untracked } from '@
 import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ApiService } from '../../core/api.service';
+import { AuthService } from '../../core/auth.service';
 import { errorKey } from '../../core/api-error';
 import { Board, BoardInfo, CommunityPost, Contributor, PostSort } from '../../core/models';
 import { Icon } from '../../shared/icons';
@@ -14,7 +15,7 @@ const BOARDS: Board[] = ['stories', 'tips', 'routes', 'destinations', 'advice'];
 const SORTS: PostSort[] = ['latest', 'trending', 'top', 'discussed'];
 const PAGE_SIZE = 10;
 
-/** Community home: discussion boards and a feed filtered by board, route or destination (?board&routeId&city&sort). */
+/** Community home: intro and call to action, discussion boards, a feed filtered by board, route or destination (?board&routeId&city&sort), and highlights. */
 @Component({
   selector: 'app-community',
   imports: [RouterLink, TranslatePipe, Icon, CityPipe, NumPipe, PluralPipe, PostCard, TranslateOrPipe],
@@ -29,6 +30,7 @@ export class CommunityPage {
 
   private readonly api = inject(ApiService);
   private readonly router = inject(Router);
+  protected readonly auth = inject(AuthService);
   protected readonly boards = BOARDS;
   protected readonly sorts = SORTS;
   protected readonly icons = BOARD_ICONS;
@@ -47,6 +49,12 @@ export class CommunityPage {
   protected readonly activeBoard = computed(() => (BOARDS.includes(this.board() as Board) ? (this.board() as Board) : null));
   protected readonly activeSort = computed<PostSort>(() => (SORTS.includes(this.sort() as PostSort) ? (this.sort() as PostSort) : 'latest'));
   protected readonly filtered = computed(() => !!(this.activeBoard() || this.routeId() || this.city()));
+  /** Route / destination filters live behind a toggle; open while one of them is set. */
+  protected readonly filterCount = computed(() => (this.routeId() ? 1 : 0) + (this.city() ? 1 : 0));
+  protected readonly filtersOpen = signal<boolean | null>(null);
+  protected readonly showFilters = computed(() => this.filtersOpen() ?? this.filterCount() > 0);
+  protected readonly allCount = computed(() => this.boardInfo().reduce((sum, b) => sum + b.posts, 0));
+  protected readonly activeRoute = computed(() => this.routes().find((r) => r.id === this.routeId()) ?? null);
 
   constructor() {
     void this.api.communityBoards().then((r) => this.boardInfo.set(r.boards)).catch(() => undefined);
@@ -77,6 +85,13 @@ export class CommunityPage {
     } finally {
       this.loading.set(false);
     }
+  }
+
+  protected reload(): void {
+    void this.load(
+      { board: this.activeBoard() ?? undefined, routeId: this.routeId() || undefined, city: this.city() || undefined, sort: this.activeSort() },
+      1,
+    );
   }
 
   protected loadMore(): void {

@@ -1,29 +1,180 @@
 <div class="container section">
-  <header class="community-head">
-    <div>
+  <header class="card community-head">
+    <div class="head-text">
       <h1 class="page-title">{{ 'COMMUNITY.TITLE' | translate }}</h1>
-      <p class="muted intro">{{ 'COMMUNITY.INTRO' | translate }}</p>
+      <p class="intro">{{ 'COMMUNITY.INTRO' | translate }}</p>
+      @if (contributors().length) {
+        <p class="people small muted">
+          <span class="stack" aria-hidden="true">
+            @for (c of contributors().slice(0, 4); track c.id) {
+              <span class="cm-avatar sm">{{ c.name.charAt(0) }}</span>
+            }
+          </span>
+          {{ 'COMMUNITY.ACTIVE_MEMBERS' | plural: contributors().length : { count: (contributors().length | num) } }}
+        </p>
+      }
     </div>
-    <a class="btn btn-primary new-post" routerLink="/community/new" [queryParams]="activeBoard() ? { board: activeBoard() } : {}">
-      {{ 'COMMUNITY.NEW_POST' | translate }}
-    </a>
+    <div class="head-cta">
+      <a class="btn btn-primary btn-lg new-post" routerLink="/community/new" [queryParams]="activeBoard() ? { board: activeBoard() } : {}">
+        <app-icon name="edit" [size]="18" /> {{ 'COMMUNITY.SHARE_JOURNEY' | translate }}
+      </a>
+      @if (!auth.isLoggedIn()) {
+        <p class="cta-note small" data-cta="guest">
+          {{ 'COMMUNITY.CTA_GUEST' | translate }}
+          <a routerLink="/login" [queryParams]="{ returnUrl: '/community/new' }">{{ 'COMMUNITY.CTA_GUEST_LINK' | translate }}</a>
+        </p>
+      } @else if (!auth.isVerified()) {
+        <p class="cta-note small" data-cta="verify">
+          {{ 'COMMUNITY.CTA_UNVERIFIED' | translate }}
+          <a routerLink="/profile" [queryParams]="{ verify: 1 }">{{ 'REVIEWS.VERIFY_NOW' | translate }}</a>
+        </p>
+      }
+    </div>
   </header>
 
-  @if (trending().length || contributors().length) {
-    <div class="highlights">
+  <div class="cm-layout">
+    <div class="main">
+      <nav class="boards" [attr.aria-label]="'COMMUNITY.BOARDS_TITLE' | translate">
+        <button type="button" class="board-all" [class.active]="!activeBoard()" [attr.aria-pressed]="!activeBoard()" (click)="setFilter({ board: null })">
+          <span class="cm-board-icon" aria-hidden="true"><app-icon name="users" [size]="18" /></span>
+          <span class="b-text">
+            <strong>{{ 'COMMUNITY.ALL_POSTS' | translate }}</strong>
+            <span class="desc small muted">{{ 'COMMUNITY.ALL_DESC' | translate }}</span>
+          </span>
+          <span class="count small">{{ 'COMMUNITY.POSTS_COUNT' | plural: allCount() : { count: (allCount() | num) } }}</span>
+        </button>
+        @for (b of boards; track b) {
+          <button type="button" [class]="'board-card tone-' + b" [class.active]="activeBoard() === b" [attr.aria-pressed]="activeBoard() === b" [attr.data-board]="b"
+            (click)="setFilter({ board: activeBoard() === b ? null : b })">
+            <span class="cm-board-icon" aria-hidden="true"><app-icon [name]="icons[b]" [size]="18" /></span>
+            <span class="b-text">
+              <strong>{{ 'COMMUNITY.BOARDS.' + b + '.NAME' | translate }}</strong>
+              <span class="desc small muted">{{ 'COMMUNITY.BOARDS.' + b + '.DESC' | translate }}</span>
+            </span>
+            <span class="count small">{{ 'COMMUNITY.POSTS_COUNT' | plural: postsOn(b) : { count: (postsOn(b) | num) } }}</span>
+          </button>
+        }
+      </nav>
+
+      <section class="feed" [attr.aria-label]="'COMMUNITY.FEED' | translate">
+        <div class="card toolbar">
+          <div class="sorts" role="group" [attr.aria-label]="'COMMUNITY.SORT_LABEL' | translate">
+            @for (s of sorts; track s) {
+              <button type="button" class="chip" [class.active]="activeSort() === s" [attr.aria-pressed]="activeSort() === s" [attr.data-sort]="s" (click)="setFilter({ sort: s })">
+                {{ 'COMMUNITY.SORT.' + s | translate }}
+              </button>
+            }
+          </div>
+          <button type="button" class="btn btn-sm btn-ghost filters-toggle" [attr.aria-expanded]="showFilters()" aria-controls="feed-filters" (click)="filtersOpen.set(!showFilters())">
+            <app-icon name="filter" [size]="16" /> {{ 'COMMUNITY.FILTERS' | translate }}
+            @if (filterCount()) {
+              <span class="badge badge-primary">{{ filterCount() | num }}</span>
+            }
+          </button>
+          <div class="filters" id="feed-filters" [hidden]="!showFilters()">
+            <div class="form-field">
+              <label for="f-route">{{ 'COMMUNITY.FILTER_ROUTE' | translate }}</label>
+              <select id="f-route" [value]="routeId() ?? ''" (change)="setFilter({ routeId: $any($event.target).value || null })">
+                <option value="">{{ 'COMMUNITY.ANY_ROUTE' | translate }}</option>
+                @for (r of routes(); track r.id) {
+                  <option [value]="r.id" [selected]="r.id === routeId()">{{ r.from | city }} → {{ r.to | city }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-field">
+              <label for="f-city">{{ 'COMMUNITY.FILTER_CITY' | translate }}</label>
+              <select id="f-city" [value]="city() ?? ''" (change)="setFilter({ city: $any($event.target).value || null })">
+                <option value="">{{ 'COMMUNITY.ANY_CITY' | translate }}</option>
+                @for (c of cities(); track c) {
+                  <option [value]="c" [selected]="c === city()">{{ c | city }}</option>
+                }
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="feed-head">
+          <h2 class="sub-title">
+            {{ (activeBoard() ? 'COMMUNITY.BOARDS.' + activeBoard() + '.NAME' : 'COMMUNITY.ALL_POSTS') | translate }}
+          </h2>
+          <span class="small muted">{{ 'COMMUNITY.POSTS_COUNT' | plural: total() : { count: (total() | num) } }}</span>
+          @if (activeRoute(); as r) {
+            <button type="button" class="chip active filter-chip" (click)="setFilter({ routeId: null })" [attr.aria-label]="'COMMUNITY.REMOVE_FILTER' | translate: { name: (r.from | city) + ' → ' + (r.to | city) }">
+              {{ r.from | city }} → {{ r.to | city }} <app-icon name="close" [size]="12" />
+            </button>
+          }
+          @if (city(); as c) {
+            <button type="button" class="chip active filter-chip" (click)="setFilter({ city: null })" [attr.aria-label]="'COMMUNITY.REMOVE_FILTER' | translate: { name: (c | city) }">
+              <app-icon name="pin" [size]="12" /> {{ c | city }} <app-icon name="close" [size]="12" />
+            </button>
+          }
+          @if (filtered()) {
+            <button type="button" class="link clear-filters" (click)="clearFilters()">{{ 'COMMUNITY.CLEAR_FILTERS' | translate }}</button>
+          }
+        </div>
+
+        @if (error(); as e) {
+          <div class="alert alert-error feed-error" role="alert">
+            <span>{{ e | translateOr: 'ERRORS.GENERIC' }}</span>
+            <button type="button" class="btn btn-sm btn-outline retry" (click)="reload()">{{ 'COMMUNITY.RETRY' | translate }}</button>
+          </div>
+        }
+        @if (posts().length) {
+          <div class="post-list" [class.dim]="loading()">
+            @for (p of posts(); track p.id) {
+              <app-post-card [post]="p" />
+            }
+          </div>
+          @if (posts().length < total()) {
+            <div class="more">
+              <button type="button" class="btn btn-outline load-more" [disabled]="loading()" (click)="loadMore()">
+                {{ (loading() ? 'COMMON.PLEASE_WAIT' : 'COMMUNITY.LOAD_MORE') | translate }}
+              </button>
+            </div>
+          }
+        } @else if (loading()) {
+          <div class="post-list" role="status">
+            <span class="sr-only">{{ 'COMMON.PLEASE_WAIT' | translate }}</span>
+            @for (i of [1, 2, 3]; track i) {
+              <div class="card cm-skeleton" aria-hidden="true">
+                <div class="row"><span class="skeleton dot"></span><span class="skeleton line short"></span></div>
+                <span class="skeleton line title"></span>
+                <span class="skeleton line"></span>
+                <span class="skeleton line mid"></span>
+              </div>
+            }
+          </div>
+        } @else if (!error()) {
+          <div class="card empty-state">
+            <span class="empty-icon" aria-hidden="true"><app-icon name="users" [size]="34" /></span>
+            <h2>{{ (filtered() ? 'COMMUNITY.NONE_MATCH' : 'COMMUNITY.EMPTY_TITLE') | translate }}</h2>
+            <p>{{ 'COMMUNITY.EMPTY_TEXT' | translate }}</p>
+            <div class="btn-row">
+              @if (filtered()) {
+                <button type="button" class="btn btn-outline" (click)="clearFilters()">{{ 'COMMUNITY.CLEAR_FILTERS' | translate }}</button>
+              }
+              <a class="btn btn-primary" routerLink="/community/new" [queryParams]="activeBoard() ? { board: activeBoard() } : {}">{{ 'COMMUNITY.SHARE_JOURNEY' | translate }}</a>
+            </div>
+          </div>
+        }
+      </section>
+    </div>
+
+    <aside class="cm-side">
       @if (trending().length) {
-        <section class="card trending" aria-labelledby="trending-title">
-          <h2 class="sub-title" id="trending-title"><app-icon name="trending" [size]="18" /> {{ 'COMMUNITY.TRENDING_TITLE' | translate }}</h2>
+        <section class="card cm-side-card trending" aria-labelledby="trending-title">
+          <h2 class="cm-side-title" id="trending-title"><app-icon name="trending" [size]="18" /> {{ 'COMMUNITY.TRENDING_TITLE' | translate }}</h2>
           <ol class="trend-list">
             @for (t of trending(); track t.id; let i = $index) {
               <li class="trend" [attr.data-post]="t.id">
                 <span class="rank" aria-hidden="true">{{ i + 1 }}</span>
                 <div class="trend-main">
-                  <a class="trend-title" [routerLink]="['/community/posts', t.id]" [attr.lang]="t.language">{{ t.title }}</a>
-                  <span class="small muted">
-                    {{ t.author.name }} · {{ 'COMMUNITY.LIKES' | plural: t.likeCount : { count: (t.likeCount | num) } }} ·
-                    {{ 'COMMUNITY.COMMENTS_COUNT' | plural: t.commentCount : { count: (t.commentCount | num) } }} ·
-                    {{ 'COMMUNITY.SHARES' | plural: t.shareCount : { count: (t.shareCount | num) } }}
+                  <a class="cm-link trend-title" [routerLink]="['/community/posts', t.id]" [attr.lang]="t.language">{{ t.title }}</a>
+                  <span class="small muted">{{ t.author.name }}</span>
+                  <span class="trend-stats small muted">
+                    <span class="cm-stat"><app-icon name="heart" [size]="13" /> {{ 'COMMUNITY.LIKES' | plural: t.likeCount : { count: (t.likeCount | num) } }}</span>
+                    <span class="cm-stat"><app-icon name="comment" [size]="13" /> {{ 'COMMUNITY.COMMENTS_COUNT' | plural: t.commentCount : { count: (t.commentCount | num) } }}</span>
+                    <span class="cm-stat"><app-icon name="share" [size]="13" /> {{ 'COMMUNITY.SHARES' | plural: t.shareCount : { count: (t.shareCount | num) } }}</span>
                   </span>
                 </div>
               </li>
@@ -32,15 +183,15 @@
         </section>
       }
       @if (contributors().length) {
-        <section class="card contributors" aria-labelledby="contributors-title">
-          <h2 class="sub-title" id="contributors-title"><app-icon name="users" [size]="18" /> {{ 'COMMUNITY.TOP_CONTRIBUTORS' | translate }}</h2>
+        <section class="card cm-side-card contributors" aria-labelledby="contributors-title">
+          <h2 class="cm-side-title" id="contributors-title"><app-icon name="users" [size]="18" /> {{ 'COMMUNITY.TOP_CONTRIBUTORS' | translate }}</h2>
           <p class="small muted cb-hint">{{ 'COMMUNITY.TOP_CONTRIBUTORS_HINT' | translate }}</p>
-          <ul class="cb-list">
+          <ol class="cb-list">
             @for (c of contributors(); track c.id) {
               <li class="cb">
-                <span class="avatar" aria-hidden="true">{{ c.name.charAt(0) }}</span>
+                <a class="cm-avatar" [routerLink]="['/users', c.id]" tabindex="-1" aria-hidden="true">{{ c.name.charAt(0) }}</a>
                 <div class="cb-main">
-                  <a class="cb-name" [routerLink]="['/users', c.id]">{{ c.name }}</a>
+                  <a class="cm-link cb-name" [routerLink]="['/users', c.id]">{{ c.name }}</a>
                   <span class="small muted">
                     {{ 'COMMUNITY.POSTS_COUNT' | plural: c.posts : { count: (c.posts | num) } }} ·
                     {{ 'COMMUNITY.COMMENTS_COUNT' | plural: c.comments : { count: (c.comments | num) } }}
@@ -48,88 +199,13 @@
                 </div>
               </li>
             }
-          </ul>
+          </ol>
         </section>
       }
-    </div>
-  }
-
-  <section class="boards" [attr.aria-label]="'COMMUNITY.BOARDS_TITLE' | translate">
-    @for (b of boards; track b) {
-      <button type="button" class="board-card card" [class.active]="activeBoard() === b" [attr.aria-pressed]="activeBoard() === b" [attr.data-board]="b"
-        (click)="setFilter({ board: activeBoard() === b ? null : b })">
-        <span class="board-icon" aria-hidden="true"><app-icon [name]="icons[b]" [size]="20" /></span>
-        <strong>{{ 'COMMUNITY.BOARDS.' + b + '.NAME' | translate }}</strong>
-        <span class="small muted desc">{{ 'COMMUNITY.BOARDS.' + b + '.DESC' | translate }}</span>
-        <span class="small count">{{ 'COMMUNITY.POSTS_COUNT' | plural: postsOn(b) : { count: (postsOn(b) | num) } }}</span>
-      </button>
-    }
-  </section>
-
-  <section class="feed" [attr.aria-label]="'COMMUNITY.FEED' | translate">
-    <div class="card feed-filters">
-      <div class="form-field">
-        <label for="f-route">{{ 'COMMUNITY.FILTER_ROUTE' | translate }}</label>
-        <select id="f-route" [value]="routeId() ?? ''" (change)="setFilter({ routeId: $any($event.target).value || null })">
-          <option value="">{{ 'COMMUNITY.ANY_ROUTE' | translate }}</option>
-          @for (r of routes(); track r.id) {
-            <option [value]="r.id" [selected]="r.id === routeId()">{{ r.from | city }} → {{ r.to | city }}</option>
-          }
-        </select>
-      </div>
-      <div class="form-field">
-        <label for="f-city">{{ 'COMMUNITY.FILTER_CITY' | translate }}</label>
-        <select id="f-city" [value]="city() ?? ''" (change)="setFilter({ city: $any($event.target).value || null })">
-          <option value="">{{ 'COMMUNITY.ANY_CITY' | translate }}</option>
-          @for (c of cities(); track c) {
-            <option [value]="c" [selected]="c === city()">{{ c | city }}</option>
-          }
-        </select>
-      </div>
-      <div class="sorts" role="group" [attr.aria-label]="'COMMUNITY.SORT_LABEL' | translate">
-        @for (s of sorts; track s) {
-          <button type="button" class="chip" [class.active]="activeSort() === s" [attr.aria-pressed]="activeSort() === s" [attr.data-sort]="s" (click)="setFilter({ sort: s })">
-            {{ 'COMMUNITY.SORT.' + s | translate }}
-          </button>
-        }
-      </div>
-    </div>
-
-    <div class="feed-head">
-      <h2 class="sub-title">
-        {{ (activeBoard() ? 'COMMUNITY.BOARDS.' + activeBoard() + '.NAME' : 'COMMUNITY.ALL_POSTS') | translate }}
-      </h2>
-      <span class="small muted">{{ 'COMMUNITY.POSTS_COUNT' | plural: total() : { count: (total() | num) } }}</span>
-      @if (filtered()) {
-        <button type="button" class="link clear-filters" (click)="clearFilters()">{{ 'COMMUNITY.CLEAR_FILTERS' | translate }}</button>
-      }
-    </div>
-
-    @if (error(); as e) {
-      <div class="alert alert-error" role="alert">{{ e | translateOr: 'ERRORS.GENERIC' }}</div>
-    }
-    @if (posts().length) {
-      <div class="post-list" [class.dim]="loading()">
-        @for (p of posts(); track p.id) {
-          <app-post-card [post]="p" />
-        }
-      </div>
-      @if (posts().length < total()) {
-        <div class="more">
-          <button type="button" class="btn btn-outline load-more" [disabled]="loading()" (click)="loadMore()">
-            {{ (loading() ? 'COMMON.PLEASE_WAIT' : 'COMMUNITY.LOAD_MORE') | translate }}
-          </button>
-        </div>
-      }
-    } @else if (!loading()) {
-      <div class="card empty-state">
-        <app-icon name="users" [size]="40" />
-        <h2>{{ (filtered() ? 'COMMUNITY.NONE_MATCH' : 'COMMUNITY.EMPTY_TITLE') | translate }}</h2>
-        <p>{{ 'COMMUNITY.EMPTY_TEXT' | translate }}</p>
-        <a class="btn btn-primary" routerLink="/community/new">{{ 'COMMUNITY.NEW_POST' | translate }}</a>
-      </div>
-    } @else {
-      <div class="card skeleton feed-skeleton"></div>
-    }
-  </section>
+      <section class="card cm-side-card safety" aria-labelledby="safety-title">
+        <h2 class="cm-side-title" id="safety-title"><app-icon name="shield" [size]="18" /> {{ 'COMMUNITY.SAFETY_TITLE' | translate }}</h2>
+        <p class="small muted">{{ 'COMMUNITY.SAFETY_TEXT' | translate }}</p>
+      </section>
+    </aside>
+  </div>
 </div>
