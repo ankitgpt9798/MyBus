@@ -15,15 +15,15 @@ import { TranslateOrPipe } from '../../shared/translate-or.pipe';
 type Tab = 'activity' | 'posts' | 'comments' | 'reviews';
 const TABS: Tab[] = ['activity', 'posts', 'comments', 'reviews'];
 const ACTIVITY_ICONS: Record<ActivityItem['type'], string> = {
-  post: 'users',
-  comment: 'bell',
+  post: 'edit',
+  comment: 'comment',
   review: 'star',
-  like_post: 'check',
-  like_comment: 'check',
-  helpful: 'shield',
+  like_post: 'heart',
+  like_comment: 'heart',
+  helpful: 'check',
 };
 
-/** Public profile (/users/:id?tab=): badges, stats and the member's visible posts, comments, reviews and activity. */
+/** Public profile (/users/:id?tab=): header with badges and stats, then tabs for the activity timeline, posts, comments and reviews. */
 @Component({
   selector: 'app-user-profile',
   imports: [RouterLink, TranslatePipe, Icon, AppDatePipe, CityPipe, NumPipe, PluralPipe, PostCard, Stars, TranslateOrPipe],
