@@ -1147,7 +1147,39 @@
     "POPULAR": "Popular",
     "TRENDING_TITLE": "Trending this week",
     "TOP_CONTRIBUTORS": "Top contributors",
-    "TOP_CONTRIBUTORS_HINT": "Most active members in the last 30 days"
+    "TOP_CONTRIBUTORS_HINT": "Most active members in the last 30 days",
+    "SHARE_JOURNEY": "Share your journey",
+    "CTA_GUEST": "Only verified members can post, comment and like.",
+    "CTA_GUEST_LINK": "Log in or sign up",
+    "CTA_UNVERIFIED": "Verify your email to post, comment and like.",
+    "ACTIVE_MEMBERS": {
+      "one": "{{count}} member active in the last 30 days",
+      "other": "{{count}} members active in the last 30 days"
+    },
+    "ALL_DESC": "Every story, tip and question from all boards",
+    "FILTERS": "Filters",
+    "REMOVE_FILTER": "Remove filter: {{name}}",
+    "RETRY": "Try again",
+    "READ_MORE": "Read more",
+    "SAFETY_TITLE": "A safe, friendly community",
+    "SAFETY_TEXT": "Only verified members can post. If a post or comment breaks the guidelines, use Report on it: our moderators review every report and remove anything that does not belong.",
+    "ABOUT_AUTHOR": "About the author",
+    "VIEW_PROFILE": "View profile and activity",
+    "SHARE_HINT": "Shared links show a preview card and bring people back to this post.",
+    "BOARD_HINT": "Choose the board that fits your post best.",
+    "TAGS_TITLE": "Tags",
+    "TAGS_HINT": "Tag a route or destination so travellers can find your post.",
+    "DROP_PHOTOS": "Drag photos here or click to choose",
+    "DROP_RELEASE": "Drop to add the photos",
+    "PHOTOS_ADDED": {
+      "one": "{{count}} of {{max}} photos added",
+      "other": "{{count}} of {{max}} photos added"
+    },
+    "GUIDELINES_INTRO": "A few simple rules keep MyBus friendly and useful:",
+    "TIPS_TITLE": "Tips for a great post",
+    "TIP_TITLE": "Use a clear title that says what the post is about.",
+    "TIP_DETAIL": "Mention the route, operator and time of travel.",
+    "TIP_PHOTOS": "Add photos and describe them for people who use screen readers."
   },
   "SHARE": {
     "LABEL": "Share",
