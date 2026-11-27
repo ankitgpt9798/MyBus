@@ -4,7 +4,7 @@ import { Post } from '../models/Post';
 import { Reaction, ReactionKind } from '../models/Reaction';
 import { POPULAR_MIN_ENGAGEMENT, engagement } from './community.rules';
 import { displayName } from './review.service';
-import { photoUrl } from './upload.service';
+import { StoredPhoto, photoView } from './photo-storage.service';
 
 type Id = Types.ObjectId;
 export type AuthorRef = { _id: Id; name: string } | null;
@@ -23,7 +23,7 @@ export type PostLean = {
   board: string;
   title: string;
   body: string;
-  photos: { file: string; alt?: string | null }[];
+  photos: StoredPhoto[];
   route?: RouteRef;
   city?: string | null;
   language?: string | null;
@@ -48,7 +48,7 @@ export function viewPost(p: PostLean, viewer: string | null, full: boolean) {
     title: p.title,
     body: truncated ? excerpt(p.body, EXCERPT) : p.body,
     truncated,
-    photos: p.photos.map((ph) => ({ url: photoUrl(ph.file), alt: ph.alt ?? '' })),
+    photos: p.photos.map(photoView),
     route: p.route ? { id: String(p.route._id), from: p.route.from, to: p.route.to } : null,
     city: p.city ?? null,
     language: p.language ?? 'en',

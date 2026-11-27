@@ -15,6 +15,22 @@ const num = (name: string, fallback: number) => {
   return Number.isFinite(n) && process.env[name] !== '' ? n : fallback;
 };
 
+/**
+ * Where community photos are kept: PHOTO_STORAGE=local|cloudinary. Without it, Cloudinary is used when its three
+ * credentials are set, otherwise the local uploads folder.
+ */
+function photoStorage(): 'local' | 'cloudinary' {
+  const hasCloudinary = ['CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET'].every((n) => str(n).trim() !== '');
+  const wanted = str('PHOTO_STORAGE').trim().toLowerCase();
+  if (wanted === 'local') return 'local';
+  if (wanted === 'cloudinary') {
+    if (!hasCloudinary) throw new Error('PHOTO_STORAGE=cloudinary needs CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET');
+    return 'cloudinary';
+  }
+  if (wanted) throw new Error('PHOTO_STORAGE must be "local" or "cloudinary"');
+  return hasCloudinary ? 'cloudinary' : 'local';
+}
+
 export const env = {
   port: num('PORT', 4000),
   nodeEnv: str('NODE_ENV', 'development'),
@@ -27,6 +43,19 @@ export const env = {
   jwtSecret: required('JWT_SECRET'),
   // Uploaded files (community photos go into <dir>/community). Default: backend/uploads (git-ignored).
   uploadsDir: path.resolve(str('UPLOADS_DIR', path.resolve(__dirname, '../../uploads'))),
+  photos: {
+    storage: photoStorage(),
+    cloudinary: {
+      cloudName: str('CLOUDINARY_CLOUD_NAME').trim(),
+      apiKey: str('CLOUDINARY_API_KEY').trim(),
+      apiSecret: str('CLOUDINARY_API_SECRET').trim(),
+      // Every MyBus image goes into this folder (nothing outside it is ever touched).
+      folder: str('CLOUDINARY_FOLDER', 'mybus/community').trim().replace(/^\/+|\/+$/g, '') || 'mybus/community',
+      // Tests only: a local mock of the Cloudinary upload API, and a shorter timeout.
+      apiBase: str('CLOUDINARY_API_BASE', 'https://api.cloudinary.com').replace(/\/$/, ''),
+      timeoutMs: num('CLOUDINARY_TIMEOUT_MS', 15_000),
+    },
+  },
   jwtExpiresIn: str('JWT_EXPIRES_IN', '7d'),
   admin: {
     email: str('ADMIN_EMAIL', 'admin@mybus.local').toLowerCase(),

@@ -11,6 +11,7 @@ async function main() {
   const server = createApp().listen(env.port, () => {
     console.log(`[api] MyBus API listening on http://localhost:${env.port}/api`);
     if (!smtpConfigured()) console.log('[mail] SMTP not configured: emails and verification links are printed here');
+    console.log(env.photos.storage === 'cloudinary' ? `[photos] community photos are stored on Cloudinary (folder ${env.photos.cloudinary.folder})` : '[photos] community photos are stored in the uploads folder');
   });
   startJobs();
 

@@ -31,7 +31,8 @@ import {
 } from '../services/community.service';
 import { guidelineViolation } from '../services/review.rules';
 import { displayName } from '../services/review.service';
-import { MAX_PHOTOS, checkPhotos, deletePhotos, savePhotos } from '../services/upload.service';
+import { StoredPhoto, photoKey, removePhotos, storeImages } from '../services/photo-storage.service';
+import { MAX_PHOTOS, checkPhotos } from '../services/upload.service';
 import { AppError, badRequest, conflict, forbidden, notFound } from '../utils/AppError';
 import { allow } from '../utils/rate-limit';
 import { isObjectId, validate } from '../utils/validate';
@@ -267,7 +268,7 @@ export async function createPost(req: Request, res: Response) {
   const types = checkPhotos(files);
   const alts = readAlts(req.body?.alts, files.length);
   const language = isLang(req.body?.language) ? req.body.language : req.user!.language;
-  const saved = await savePhotos(files, types);
+  const saved = await storeImages(files.map((f, i) => ({ data: f.buffer, type: types[i] })));
   let post: PostDoc;
   try {
     post = await Post.create({
@@ -281,7 +282,7 @@ export async function createPost(req: Request, res: Response) {
       photos: saved.map((s, i) => ({ ...s, alt: alts[i] })),
     });
   } catch (err) {
-    await deletePhotos(saved.map((s) => s.file));
+    await removePhotos(saved);
     throw err;
   }
   res.status(201).json({ post: await postView(post._id, viewerOf(req)) });
@@ -289,7 +290,8 @@ export async function createPost(req: Request, res: Response) {
 
 /**
  * PATCH /community/posts/:id (multipart): any post field, plus
- *  keep: JSON [{ file, alt }] of existing photos to keep (all kept when omitted) and new photos[].
+ *  keep: JSON [{ file, alt }] of existing photos to keep (all kept when omitted; `file` is the photo id from the API)
+ *  and new photos[].
  */
 export async function updatePost(req: Request, res: Response) {
   const files = (req.files as Express.Multer.File[] | undefined) ?? [];
@@ -306,7 +308,8 @@ export async function updatePost(req: Request, res: Response) {
   checkBoardTags(board, route, city);
 
   // Photos: kept existing ones (optionally with new alt text) + new uploads, at most 4 in total.
-  let kept = post.photos.map((p) => ({ file: p.file, type: p.type, size: p.size, alt: p.alt ?? '' }));
+  const current = (post.toObject().photos ?? []) as StoredPhoto[];
+  let kept = current.map((p) => ({ ...p, alt: p.alt ?? '' }));
   if (req.body?.keep !== undefined) {
     let list: unknown;
     try {
@@ -317,16 +320,16 @@ export async function updatePost(req: Request, res: Response) {
     if (!Array.isArray(list)) throw badRequest('VALIDATION_ERROR', 'Invalid input', [{ field: 'keep', rule: 'type' }]);
     const wanted = list as { file?: string; alt?: string }[];
     kept = kept
-      .filter((p) => wanted.some((w) => w.file === p.file))
-      .map((p) => ({ ...p, alt: String(wanted.find((w) => w.file === p.file)?.alt ?? p.alt).trim().slice(0, ALT_MAX) }));
+      .filter((p) => wanted.some((w) => w.file === photoKey(p)))
+      .map((p) => ({ ...p, alt: String(wanted.find((w) => w.file === photoKey(p))?.alt ?? p.alt).trim().slice(0, ALT_MAX) }));
   }
   if (kept.length + files.length > MAX_PHOTOS) {
     throw new AppError(400, 'COMMUNITY_TOO_MANY_PHOTOS', 'At most 4 photos per post', [{ field: 'photos', rule: 'maxItems', params: { max: MAX_PHOTOS } }]);
   }
   const types = checkPhotos(files);
   const alts = readAlts(req.body?.alts, files.length);
-  const dropped = post.photos.map((p) => p.file).filter((f) => !kept.some((k) => k.file === f));
-  const saved = await savePhotos(files, types);
+  const dropped = current.filter((p) => !kept.some((k) => photoKey(k) === photoKey(p)));
+  const saved = await storeImages(files.map((f, i) => ({ data: f.buffer, type: types[i] })));
   try {
     await Post.updateOne(
       { _id: post._id },
@@ -344,14 +347,14 @@ export async function updatePost(req: Request, res: Response) {
       },
     );
   } catch (err) {
-    await deletePhotos(saved.map((s) => s.file));
+    await removePhotos(saved);
     throw err;
   }
-  await deletePhotos(dropped);
+  await removePhotos(dropped);
   res.json({ post: await postView(post._id, viewerOf(req)) });
 }
 
-/** DELETE /community/posts/:id: the author removes their post, its comments and its photo files. */
+/** DELETE /community/posts/:id: the author removes their post, its comments and its photos (files or Cloudinary images). */
 export async function deletePost(req: Request, res: Response) {
   if (!isObjectId(req.params.id)) throw notFound('COMMUNITY_POST_NOT_FOUND', 'Post not found');
   const post = await Post.findById(req.params.id);
@@ -361,7 +364,7 @@ export async function deletePost(req: Request, res: Response) {
   await Comment.deleteMany({ post: post._id });
   await Post.deleteOne({ _id: post._id });
   await forgetReactions([post._id, ...commentIds]);
-  await deletePhotos(post.photos.map((p) => p.file));
+  await removePhotos((post.toObject().photos ?? []) as StoredPhoto[]);
   res.json({ deleted: true });
 }
 

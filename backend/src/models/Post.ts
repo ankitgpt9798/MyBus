@@ -6,11 +6,23 @@ import { SHARE_NETWORKS } from '../services/community.rules';
 export const BOARDS = ['stories', 'tips', 'routes', 'destinations', 'advice'] as const;
 export const CONTENT_STATUSES = ['visible', 'hidden', 'removed'] as const;
 
+/**
+ * A post photo, stored in the local uploads folder or on Cloudinary. Photos saved before Cloudinary support have no
+ * `storage` (local) and keep their format / size in `type` / `size`.
+ */
 const photoSchema = new Schema(
   {
-    file: { type: String, required: true }, // random name under uploads/community
-    type: { type: String, enum: ['jpg', 'png', 'webp'], required: true },
-    size: { type: Number, required: true },
+    storage: { type: String, enum: ['local', 'cloudinary'], default: 'local' },
+    file: String, // local: random name under uploads/community (kept as a backup when the photo is moved to Cloudinary)
+    url: String, // cloudinary: HTTPS delivery URL
+    publicId: String, // cloudinary: public id, used to delete the image
+    width: Number,
+    height: Number,
+    format: { type: String, enum: ['jpg', 'png', 'webp'] },
+    bytes: Number,
+    type: { type: String, enum: ['jpg', 'png', 'webp'] }, // legacy: format of photos stored before Cloudinary support
+    size: Number, // legacy: bytes of photos stored before Cloudinary support
+    seed: Boolean, // created by the demo seed (the only images the seed deletes again)
     alt: { type: String, default: '', maxlength: 150 },
   },
   { _id: false },
