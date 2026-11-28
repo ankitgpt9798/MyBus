@@ -94,6 +94,14 @@ export const env = {
     pass: str('SMTP_PASS'),
     from: str('MAIL_FROM', 'MyBus <no-reply@mybus.local>'),
   },
+  // Email over HTTPS with Brevo's transactional API (used before SMTP when the key is set; hosts such as Render's
+  // free plan block SMTP ports). The sender comes from MAIL_FROM.
+  brevo: {
+    apiKey: str('BREVO_API_KEY').trim(),
+    // Tests only: a local mock of the Brevo API.
+    apiBase: str('BREVO_API_BASE', 'https://api.brevo.com').replace(/\/$/, ''),
+    timeoutMs: 15_000,
+  },
   seatHoldMinutes: num('SEAT_HOLD_MINUTES', 10),
   // Route planner. The TomTom key stays on the server (Search, Routing, Traffic and Map Display APIs).
   // Without a working key the planner falls back to the app's own places and the public OSRM router.

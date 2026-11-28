@@ -13,6 +13,10 @@ export function productionWarnings(): string[] {
   if (env.photos.storage === 'local') {
     warnings.push('community photos are stored on the server disk (PHOTO_STORAGE=local): hosting platforms like Render wipe it on every deploy or restart; set the CLOUDINARY_* variables');
   }
+  if (!env.brevo.apiKey && env.smtp.host) {
+    warnings.push("email goes out over SMTP only: SMTP ports are blocked on Render's free plan; set BREVO_API_KEY to send through Brevo's HTTPS API");
+  }
+  if (!env.brevo.apiKey && !env.smtp.host) warnings.push('no email transport is configured (BREVO_API_KEY or SMTP_HOST): emails are only printed to the log');
   if (!env.vapid.publicKey || !env.vapid.privateKey) {
     warnings.push('VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY are not set: keys generated on the server are lost on the next deploy, which breaks existing push subscriptions');
   }

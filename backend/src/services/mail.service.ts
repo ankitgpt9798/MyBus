@@ -9,11 +9,25 @@ export interface MailMessage {
   text: string;
 }
 
+export type MailTransport = 'brevo-api' | 'smtp' | 'console';
+
 export interface MailResult {
-  delivered: boolean; // true when handed to an SMTP server
+  delivered: boolean; // true when handed to Brevo or an SMTP server
   messageId?: string;
   /** suppressed: reserved / non-routable recipient, printed to the console instead of being sent */
-  transport: 'smtp' | 'console' | 'suppressed';
+  transport: MailTransport | 'suppressed';
+}
+
+/** A failed send; the message never contains credentials (it becomes a delivery's lastError). */
+export class MailError extends Error {
+  constructor(
+    message: string,
+    readonly status?: number,
+    readonly code?: string,
+  ) {
+    super(message);
+    this.name = 'MailError';
+  }
 }
 
 // Reserved / non-routable recipients (RFC 2606 / 6761 names and the example.* domains). Real SMTP sends to them
@@ -30,7 +44,11 @@ export function isUndeliverableAddress(email: string | null | undefined): boolea
 
 let transporter: Transporter | null = null;
 
-export const smtpConfigured = () => Boolean(env.smtp.host);
+/** Brevo's HTTPS API when BREVO_API_KEY is set, otherwise SMTP when SMTP_HOST is set, otherwise the console. */
+export function mailTransport(): MailTransport {
+  if (env.brevo.apiKey) return 'brevo-api';
+  return env.smtp.host ? 'smtp' : 'console';
+}
 
 function getTransporter(): Transporter {
   if (!transporter) {
@@ -44,8 +62,43 @@ function getTransporter(): Transporter {
   return transporter;
 }
 
+/** "MyBus <no-reply@example.org>" or a bare address → Brevo's sender object. */
+export function parseSender(from: string): { name?: string; email: string } {
+  const m = from.match(/^\s*"?([^"<]*?)"?\s*<([^>]+)>\s*$/);
+  if (m) return { ...(m[1].trim() && { name: m[1].trim() }), email: m[2].trim() };
+  return { email: from.trim() };
+}
+
+/** POST /v3/smtp/email with a 15 s timeout. Any failure throws a MailError (Brevo's code and message, never the key). */
+async function sendViaBrevo(msg: MailMessage): Promise<MailResult> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), env.brevo.timeoutMs);
+  let res: Response;
+  try {
+    res = await fetch(`${env.brevo.apiBase}/v3/smtp/email`, {
+      method: 'POST',
+      headers: { 'api-key': env.brevo.apiKey, 'content-type': 'application/json', accept: 'application/json' },
+      body: JSON.stringify({ sender: parseSender(env.smtp.from), to: [{ email: msg.to }], subject: msg.subject, htmlContent: msg.html, textContent: msg.text }),
+      signal: controller.signal,
+    });
+  } catch (err) {
+    if (controller.signal.aborted) throw new MailError(`Brevo API did not answer within ${env.brevo.timeoutMs / 1000} s`);
+    const cause = (err as { cause?: { code?: string } })?.cause?.code;
+    throw new MailError(`Brevo API unreachable${cause ? ` (${cause})` : ''}`);
+  } finally {
+    clearTimeout(timer);
+  }
+  const body = (await res.json().catch(() => null)) as { messageId?: string; code?: string; message?: string } | null;
+  if (!res.ok) {
+    if (res.status === 401 || res.status === 403) console.error("[mail] Brevo API rejected the key (check BREVO_API_KEY and Brevo's authorised IPs)");
+    const detail = `${body?.code ?? 'error'}: ${String(body?.message ?? res.statusText).slice(0, 200)}`;
+    throw new MailError(`Brevo API ${res.status} ${detail}`, res.status, body?.code);
+  }
+  return { delivered: true, messageId: body?.messageId, transport: 'brevo-api' };
+}
+
 /**
- * Sends through SMTP when configured; otherwise prints the email to the console (dev mode). Throws on SMTP failure.
+ * Sends with the configured transport (Brevo API, SMTP, or the console in development). Throws on a failed send.
  * Reserved / non-routable recipients are never sent: the email is printed to the console instead.
  */
 export async function sendMail(msg: MailMessage): Promise<MailResult> {
@@ -57,10 +110,12 @@ ${msg.text}
 `);
     return { delivered: false, transport: 'suppressed' };
   }
-  if (!smtpConfigured()) {
+  const transport = mailTransport();
+  if (transport === 'console') {
     console.log(`\n[mail:console] To: ${msg.to}\nSubject: ${msg.subject}\n${msg.text}\n`);
     return { delivered: false, transport: 'console' };
   }
+  if (transport === 'brevo-api') return sendViaBrevo(msg);
   const info = await getTransporter().sendMail({ from: env.smtp.from, ...msg });
   return { delivered: true, messageId: info.messageId, transport: 'smtp' };
 }
