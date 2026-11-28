@@ -1,0 +1,66 @@
+# Render Blueprint: the MyBus API (Express + TypeScript). The web app is deployed separately (netlify.toml).
+# Values marked "sync: false" are asked for when the Blueprint is created; add any you skip later under
+# Environment in the Render dashboard. The seed script never runs here (it refuses to with NODE_ENV=production).
+services:
+  - type: web
+    name: mybus-api
+    runtime: node
+    rootDir: backend
+    plan: free
+    region: singapore
+    # Dev dependencies (TypeScript) are needed to compile; NODE_ENV=production would skip them otherwise.
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "24"
+      - key: TRUST_PROXY
+        value: "1"
+      - key: PHOTO_STORAGE
+        value: cloudinary
+      - key: CLOUDINARY_FOLDER
+        value: mybus/community
+      # MongoDB Atlas connection string (database "mybus"); allow 0.0.0.0/0 under Atlas Network Access.
+      - key: MONGODB_URI
+        sync: false
+      # A long random string (32+ characters).
+      - key: JWT_SECRET
+        sync: false
+      # The web app URL on Netlify, e.g. https://mybus.netlify.app (email links, shared posts).
+      - key: FRONTEND_URL
+        sync: false
+      # Comma-separated web app origins allowed to call the API, e.g. https://mybus.netlify.app
+      - key: CORS_ORIGINS
+        sync: false
+      # Outgoing email (Brevo SMTP relay).
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: MAIL_FROM
+        sync: false
+      # Route planner (TomTom Search, Routing, Traffic, Map Display).
+      - key: TOMTOM_API_KEY
+        sync: false
+      # Community photos.
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      # Web push: fixed keys so subscriptions survive redeploys, and a contact (site URL or mailto: address).
+      - key: VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+      - key: VAPID_SUBJECT
+        sync: false
