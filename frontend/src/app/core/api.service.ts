@@ -47,6 +47,7 @@ import {
   SearchResponse,
   TripDetails,
 } from './models';
+import { apiUrl } from './config';
 
 type Params = Record<string, string | number | boolean | undefined | null>;
 const toParams = (p: Params) =>
@@ -58,19 +59,19 @@ export class ApiService {
   private readonly http = inject(HttpClient);
 
   private get<T>(url: string, params: Params = {}) {
-    return firstValueFrom(this.http.get<T>(`/api${url}`, { params: toParams(params) }));
+    return firstValueFrom(this.http.get<T>(apiUrl(`/api${url}`), { params: toParams(params) }));
   }
   private post<T>(url: string, body: unknown = {}) {
-    return firstValueFrom(this.http.post<T>(`/api${url}`, body));
+    return firstValueFrom(this.http.post<T>(apiUrl(`/api${url}`), body));
   }
   private put<T>(url: string, body: unknown) {
-    return firstValueFrom(this.http.put<T>(`/api${url}`, body));
+    return firstValueFrom(this.http.put<T>(apiUrl(`/api${url}`), body));
   }
   private patch<T>(url: string, body: unknown) {
-    return firstValueFrom(this.http.patch<T>(`/api${url}`, body));
+    return firstValueFrom(this.http.patch<T>(apiUrl(`/api${url}`), body));
   }
   private del<T>(url: string) {
-    return firstValueFrom(this.http.delete<T>(`/api${url}`));
+    return firstValueFrom(this.http.delete<T>(apiUrl(`/api${url}`)));
   }
 
   // Catalogue

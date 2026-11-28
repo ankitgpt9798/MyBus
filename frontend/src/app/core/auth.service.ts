@@ -7,6 +7,7 @@ import { PushService } from './push.service';
 import { AuthResponse, Lang, NotificationPreferences, Theme, User } from './models';
 import { STORAGE_KEYS, readStorage, writeStorage } from './storage';
 import { ThemeService } from './theme.service';
+import { apiUrl } from './config';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -26,7 +27,7 @@ export class AuthService {
   async restore(): Promise<void> {
     if (!this.token()) return;
     try {
-      const { user } = await firstValueFrom(this.http.get<{ user: User }>('/api/users/me'));
+      const { user } = await firstValueFrom(this.http.get<{ user: User }>(apiUrl('/api/users/me')));
       await this.setSession(this.token()!, user);
     } catch {
       this.clearSession();
@@ -34,7 +35,7 @@ export class AuthService {
   }
 
   async login(email: string, password: string): Promise<User> {
-    const res = await firstValueFrom(this.http.post<AuthResponse>('/api/auth/login', { email, password }));
+    const res = await firstValueFrom(this.http.post<AuthResponse>(apiUrl('/api/auth/login'), { email, password }));
     await this.setSession(res.token, res.user);
     return res.user;
   }
@@ -42,7 +43,7 @@ export class AuthService {
   /** New accounts start with the language and theme the guest was already using. */
   async register(data: { name: string; email: string; password: string }): Promise<User> {
     const res = await firstValueFrom(
-      this.http.post<AuthResponse>('/api/auth/register', { ...data, language: this.language.current(), theme: this.theme.current() }),
+      this.http.post<AuthResponse>(apiUrl('/api/auth/register'), { ...data, language: this.language.current(), theme: this.theme.current() }),
     );
     await this.setSession(res.token, res.user);
     return res.user;
@@ -55,7 +56,7 @@ export class AuthService {
       .disable()
       .catch(() => undefined);
     try {
-      await firstValueFrom(this.http.post('/api/auth/logout', {}));
+      await firstValueFrom(this.http.post(apiUrl('/api/auth/logout'), {}));
     } catch {
       /* token may already be invalid — the local session is cleared either way */
     }
@@ -65,19 +66,19 @@ export class AuthService {
 
   /** Consumes the emailed verification token. Updates the session if the verified account is the one logged in. */
   async verifyEmail(token: string): Promise<User> {
-    const { user } = await firstValueFrom(this.http.post<{ user: User }>('/api/auth/verify-email', { token }));
+    const { user } = await firstValueFrom(this.http.post<{ user: User }>(apiUrl('/api/auth/verify-email'), { token }));
     if (this.user()?.id === user.id) this.user.set(user);
     return user;
   }
 
   async resendVerification(): Promise<void> {
-    await firstValueFrom(this.http.post('/api/auth/resend-verification', {}));
+    await firstValueFrom(this.http.post(apiUrl('/api/auth/resend-verification'), {}));
   }
 
   async updateProfile(
     patch: Partial<Pick<User, 'name' | 'phone'>> & { language?: Lang; theme?: Theme; notificationPreferences?: Partial<NotificationPreferences> },
   ): Promise<User> {
-    const { user } = await firstValueFrom(this.http.patch<{ user: User }>('/api/users/me', patch));
+    const { user } = await firstValueFrom(this.http.patch<{ user: User }>(apiUrl('/api/users/me'), patch));
     this.user.set(user);
     return user;
   }
@@ -89,7 +90,7 @@ export class AuthService {
   }
 
   async changePassword(currentPassword: string, newPassword: string): Promise<void> {
-    await firstValueFrom(this.http.post('/api/users/me/password', { currentPassword, newPassword }));
+    await firstValueFrom(this.http.post(apiUrl('/api/users/me/password'), { currentPassword, newPassword }));
   }
 
   clearSession(): void {

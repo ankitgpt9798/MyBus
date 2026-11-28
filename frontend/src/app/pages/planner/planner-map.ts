@@ -3,6 +3,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import * as L from 'leaflet/dist/leaflet-src.esm.js';
 import { PlannedRoute, PlannerPlace, TrafficSection } from '../../core/models';
 import { TRAFFIC_COLORS, TRAFFIC_LEVELS, trafficLevel } from './planner.traffic';
+import { apiUrl } from '../../core/config';
 
 export interface MapStop {
   place: PlannerPlace;
@@ -159,7 +160,7 @@ export class PlannerMap implements OnDestroy {
     this.tileLayer?.remove();
     this.activeTiles.set(source);
     if (source === 'tomtom') {
-      this.tileLayer = L.tileLayer(`/api/planner/tiles/{z}/{x}/{y}.png?style=${dark ? 'night' : 'main'}`, { maxZoom: 19, attribution: TOMTOM_ATTRIBUTION });
+      this.tileLayer = L.tileLayer(apiUrl(`/api/planner/tiles/{z}/{x}/{y}.png?style=${dark ? 'night' : 'main'}`), { maxZoom: 19, attribution: TOMTOM_ATTRIBUTION });
       this.tileLayer.on('tileerror', () => {
         if (++this.tileErrors >= TILE_ERRORS_BEFORE_FALLBACK && this.activeTiles() === 'tomtom') {
           this.setTiles('osm', this.dark());
@@ -177,7 +178,7 @@ export class PlannerMap implements OnDestroy {
     this.trafficLayer?.remove();
     this.trafficLayer = undefined;
     if (!show || !this.map) return;
-    this.trafficLayer = L.tileLayer(`/api/planner/traffic-tiles/{z}/{x}/{y}.png?style=${dark ? 'relative0-dark' : 'relative0'}`, {
+    this.trafficLayer = L.tileLayer(apiUrl(`/api/planner/traffic-tiles/{z}/{x}/{y}.png?style=${dark ? 'relative0-dark' : 'relative0'}`), {
       maxZoom: 19,
       opacity: 0.8,
       zIndex: 5,

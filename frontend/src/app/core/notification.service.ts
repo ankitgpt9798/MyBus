@@ -6,6 +6,7 @@ import { AuthService } from './auth.service';
 import { AppNotification } from './models';
 import { PushService } from './push.service';
 import { ToastService } from './toast.service';
+import { apiUrl } from './config';
 
 /** Fallback polling interval while the live stream is not connected. */
 const POLL_MS = 30_000;
@@ -126,7 +127,7 @@ export class NotificationService {
       // EventSource can't send headers: exchange the session for a short-lived stream token.
       const { token } = await this.api.notificationStreamToken();
       if (gen !== this.generation || !this.auth.isLoggedIn()) return;
-      const es = new EventSource(`/api/notifications/stream?token=${encodeURIComponent(token)}`);
+      const es = new EventSource(apiUrl(`/api/notifications/stream?token=${encodeURIComponent(token)}`));
       this.source = es;
       // The token is only valid for a minute, so instead of letting EventSource retry with the same URL
       // we close it and reconnect with a fresh token.

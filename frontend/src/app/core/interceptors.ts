@@ -3,12 +3,13 @@ import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
+import { isApiUrl } from './config';
 
 /** Adds the JWT to API calls and ends the session when the server says the token is no longer valid. */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   // Translation files and other static assets pass straight through. Resolving AuthService for them would
   // create a DI cycle at startup (TranslateService -> HttpClient -> AuthService -> Router -> TitleStrategy -> TranslateService).
-  if (!req.url.startsWith('/api/')) return next(req);
+  if (!isApiUrl(req.url)) return next(req);
 
   const auth = inject(AuthService);
   const router = inject(Router);
