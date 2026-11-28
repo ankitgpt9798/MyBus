@@ -16,6 +16,32 @@ const num = (name: string, fallback: number) => {
 };
 
 /**
+ * Allowed browser origins (CORS_ORIGINS, comma-separated). An entry may use "*" for one host label, e.g.
+ * https://deploy-preview-*--mybus.netlify.app for Netlify deploy previews.
+ */
+const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+function corsOrigins(): (string | RegExp)[] {
+  return str('CORS_ORIGINS', 'http://localhost:4200')
+    .split(',')
+    .map((s) => s.trim().replace(/\/+$/, ''))
+    .filter(Boolean)
+    .map((o) => (o.includes('*') ? new RegExp(`^${o.split('*').map(escapeRegex).join('[a-z0-9-]+')}$`, 'i') : o));
+}
+
+/**
+ * Express "trust proxy": how many proxies sit in front of the API (Render adds one). TRUST_PROXY=1 / true / false /
+ * a named Express setting; default 1 in production, off otherwise. Needed so per-visitor limits see the real client IP.
+ */
+function trustProxy(): boolean | number | string {
+  const raw = str('TRUST_PROXY').trim().toLowerCase();
+  if (!raw) return str('NODE_ENV') === 'production' ? 1 : false;
+  if (raw === 'true') return true;
+  if (raw === 'false') return false;
+  return /^\d+$/.test(raw) ? Number(raw) : raw;
+}
+
+/**
  * Where community photos are kept: PHOTO_STORAGE=local|cloudinary. Without it, Cloudinary is used when its three
  * credentials are set, otherwise the local uploads folder.
  */
@@ -36,10 +62,8 @@ export const env = {
   nodeEnv: str('NODE_ENV', 'development'),
   mongoUri: str('MONGODB_URI', 'mongodb://127.0.0.1:27017/mybus'),
   frontendUrl: str('FRONTEND_URL', 'http://localhost:4200').replace(/\/$/, ''),
-  corsOrigins: str('CORS_ORIGINS', 'http://localhost:4200')
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean),
+  corsOrigins: corsOrigins(),
+  trustProxy: trustProxy(),
   jwtSecret: required('JWT_SECRET'),
   // Uploaded files (community photos go into <dir>/community). Default: backend/uploads (git-ignored).
   uploadsDir: path.resolve(str('UPLOADS_DIR', path.resolve(__dirname, '../../uploads'))),

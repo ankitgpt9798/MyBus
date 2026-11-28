@@ -9,7 +9,17 @@ import { api } from './routes';
 export function createApp() {
   const app = express();
   app.disable('x-powered-by');
-  app.use(cors({ origin: env.corsOrigins }));
+  // Behind Render's proxy: take the client IP from X-Forwarded-For (per-visitor rate limits, share counting).
+  if (env.trustProxy !== false) app.set('trust proxy', env.trustProxy);
+  // The web app calls the API from its own origin (e.g. Netlify): only the configured origins get CORS headers.
+  app.use(
+    cors({
+      origin: env.corsOrigins,
+      methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE'],
+      allowedHeaders: ['Authorization', 'Content-Type'],
+      maxAge: 600,
+    }),
+  );
   app.use(express.json({ limit: '1mb' }));
   app.use('/api', api);
   // Uploaded photos: read-only, only generated image names, never sniffed or rendered as anything else.
