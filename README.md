@@ -45,6 +45,7 @@ npm ci
 | `CORS_ORIGINS` | Comma-separated origins allowed to call the API (default `http://localhost:4200`). An entry may use `*` for one host label, e.g. `https://deploy-preview-*--mybus.netlify.app` |
 | `TRUST_PROXY` | How many proxies sit in front of the API, so rate limits see the real client IP (default `1` with `NODE_ENV=production`, otherwise off) |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME` | Admin account created by the seed script |
+| `BREVO_API_KEY` | Sends email through Brevo's HTTPS API (used first when set; needed on hosts that block SMTP, such as Render's free plan). Create it under Brevo > SMTP & API > API keys (it is not the SMTP key) |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM` | Outgoing email, e.g. with Brevo: `SMTP_HOST=smtp-relay.brevo.com`, `SMTP_PORT=587`, your Brevo SMTP login and SMTP key, and a sender address verified in Brevo. Leave `SMTP_HOST` empty to print emails and verification links in the backend console instead |
 | `SEAT_HOLD_MINUTES` | How long selected seats are held while paying |
 | `UPLOADS_DIR` | Where community photos are stored and served from at `/uploads` when they are kept locally (default `backend/uploads`, git-ignored) |
@@ -157,7 +158,9 @@ The API runs on [Render](https://render.com) (`render.yaml`) and the web app on 
 | `JWT_SECRET` | A long random string (32+ characters) |
 | `FRONTEND_URL` | The Netlify site URL (email links, shared posts) |
 | `CORS_ORIGINS` | The Netlify site origin(s), comma-separated |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM` | Brevo SMTP relay (`smtp-relay.brevo.com`, `587`), SMTP login and key, a verified sender |
+| `BREVO_API_KEY` | Brevo API key (Brevo > SMTP & API > API keys, not the SMTP key). Render's free plan blocks SMTP ports, so email goes out over HTTPS |
+| `MAIL_FROM` | Sender verified in Brevo, e.g. `MyBus <you@yourdomain.com>` |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | Optional SMTP fallback, only used when `BREVO_API_KEY` is empty (it cannot connect on Render's free plan) |
 | `TOMTOM_API_KEY` | TomTom key (Search, Routing, Traffic, Map Display) |
 | `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | Cloudinary account for community photos |
 | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` | Fixed web push keys (e.g. the pair in your local `backend/.vapid-keys.json`); without them new keys are made on every deploy and existing push subscriptions stop working |
@@ -172,3 +175,4 @@ Free-plan notes:
 - Render puts the API to sleep after about 15 minutes without requests. The first request after that takes up to a minute, and background jobs (journey reminders, notification retries, hold expiry) pause while it sleeps and catch up when it wakes.
 - Never run `npm run seed` against the production database: it replaces trips, bookings, reviews and community posts. It refuses to run with `NODE_ENV=production`.
 - Photos must be on Cloudinary in production: Render's disk is wiped on every deploy and restart.
+- Email must use `BREVO_API_KEY`: Render's free plan blocks outgoing SMTP. If Brevo's "Authorised IPs" protection is on (Brevo > Security), deactivate it, otherwise the API rejects Render's changing IP addresses ("unrecognised IP address"). The API logs which email transport it uses at startup (`brevo-api`, `smtp` or `console`).
