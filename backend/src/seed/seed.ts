@@ -150,6 +150,11 @@ async function upsertUser(data: { name: string; email: string; password: string;
 }
 
 async function main() {
+  // The seed replaces the catalogue, bookings, reviews and community content: never on a deployed server.
+  if (env.nodeEnv === 'production') {
+    console.error('[seed] refusing to run with NODE_ENV=production: the seed replaces trips, bookings, reviews and community posts');
+    process.exit(1);
+  }
   await connectDb();
   const models = [User, RevokedToken, Operator, Bus, Route, Trip, Booking, Review, Post, Comment, Reaction, SavedRoute];
   for (const m of models) await m.syncIndexes();
