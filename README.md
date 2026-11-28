@@ -42,7 +42,8 @@ npm ci
 | `MONGODB_URI` | MongoDB connection string (database `mybus`) |
 | `FRONTEND_URL` | Public app URL used in email links, shared community links and their preview images (default `http://localhost:4200`) |
 | `JWT_SECRET`, `JWT_EXPIRES_IN` | Signing secret (required, a long random string) and lifetime for login tokens |
-| `CORS_ORIGINS` | Comma-separated origins allowed to call the API (default `http://localhost:4200`) |
+| `CORS_ORIGINS` | Comma-separated origins allowed to call the API (default `http://localhost:4200`). An entry may use `*` for one host label, e.g. `https://deploy-preview-*--mybus.netlify.app` |
+| `TRUST_PROXY` | How many proxies sit in front of the API, so rate limits see the real client IP (default `1` with `NODE_ENV=production`, otherwise off) |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME` | Admin account created by the seed script |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM` | Outgoing email, e.g. with Brevo: `SMTP_HOST=smtp-relay.brevo.com`, `SMTP_PORT=587`, your Brevo SMTP login and SMTP key, and a sender address verified in Brevo. Leave `SMTP_HOST` empty to print emails and verification links in the backend console instead |
 | `SEAT_HOLD_MINUTES` | How long selected seats are held while paying |
@@ -138,4 +139,36 @@ cd backend && npm run build && npm start   # compiles to backend/dist and starts
 cd frontend && npm run build               # outputs the web app to frontend/dist/frontend/browser
 ```
 
-Serve `frontend/dist/frontend/browser` as static files with a fallback to `index.html` for app routes, and forward `/api`, `/uploads` and `/share` to the API. Set `FRONTEND_URL` and `CORS_ORIGINS` to the public address of the web app.
+The web app reads the API location from `config.js` at startup. In development it is empty (same origin, `/api` through the dev proxy). For a deployment, `frontend/scripts/deploy-config.mjs` writes `config.js` with `API_BASE_URL` and a Netlify `_redirects` file into the build output (see below). With `NODE_ENV=production` the API prints warnings at startup for settings that break on a hosted server (local photo storage, missing VAPID keys, localhost URLs, a weak `JWT_SECRET`).
+
+## Deploy (Render + Netlify)
+
+The API runs on [Render](https://render.com) (`render.yaml`) and the web app on [Netlify](https://www.netlify.com) (`netlify.toml`). The web app calls the API directly (cross-origin). Netlify only proxies share links (`/share/*`) and locally stored photos (`/uploads/*`), so shared links stay on the web app's domain.
+
+1. **MongoDB Atlas:** under Network Access allow `0.0.0.0/0` (Render has no fixed outgoing IP on the free plan), and copy the connection string.
+2. **Render:** New > Blueprint, pick this repository. Fill in the variables it asks for (table below). `FRONTEND_URL` and `CORS_ORIGINS` are not known yet: enter a placeholder such as `https://example.com` for now. Wait for the deploy, then note the service URL (e.g. `https://mybus-api.onrender.com`); `/api/health` should answer `{"status":"ok"}`.
+3. **Netlify:** Add new site > Import from Git, pick this repository (the settings come from `netlify.toml`). Add the environment variable `API_BASE_URL` = the Render URL, then deploy. The build stops with a clear message if it is missing.
+4. **Back on Render:** set `FRONTEND_URL` to the Netlify URL (e.g. `https://mybus.netlify.app`) and `CORS_ORIGINS` to the same origin (comma-separated if there are more, e.g. a custom domain), then redeploy.
+
+| Variable (Render) | What it must contain |
+| --- | --- |
+| `NODE_ENV`, `NODE_VERSION`, `TRUST_PROXY`, `PHOTO_STORAGE`, `CLOUDINARY_FOLDER` | Set by `render.yaml` (`production`, `24`, `1`, `cloudinary`, `mybus/community`) |
+| `MONGODB_URI` | Atlas connection string for the MyBus database |
+| `JWT_SECRET` | A long random string (32+ characters) |
+| `FRONTEND_URL` | The Netlify site URL (email links, shared posts) |
+| `CORS_ORIGINS` | The Netlify site origin(s), comma-separated |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM` | Brevo SMTP relay (`smtp-relay.brevo.com`, `587`), SMTP login and key, a verified sender |
+| `TOMTOM_API_KEY` | TomTom key (Search, Routing, Traffic, Map Display) |
+| `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | Cloudinary account for community photos |
+| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` | Fixed web push keys (e.g. the pair in your local `backend/.vapid-keys.json`); without them new keys are made on every deploy and existing push subscriptions stop working |
+| `VAPID_SUBJECT` | Contact for push services: the site URL (`https://mybus.netlify.app`) or `mailto:` a real address |
+
+| Variable (Netlify) | What it must contain |
+| --- | --- |
+| `API_BASE_URL` | The Render service URL, e.g. `https://mybus-api.onrender.com` (origin only, no `/api`) |
+
+Free-plan notes:
+
+- Render puts the API to sleep after about 15 minutes without requests. The first request after that takes up to a minute, and background jobs (journey reminders, notification retries, hold expiry) pause while it sleeps and catch up when it wakes.
+- Never run `npm run seed` against the production database: it replaces trips, bookings, reviews and community posts. It refuses to run with `NODE_ENV=production`.
+- Photos must be on Cloudinary in production: Render's disk is wiped on every deploy and restart.
